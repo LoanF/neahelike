@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { auth } from "@/auth";
+import { CGU_VERSION } from "@/content/legal";
 import { db, schema } from "@/db";
 import type { Rank, User } from "@/db/schema";
 import { rolesAreStale, syncMember } from "./members";
@@ -38,6 +39,11 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   return load();
 });
 
+/** CGU acceptées dans leur version actuelle. */
+export function hasAcceptedCgu(user: Pick<User, "cguAcceptedAt" | "cguVersion">) {
+  return !!user.cguAcceptedAt && user.cguVersion === CGU_VERSION;
+}
+
 interface Requirements {
   /** CGU acceptées (toutes les pages du portail sauf la liaison). */
   cgu?: boolean;
@@ -49,7 +55,7 @@ export async function requireUser({ cgu = true, rank }: Requirements = {}): Prom
   const user = await getCurrentUser();
   if (!user) redirect("/connexion");
   if (!user.inGuild) redirect("/rejoindre-discord");
-  if (cgu && !user.cguAcceptedAt) redirect("/liaison");
+  if (cgu && !hasAcceptedCgu(user)) redirect("/liaison");
   if (rank && !hasRank(user, rank)) redirect("/portail");
   return user;
 }
