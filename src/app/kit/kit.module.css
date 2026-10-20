@@ -1,0 +1,180 @@
+.page {
+  padding-block: 56px 120px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 56px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.h1 {
+  font-size: 44px;
+}
+
+.h2 {
+  font-size: 26px;
+  margin-bottom: 20px;
+}
+
+.h3 {
+  font-size: 34px;
+  margin: 22px 0 16px;
+}
+
+.lead {
+  margin-top: 8px;
+  font-size: 17px;
+  color: var(--nh-parchment-dim);
+}
+
+.body {
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.dim {
+  color: var(--nh-parchment-dim);
+}
+
+.section {
+  margin-top: 64px;
+}
+
+.pad {
+  padding: 34px 30px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.padLg {
+  padding: 34px 40px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: var(--nh-grid-gap);
+}
+
+.grid2 > :first-child:not(.list) {
+  grid-column: span 1;
+}
+
+.list {
+  padding: 34px 9px 22px;
+}
+
+.listDots {
+  margin: 0 13px 18px;
+}
+
+.listBody {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.band {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 46px;
+  transition: transform var(--nh-dur-band) var(--nh-ease-band);
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 46px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--nh-parchment);
+  text-shadow: 0 1px 0 #000;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.itemCurrent {
+  color: var(--nh-gold-lit);
+  font-weight: 700;
+}
+
+.itemState {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+}
+
+.sceneDemo {
+  min-height: 300px;
+  animation: nh-fade var(--nh-dur-fade) ease-out both;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 20px;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.obliqueWrap {
+  max-width: 520px;
+}
+
+.oblique {
+  height: 420px;
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+}
+
+@media (max-width: 900px) {
+  .grid2,
+  .form {
+    grid-template-columns: 1fr;
+  }
+
+  .head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

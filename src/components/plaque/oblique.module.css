@@ -1,0 +1,32 @@
+.gold {
+  position: relative;
+  background: var(--nh-gold-lit);
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--cut)) 100%, 0 100%);
+}
+
+.black {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  clip-path: polygon(0 0, calc(100% - var(--gold)) 0, calc(100% - var(--cut) - var(--gold)) 100%, 0 100%);
+}
+
+.content {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  clip-path: polygon(0 0, calc(100% - var(--black)) 0, calc(100% - var(--cut) - var(--black)) 100%, 0 100%);
+}
+
+@media (max-width: 900px) {
+  /* Sur mobile, la coupe devient une simple bande horizontale : pas de biais illisible. */
+  .gold,
+  .black,
+  .content {
+    clip-path: none;
+  }
+
+  .gold {
+    padding-bottom: 4px;
+  }
+}

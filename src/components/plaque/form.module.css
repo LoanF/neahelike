@@ -1,0 +1,138 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 15px;
+  color: var(--nh-parchment);
+}
+
+.required {
+  color: var(--nh-gold);
+  margin-left: 4px;
+}
+
+.control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--nh-parchment);
+  background: var(--nh-bronze-deep);
+  border: 0;
+  border-radius: var(--nh-radius);
+  box-shadow: var(--nh-socket);
+  outline: none;
+  transition: box-shadow var(--nh-dur-band) ease-out;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--nh-placeholder);
+}
+
+.input:focus,
+.textarea:focus {
+  box-shadow: var(--nh-socket-focus);
+}
+
+.textarea {
+  min-height: 148px;
+  padding: 12px 14px 28px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.locked {
+  color: var(--nh-parchment-dim);
+  box-shadow: var(--nh-socket-locked);
+  cursor: default;
+  font-variant-numeric: tabular-nums;
+}
+
+.locked:focus {
+  box-shadow: var(--nh-socket-locked);
+}
+
+.withSuffix {
+  padding-right: 92px;
+}
+
+.suffix {
+  position: absolute;
+  right: 14px;
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+  pointer-events: none;
+}
+
+.counter {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.invalid,
+.invalid:focus {
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px var(--nh-terracotta);
+}
+
+.error {
+  font-size: 14px;
+  color: #e98a6f;
+}
+
+.hint {
+  font-size: 14px;
+  color: var(--nh-parchment-dim);
+}
+
+/* Case à cocher en pin : la vraie case reste dans le DOM pour le clavier et les lecteurs d'écran. */
+.check {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--nh-parchment);
+}
+
+.check input {
+  position: absolute;
+  opacity: 0;
+  width: 14px;
+  height: 14px;
+  margin: 3px 0 0;
+}
+
+.check .pinSlot {
+  margin-top: 3px;
+}
+
+.check input:focus-visible + .pinSlot {
+  outline: 2px solid var(--nh-gold);
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+
+.checkDisabled {
+  cursor: not-allowed;
+  color: var(--nh-disabled-text);
+}

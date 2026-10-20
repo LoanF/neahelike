@@ -1,0 +1,90 @@
+/*
+ * Néa Hélikè — « The Struck Plaque ».
+ * Jetons repris du design system en jeu (DESIGN-ingame-struck-plaque.md), qui fait foi.
+ * Ce fichier se charge après arc/foundation.css et remappe les jetons Arc UI sur le bronze et l'or.
+ */
+:root {
+  /* Matières */
+  --nh-bronze: #1a150f;
+  --nh-bronze-deep: #0b0907;
+  --nh-bronze-lit: #231c14;
+  --nh-gold: #d1a64a;
+  --nh-gold-lit: #e8c473;
+  --nh-gold-deep: #8f6f2c;
+  --nh-parchment: #f1ece2;
+  --nh-parchment-dim: #b9b09d;
+  --nh-placeholder: #7d7566;
+  --nh-disabled-text: #8a8273;
+  --nh-terracotta: #c4583a;
+  --nh-success: #8fae5a;
+
+  /* Polices */
+  --nh-font-title: var(--font-marcellus), "Marcellus", serif;
+  --nh-font-body: "Segoe UI", "Selawik", system-ui, -apple-system, sans-serif;
+
+  /* Mise en page */
+  --nh-container: 1440px;
+  --nh-gutter: 48px;
+  --nh-gutter-portal: 36px;
+  --nh-grid-gap: 16px;
+  --nh-section-gap: 110px;
+  --nh-radius: 2px;
+
+  /* Recettes */
+  --nh-hammer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='h'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .9 0 0 0 0 .75 0 0 0 0 .5 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23h)'/%3E%3C/svg%3E");
+  --nh-plaque-bg: var(--nh-hammer), radial-gradient(120% 90% at 0% 0%, var(--nh-bronze-lit) 0%, rgba(35, 28, 20, 0) 55%), linear-gradient(180deg, var(--nh-bronze), var(--nh-bronze-deep));
+  --nh-rim: inset 0 0 0 1px rgb(0 0 0 / .6), inset 0 0 0 2px rgb(143 111 44 / .6), inset 0 1px 0 rgb(232 196 115 / .16);
+  --nh-lift: 0 18px 28px -14px rgb(0 0 0 / .75), 0 0 0 1px rgb(0 0 0 / .75);
+  --nh-socket: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px var(--nh-gold-deep);
+  --nh-socket-locked: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px rgba(143, 111, 44, .5);
+  --nh-socket-focus: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px var(--nh-gold), 0 0 0 3px rgba(209, 166, 74, .17);
+  --nh-dome: radial-gradient(circle at 35% 30%, var(--nh-gold-lit) 0, var(--nh-gold) 40%, var(--nh-gold-deep) 100%);
+  --nh-dome-shadow: 0 1px 2px rgb(0 0 0 / .7);
+  --nh-sel-bg: rgba(209, 166, 74, .17);
+  --nh-sel-ring: inset 0 0 0 1px var(--nh-gold), inset 0 0 0 2px rgba(209, 166, 74, .28);
+  --nh-hover-wash: rgba(209, 166, 74, .09);
+  --nh-dots: radial-gradient(circle at 4px 4px, var(--nh-gold) 0 2.4px, var(--nh-gold-deep) 3px, transparent 3.6px);
+  --nh-scene: radial-gradient(55% 60% at 60% 32%, rgba(232, 196, 115, .22), transparent 64%), radial-gradient(42% 52% at 8% 95%, rgba(70, 105, 125, .22), transparent 70%), linear-gradient(180deg, var(--nh-bronze-lit), var(--nh-bronze-deep));
+
+  /* Mouvement */
+  --nh-ease-band: cubic-bezier(.16, 1, .3, 1);
+  --nh-dur-unveil: .32s;
+  --nh-dur-band: .16s;
+  --nh-dur-fade: .14s;
+
+  /* Remappage des jetons Arc UI : les composants Arc adoptent la plaque sans être réécrits. */
+  --background: var(--nh-bronze-deep);
+  --surface: var(--nh-bronze);
+  --surface-raised: var(--nh-bronze-lit);
+  --surface-muted: var(--nh-bronze-lit);
+  --foreground: var(--nh-parchment);
+  --text-secondary: var(--nh-parchment-dim);
+  --text-muted: var(--nh-placeholder);
+  --border: var(--nh-gold-deep);
+  --border-subtle: rgba(143, 111, 44, .35);
+  --border-strong: var(--nh-gold);
+  --accent: var(--nh-gold);
+  --accent-strong: var(--nh-gold-lit);
+  --accent-subtle: var(--nh-sel-bg);
+  --accent-foreground: var(--nh-bronze);
+  --control-on: var(--nh-gold);
+  --control-fill: var(--nh-gold);
+  --control-glyph: var(--nh-bronze);
+  --success: var(--nh-success);
+  --danger: var(--nh-terracotta);
+  --warning: var(--nh-gold);
+  --radius-control: var(--nh-radius);
+  --radius-panel: var(--nh-radius);
+  --radius-surface: var(--nh-radius);
+  --font-display: var(--nh-font-title);
+  --font-body: var(--nh-font-body);
+  --tracking-display: .1em;
+  --tracking-body: 0;
+  --leading-body: 1.45;
+  --control-height-sm: 40px;
+  --control-height-md: 46px;
+  --control-height-lg: 52px;
+  --shadow-resting: none;
+  --shadow-raised: var(--nh-lift);
+  --shadow-floating: var(--nh-lift);
+}

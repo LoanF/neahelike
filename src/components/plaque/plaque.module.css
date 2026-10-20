@@ -1,0 +1,161 @@
+/* Plaque : tous les panneaux. Bronze martelé, bord or, ombre portée, coins carrés. */
+.plaque {
+  position: relative;
+  border-radius: var(--nh-radius);
+  background: var(--nh-plaque-bg);
+  box-shadow: var(--nh-rim), var(--nh-lift);
+}
+
+.unveil {
+  animation: nh-unveil var(--nh-dur-unveil) ease-out both;
+}
+
+.interactive::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: transparent;
+  transition: background var(--nh-dur-band) ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .interactive:hover::after {
+    background: var(--nh-hover-wash);
+  }
+}
+
+/* Rivet bombé : 12 px, à 12 px des coins du haut. */
+.rivet {
+  position: absolute;
+  top: 12px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--nh-dome);
+  box-shadow: var(--nh-dome-shadow);
+  pointer-events: none;
+}
+
+.rivetLeft {
+  left: 12px;
+}
+
+.rivetRight {
+  right: 12px;
+}
+
+/* Rangée de points poinçonnés. */
+.dots {
+  height: 8px;
+  background-image: var(--nh-dots);
+  background-size: 11px 8px;
+  background-repeat: repeat-x;
+  filter: drop-shadow(0 1px 0 #000);
+}
+
+.spiral {
+  flex: none;
+  filter: drop-shadow(0 1px 0 #000);
+}
+
+/* Cavité : champs, cases, emplacements, badges. */
+.socket {
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket);
+  border-radius: var(--nh-radius);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 7px;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--nh-parchment);
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket);
+  border-radius: var(--nh-radius);
+}
+
+.badgeLg {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.badgeGold {
+  color: var(--nh-gold-lit);
+  background: var(--nh-sel-bg);
+  box-shadow: var(--nh-sel-ring);
+}
+
+.badgeDanger {
+  color: #e98a6f;
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px var(--nh-terracotta);
+}
+
+.badgeSuccess {
+  color: #b9d08a;
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px #6f8a43;
+}
+
+/* Pin : cavité ronde de 14 px, dôme doré quand allumé. */
+.pin {
+  flex: none;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket);
+  transition: background var(--nh-dur-band) ease-out, box-shadow var(--nh-dur-band) ease-out;
+}
+
+.pinOn {
+  background: var(--nh-dome);
+  box-shadow: var(--nh-dome-shadow);
+}
+
+/* Logo rogné en cercle avec anneau gold-deep. */
+.logo {
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Fond « scène » : lumière clé chaude, liseré froid. Sert aussi d'attente d'illustration. */
+.scene {
+  position: relative;
+  overflow: hidden;
+  background: var(--nh-scene);
+}
+
+.sceneImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sceneCaption {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(185, 176, 157, .55);
+}
+
+/* Lamelle de sélection : voile or 17 % et filet, jamais un aplat. */
+.selection {
+  background: var(--nh-sel-bg);
+  box-shadow: var(--nh-sel-ring);
+}
