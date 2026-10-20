@@ -6,16 +6,28 @@ Site vitrine et portail whitelist du serveur roleplay FiveM **Néa Hélikè** (m
 
 - **Next.js 15** (App Router) + **TypeScript**, CSS Modules
 - **Arc UI** (uiarc.dev) installé via la CLI shadcn, restylé en « Struck Plaque »
-- À venir : Supabase (base de données, présence temps réel), Auth.js (Discord), bot Discord
+- **Auth.js** (connexion Discord), **Drizzle** + **Supabase** (Postgres)
+- À venir : présence temps réel, bot Discord
 
 ## Démarrer
 
 ```bash
 pnpm install
-pnpm dev        # http://localhost:3000
+cp .env.example .env.local   # puis remplir les valeurs
+pnpm db:migrate              # crée les tables dans Supabase
+pnpm dev                     # http://localhost:3000
 pnpm lint
 pnpm build
 ```
+
+## Portail : configuration Discord
+
+1. Créer une application sur https://discord.com/developers/applications.
+2. **OAuth2** : copier le Client ID et le Client Secret dans `AUTH_DISCORD_ID` / `AUTH_DISCORD_SECRET`, et ajouter la redirection `https://<domaine>/api/auth/callback/discord` (et `http://localhost:3000/api/auth/callback/discord` en local).
+3. **Bot** : générer le token (`DISCORD_BOT_TOKEN`), activer l'intent « Server Members », puis inviter le bot sur le serveur avec la permission « Gérer les rôles ». Son rôle doit être placé **au-dessus** des rôles Initié, Aspirant et Hélikéen.
+4. Copier l'ID du serveur et des rôles (mode développeur Discord → clic droit → Copier l'identifiant).
+
+Les permissions du site suivent les rôles Discord : rôle Staff → staff, rôle Recruteur → recruteur, sinon joueur. Elles sont relues à chaque connexion puis toutes les 5 minutes ; quitter le serveur ou perdre un rôle retire aussitôt les droits.
 
 ## Design
 
