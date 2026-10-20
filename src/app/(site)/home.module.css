@@ -1,0 +1,497 @@
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  height: 860px;
+  max-height: calc(100vh - 76px + 120px);
+  min-height: 640px;
+  overflow: hidden;
+  background: radial-gradient(55% 70% at 72% 32%, rgba(232, 196, 115, .2), transparent 62%), radial-gradient(45% 55% at 95% 95%, rgba(70, 105, 125, .22), transparent 70%), linear-gradient(180deg, var(--nh-bronze-lit), var(--nh-bronze-deep));
+}
+
+.heroArt {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 50%;
+  background: transparent;
+}
+
+.heroVeil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--nh-bronze-deep) 0%, rgba(11, 9, 7, .92) 38%, rgba(11, 9, 7, .2) 52%, rgba(11, 9, 7, 0) 62%), linear-gradient(180deg, rgba(11, 9, 7, 0) 70%, var(--nh-bronze-deep) 100%);
+}
+
+.heroContent {
+  position: relative;
+  max-width: var(--nh-container);
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 var(--nh-gutter) 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 28px;
+}
+
+.heroTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.heroTitle {
+  font-size: clamp(48px, 7.2vw, 104px);
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 2px 0 #000, 0 -1px 0 rgba(255, 235, 190, .25);
+}
+
+.heroLead {
+  max-width: 520px;
+  font-size: 22px;
+  line-height: 1.4;
+  text-shadow: 0 1px 2px #000;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.heroDiscord {
+  margin-left: 14px;
+  color: var(--nh-parchment-dim);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.heroDiscord:hover {
+  color: var(--nh-gold-lit);
+}
+
+/* ---------- Le serveur ---------- */
+.server {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 56px;
+  padding: 34px 44px 40px;
+}
+
+.serverText {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.serverTitle {
+  font-size: 34px;
+}
+
+.lead,
+.leadDim {
+  max-width: 620px;
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.leadDim {
+  color: var(--nh-parchment-dim);
+}
+
+.facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.fact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 46px;
+  padding: 8px 14px;
+  box-shadow: inset 0 -1px 0 rgba(143, 111, 44, .35);
+}
+
+.fact dt {
+  color: var(--nh-parchment-dim);
+  flex-shrink: 0;
+}
+
+.fact dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Affinités ---------- */
+.affinities {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--nh-grid-gap);
+}
+
+.affinityLink {
+  display: flex;
+  color: var(--nh-parchment);
+}
+
+.affinityLink:hover {
+  color: var(--nh-parchment);
+}
+
+.affinity {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 10px 20px;
+}
+
+.affinityArt {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+}
+
+.element {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  height: 24px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--nh-parchment);
+  background: rgba(11, 9, 7, .85);
+  box-shadow: var(--nh-socket);
+  pointer-events: none;
+}
+
+.affinityBody {
+  padding: 18px 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.affinityName {
+  font-family: var(--nh-font-title);
+  font-size: 19px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--nh-gold-lit);
+  text-shadow: 0 1px 0 #000;
+  overflow-wrap: anywhere;
+}
+
+.affinityGod {
+  font-size: 14px;
+  color: var(--nh-parchment-dim);
+}
+
+.affinityText {
+  margin-top: 6px;
+}
+
+/* ---------- Créatures ---------- */
+.creatures {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: var(--nh-grid-gap);
+  align-items: stretch;
+}
+
+.creatureList {
+  padding: 34px 9px 22px;
+}
+
+.creatureDots {
+  margin: 0 30px 18px;
+}
+
+.creatureButtons {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 46px;
+  transition: transform var(--nh-dur-band) var(--nh-ease-band);
+}
+
+.creatureButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 46px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 16px;
+  color: var(--nh-parchment);
+  text-shadow: 0 1px 0 #000;
+  text-align: left;
+}
+
+.creatureButton:hover {
+  color: var(--nh-gold-lit);
+}
+
+.creatureCurrent {
+  color: var(--nh-gold-lit);
+  font-weight: 700;
+}
+
+.creaturePlaces {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--nh-parchment-dim);
+}
+
+.creatureCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 1fr);
+  overflow: hidden;
+}
+
+.creatureArt {
+  min-height: 470px;
+  margin: 10px;
+  box-shadow: var(--nh-socket);
+  animation: nh-fade var(--nh-dur-fade) ease-out both;
+}
+
+.creatureBody {
+  position: relative;
+  padding: 44px 40px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: nh-fade var(--nh-dur-fade) ease-out both;
+}
+
+.creatureName {
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+.creatureText {
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tile {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket);
+}
+
+.tile span {
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+}
+
+.tile strong {
+  font-weight: 600;
+}
+
+.creatureFoot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding-top: 18px;
+  box-shadow: inset 0 1px 0 rgba(143, 111, 44, .4);
+  color: var(--nh-parchment-dim);
+}
+
+/* ---------- Comment rejoindre ---------- */
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--nh-grid-gap);
+}
+
+.steps li {
+  display: flex;
+}
+
+.step {
+  flex: 1;
+  padding: 30px 26px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stepNumber {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  font-family: var(--nh-font-title);
+  font-size: 22px;
+  color: var(--nh-gold-lit);
+  text-shadow: 0 1px 0 #000;
+}
+
+.stepTitle {
+  font-family: var(--nh-font-title);
+  font-size: 19px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--nh-gold-lit);
+  text-shadow: 0 1px 0 #000;
+}
+
+.cta {
+  margin-top: var(--nh-grid-gap);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  padding: 26px 30px;
+  border-radius: var(--nh-radius);
+  font-size: 19px;
+  background: linear-gradient(rgba(209, 166, 74, .1), rgba(209, 166, 74, .1)), linear-gradient(180deg, var(--nh-bronze), var(--nh-bronze-deep));
+  box-shadow: var(--nh-sel-ring), 0 0 0 1px #000;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1200px) {
+  .affinities {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .creatureCard {
+    grid-template-columns: 1fr;
+  }
+
+  .creatureArt {
+    min-height: 320px;
+  }
+
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .hero {
+    height: auto;
+    max-height: none;
+    min-height: 0;
+  }
+
+  .heroArt {
+    position: relative;
+    left: 0;
+    height: 300px;
+  }
+
+  .heroVeil {
+    background: linear-gradient(180deg, rgba(11, 9, 7, 0) 0, rgba(11, 9, 7, 0) 180px, var(--nh-bronze-deep) 300px);
+  }
+
+  .heroContent {
+    margin-top: -120px;
+    padding-bottom: 56px;
+    gap: 22px;
+  }
+
+  .server {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 34px 24px 28px;
+  }
+
+  .creatures {
+    grid-template-columns: 1fr;
+  }
+
+  .creatureBody {
+    padding: 28px 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .heroTitle {
+    white-space: normal;
+  }
+
+  .heroLead {
+    font-size: 19px;
+  }
+
+  .heroDiscord {
+    margin-left: 0;
+  }
+
+  .affinities {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .affinity {
+    padding: 8px 8px 16px;
+  }
+
+  .affinityBody {
+    padding: 14px 4px 0;
+  }
+
+  .affinityName {
+    font-size: 16px;
+  }
+
+  .tiles,
+  .steps {
+    grid-template-columns: 1fr;
+  }
+
+  .cta {
+    padding: 22px 20px;
+    font-size: 17px;
+  }
+}

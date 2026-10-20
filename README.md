@@ -33,7 +33,9 @@ Le site reprend le langage visuel de l'interface en jeu, « The Struck Plaque »
 | `src/styles/tokens.css` | Jetons Néa Hélikè (`--nh-*`) et remappage des jetons Arc UI |
 | `src/components/arc/` | Composants Arc UI (restylés : variantes de bouton `primary`, `secondary`, `cavity`, `ghost`, `danger`) |
 | `src/components/plaque/` | Primitives : `Plaque`, `Rivet`, `DotsRow`, `Spiral`, `Badge`, `Pin`, `PinCheckbox`, `TextField`, `TextAreaField`, `ObliquePanel`, `Scene`, `Logo`, `ButtonLink` |
-| `src/app/` | Pages (App Router) |
+| `src/content/` | **Tous les textes du site** : lore, règlement, FAQ, pages légales, liens (Discord), places ouvertes/closes |
+| `src/components/site/` | En-tête, pied de page, sections, emblèmes dessinés du lore |
+| `src/app/` | Pages (App Router) : `(site)/` pour le site public |
 | `public/images/` | Logo et, plus tard, illustrations |
 
 ## Illustrations
