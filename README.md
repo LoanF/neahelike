@@ -21,9 +21,8 @@ pnpm build
 
 Le site reprend le langage visuel de l'interface en jeu, « The Struck Plaque » : plaques de bronze martelé, reliefs dorés, coins carrés.
 
-- `docs/design/README.md` : handoff des maquettes (jetons, recettes, écrans). Il fait foi pour les écrans livrés.
-- `docs/design/DESIGN-ingame-struck-plaque.md` : design system en jeu, la référence en cas de doute.
-- `docs/design/designs/*.dc.html` : maquettes HTML. Ouvrir avec `npx serve docs/design/designs`.
+- `src/styles/tokens.css` : jetons du design system (couleurs, recettes de plaque, mouvement).
+- `docs/lore/` : diapos de référence du lore.
 - `/kit` : page (non indexée) qui présente tous les composants du site.
 
 ## Organisation
