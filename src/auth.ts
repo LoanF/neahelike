@@ -58,7 +58,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     session({ session, token }) {
-      if (token.discordId) session.user.id = token.discordId;
+      if (typeof token.discordId === "string") session.user.id = token.discordId;
       return session;
     },
   },
