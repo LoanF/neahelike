@@ -1,29 +1,40 @@
 import type { Metadata } from "next";
-import { ButtonLink, DotsRow, Logo, Plaque, Spiral } from "@/components/plaque";
-import { SITE } from "@/content/site";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Button } from "@/components/plaque";
+import { AuthScreen } from "@/components/portal/auth-screen";
+import { getCurrentUser, hasAcceptedCgu } from "@/lib/session";
+import { loginWithDiscord } from "../actions";
+import styles from "../portal.module.css";
 
-export const metadata: Metadata = {
-  title: "Connexion",
-  robots: { index: false },
+export const metadata: Metadata = { title: "Connexion" };
+
+const ERRORS: Record<string, string> = {
+  AccessDenied: "Connexion refusée. Réessaie, ou contacte l'équipe sur Discord si le problème continue.",
+  Configuration: "Le portail est mal configuré. Préviens l'équipe sur Discord.",
 };
 
-// Provisoire : la connexion Discord (OAuth) et la page « Liaison réussie » arrivent en Phase 2.
-export default function ConnexionPage() {
+export default async function ConnexionPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const user = await getCurrentUser();
+  if (user) redirect(user.inGuild && hasAcceptedCgu(user) ? "/portail" : "/liaison");
+  const { error } = await searchParams;
+
   return (
-    <div style={{ minHeight: "70vh", display: "grid", placeItems: "center", padding: "64px 16px 0" }}>
-      <Plaque unveil style={{ width: "100%", maxWidth: 440, padding: 30, display: "flex", flexDirection: "column", alignItems: "center", gap: 18, textAlign: "center" }}>
-        <DotsRow style={{ alignSelf: "stretch", margin: "0 22px" }} />
-        <Logo size={76} ring={3} />
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <h1 style={{ fontSize: 26 }}>Le portail</h1>
-          <Spiral />
-        </div>
-        <p style={{ color: "var(--nh-parchment-dim)" }}>
-          Le portail whitelist ouvre très bientôt. Tu pourras y lier ton compte Discord et déposer ta candidature.
-        </p>
-        <ButtonLink href={SITE.discordUrl} size="md" style={{ width: "100%" }}>Rejoindre le Discord en attendant</ButtonLink>
-        <ButtonLink href="/lore" variant="secondary" size="md" style={{ width: "100%" }}>Lire le lore</ButtonLink>
-      </Plaque>
-    </div>
+    <AuthScreen
+      title="Le portail"
+      quote="Les portes de la cité s'ouvrent à qui ose se présenter."
+      art="gardien d'Hélikè devant les portes de bronze de la cité, torches, lumière chaude, style illustration peinte bronze et or"
+    >
+      <p className={styles.text}>
+        Le portail whitelist passe par ton compte Discord. Tu y déposeras ta candidature et suivras chaque étape jusqu&apos;à ton entrée dans la cité.
+      </p>
+      {error && <p className={styles.error} role="alert">{ERRORS[error] ?? "La connexion a échoué. Réessaie dans un instant."}</p>}
+      <form action={loginWithDiscord} className={styles.form}>
+        <Button type="submit" size="lg" className={styles.submit}>Se connecter avec Discord</Button>
+      </form>
+      <div className={styles.back}>
+        <Link href="/" className={styles.linkButton}>Retour au site</Link>
+      </div>
+    </AuthScreen>
   );
 }
