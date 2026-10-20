@@ -143,3 +143,14 @@
     padding: 26px 20px;
   }
 }
+
+/* La légende d'attente reste dans la partie visible du panneau, avant la coupe. */
+.scene > span {
+  padding-right: 320px;
+}
+
+@media (max-width: 900px) {
+  .scene > span {
+    padding-right: 24px;
+  }
+}
