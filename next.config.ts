@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    // Avatars et bannières Discord.
+    remotePatterns: [{ protocol: "https", hostname: "cdn.discordapp.com" }],
+  },
 };
 
 export default nextConfig;
