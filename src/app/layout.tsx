@@ -11,8 +11,16 @@ const marcellus = Marcellus({
   display: "swap",
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
+
+// Le site reste invisible des moteurs de recherche tant que NEXT_PUBLIC_INDEXABLE n'est pas « true ».
+const indexable = process.env.NEXT_PUBLIC_INDEXABLE === "true";
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(siteUrl),
+  robots: indexable ? undefined : { index: false, follow: false },
   title: {
     default: "Néa Hélikè · Serveur RP FiveM whitelist",
     template: "%s · Néa Hélikè",
