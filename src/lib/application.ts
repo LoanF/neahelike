@@ -67,7 +67,7 @@ export const STEP_SCHEMAS = {
   rp: z.object({
     firstName: text(2, 40, "Le prénom"),
     lastName: text(2, 40, "Le nom"),
-    age: integer(16, 120, "L'âge du personnage"),
+    age: integer(18, 120, "L'âge du personnage"),
     origin: text(10, 1000, "L'origine"),
     affinity: optionalChoice(AFFINITY_IDS),
     creature: optionalChoice(CREATURE_IDS),

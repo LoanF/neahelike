@@ -41,6 +41,7 @@ export function RpForm({ initial, affinities, creatures, backHref }: RpFormProps
           value={text(values, "age")}
           onChange={event => set("age", event.target.value)}
           error={errors.age}
+          hint="Ton personnage doit être majeur : 18 ans minimum."
         />
       </div>
       <TextAreaField
