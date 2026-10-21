@@ -10,6 +10,10 @@ export interface PlaqueProps extends HTMLAttributes<HTMLElement> {
   unveil?: boolean;
   /** Voile doré au survol (cartes cliquables). */
   interactive?: boolean;
+  /** Plaque cliquable rendue en lien (`as="a"` ou `as={Link}`). */
+  href?: string;
+  target?: string;
+  rel?: string;
   children?: ReactNode;
 }
 
