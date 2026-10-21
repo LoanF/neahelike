@@ -68,7 +68,7 @@ export default async function PortailPage() {
       </div>
 
       <section className={styles.resources} aria-labelledby="ressources">
-        <h2 id="ressources" className={styles.sectionTitle}>Avant de candidater</h2>
+        <h2 id="ressources" className={styles.sectionTitle}>Ressources</h2>
         <div className={styles.resourceGrid}>
           {RESOURCES.map(resource => {
             const Icon = resource.icon;
