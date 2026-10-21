@@ -22,7 +22,10 @@ export type EventType =
   | "candidature.refusee"
   | "candidature.supprimee"
   | "entretien.valide"
-  | "note.ajoutee";
+  | "note.ajoutee"
+  | "role.rang"
+  | "owner.ajoute"
+  | "owner.retire";
 
 export async function logEvent(event: { type: EventType; subjectId: string | null; actorId?: string | null; data?: Record<string, unknown> }) {
   await db().insert(schema.events).values({

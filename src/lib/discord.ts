@@ -48,6 +48,24 @@ async function call<T>(path: string, init: RequestInit = {}, attempt = 0): Promi
   return (await response.json()) as T;
 }
 
+export interface GuildRole {
+  id: string;
+  name: string;
+  color: number;
+  position: number;
+  managed: boolean;
+}
+
+/** Rôles du serveur (nom, couleur, ordre), pour la page des permissions. */
+export async function getGuildRoles() {
+  return (await call<GuildRole[]>(`/guilds/${env().DISCORD_GUILD_ID}/roles`)) ?? [];
+}
+
+/** Profil public d'un utilisateur Discord, ou `null` s'il n'existe pas. */
+export function getUser(userId: string) {
+  return call<DiscordUser>(`/users/${userId}`);
+}
+
 /** Le membre sur le serveur Néa Hélikè, ou `null` s'il n'en fait pas partie. */
 export function getMember(userId: string) {
   return call<GuildMember>(`/guilds/${env().DISCORD_GUILD_ID}/members/${userId}`);

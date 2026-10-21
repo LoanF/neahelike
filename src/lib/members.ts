@@ -3,19 +3,11 @@ import { eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { Rank, User } from "@/db/schema";
 import { getMember } from "./discord";
-import { env } from "./env";
 import { logEvent } from "./events";
+import { rankFor } from "./permissions";
 
 /** Délai après lequel les rôles Discord sont relus. */
 export const ROLES_TTL_MS = 5 * 60 * 1000;
-
-/** Le rang découle uniquement des rôles Discord : admin > recruteur > joueur. Un seul rôle de la liste suffit. */
-export function rankFromRoles(roles: string[]): Rank {
-  const { DISCORD_ROLE_ADMIN, DISCORD_ROLE_STAFF, DISCORD_ROLE_RECRUTEUR } = env();
-  if ((DISCORD_ROLE_ADMIN ?? DISCORD_ROLE_STAFF ?? []).some(role => roles.includes(role))) return "admin";
-  if ((DISCORD_ROLE_RECRUTEUR ?? []).some(role => roles.includes(role))) return "recruteur";
-  return "joueur";
-}
 
 export function rolesAreStale(user: Pick<User, "rolesSyncedAt">) {
   return !user.rolesSyncedAt || Date.now() - user.rolesSyncedAt.getTime() > ROLES_TTL_MS;
@@ -28,7 +20,8 @@ export function rolesAreStale(user: Pick<User, "rolesSyncedAt">) {
 export async function syncMember(userId: string): Promise<Pick<User, "rank" | "inGuild">> {
   const member = await getMember(userId);
   const inGuild = member !== null;
-  const rank: Rank = member ? rankFromRoles(member.roles) : "joueur";
+  // Hors du serveur, plus aucune permission, owners compris.
+  const rank: Rank = member ? await rankFor(userId, member.roles) : "joueur";
 
   const [previous] = await db().select({ rank: schema.users.rank, inGuild: schema.users.inGuild }).from(schema.users).where(eq(schema.users.id, userId));
 
