@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Une page du portail déjà visitée reste en mémoire 30 s : les allers-retours dans le menu sont instantanés.
+    staleTimes: { dynamic: 30 },
+  },
   images: {
     // Avatars et bannières Discord.
     remotePatterns: [{ protocol: "https", hostname: "cdn.discordapp.com" }],
