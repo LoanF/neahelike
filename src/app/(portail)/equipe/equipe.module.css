@@ -16,6 +16,12 @@
   border-radius: var(--nh-radius);
 }
 
+.noticeWarnings {
+  display: block;
+  margin-top: 4px;
+  color: var(--nh-gold-lit);
+}
+
 /* ---------- Onglets et recherche ---------- */
 
 .toolbar {

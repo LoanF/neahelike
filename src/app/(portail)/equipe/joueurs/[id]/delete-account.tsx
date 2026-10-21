@@ -34,8 +34,9 @@ export function DeleteAccount({ subjectId }: { subjectId: string }) {
     <form action={action} className={styles.confirm}>
       <input type="hidden" name="subjectId" value={subjectId} />
       <p className={styles.confirmText}>
-        À faire seulement sur demande du joueur (ticket Discord). Compte, candidature, notes et notifications sont effacés définitivement. Après un refus de moins de
-        3 mois, seuls son ID Discord et la fin du délai sont gardés pour qu&apos;il ne puisse pas recandidater plus tôt.
+        À faire seulement sur demande du joueur (ticket Discord). Compte, candidature, notes et notifications sont effacés définitivement. Sur Discord, il perd sa
+        whitelist, retrouve le rôle Novice et reçoit un message privé. Après un refus de moins de 3 mois, seuls son ID Discord et la fin du délai sont gardés pour
+        qu&apos;il ne puisse pas recandidater plus tôt.
       </p>
       <TextField name="confirmation" label="Recopie SUPPRIMER pour confirmer" autoComplete="off" value={confirmation} onChange={event => setConfirmation(event.target.value)} error={state?.error} />
       <div className={styles.confirmActions}>

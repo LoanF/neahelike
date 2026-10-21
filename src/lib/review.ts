@@ -194,6 +194,7 @@ export async function deleteNote(noteId: string, viewer: Reviewer) {
 /**
  * Staff : suppression d'un compte à la demande du joueur (ticket Discord).
  * Tout part avec le compte, sauf, après un refus de moins de 3 mois, l'ID Discord et la fin du délai.
+ * Sur Discord, le joueur perd ses rôles de whitelist et retrouve le rôle de base.
  */
 export async function deletePlayerAccount(subjectId: string, reviewer: Reviewer): Promise<ReviewResult> {
   if (!hasRank(reviewer, "staff")) return { error: "Réservé au staff." };
@@ -212,10 +213,14 @@ export async function deletePlayerAccount(subjectId: string, reviewer: Reviewer)
       .onConflictDoUpdate({ target: schema.reapplyLocks.discordId, set: { until: until! } });
   }
 
-  const role = env().DISCORD_ROLE_ASPIRANT;
-  if (role && latest?.status === "entretien") {
-    await discord("Retrait du rôle « attente de wl »", warnings, () => removeRole(subjectId, role, reason(reviewer, "Compte du portail supprimé")));
-  }
+  // Plus de compte, plus de whitelist : retour au rôle de base, comme un nouvel arrivant.
+  const { DISCORD_ROLE_ASPIRANT: waiting, DISCORD_ROLE_HELIKEEN: whitelisted, DISCORD_ROLE_NOVICE: novice } = env();
+  const why = reason(reviewer, "Compte du portail supprimé");
+  if (waiting) await discord("Retrait du rôle « attente de wl »", warnings, () => removeRole(subjectId, waiting, why));
+  if (whitelisted) await discord("Retrait du rôle « Magistrat (wl) »", warnings, () => removeRole(subjectId, whitelisted, why));
+  if (novice) await discord("Rôle « Novice »", warnings, () => addRole(subjectId, novice, why));
+  else warnings.push("Rôle de base non configuré (DISCORD_ROLE_NOVICE).");
+  await discord("Message privé", warnings, () => sendDirectMessage(subjectId, { embeds: [DIRECT_MESSAGES.compteSupprime({ url: `${SITE_URL}/connexion` })] }));
 
   await db().delete(schema.users).where(eq(schema.users.id, subjectId));
   await logEvent({ type: "compte.supprime", subjectId: null, actorId: reviewer.id, data: keepDelay ? { delaiConserve: true } : {} });

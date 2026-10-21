@@ -120,5 +120,6 @@ export async function deleteAccountAction(_previous: DeleteAccountState, formDat
   const result = await deletePlayerAccount(String(formData.get("subjectId")), reviewer);
   if ("error" in result) return { error: result.error, at: Date.now() };
   revalidatePath("/equipe");
-  redirect(`/equipe?onglet=tous&supprime=1${result.warnings.length ? "&avertissement=1" : ""}`);
+  const warnings = result.warnings.map(warning => `&avertissement=${encodeURIComponent(warning)}`).join("");
+  redirect(`/equipe?onglet=tous&supprime=1${warnings}`);
 }

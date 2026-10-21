@@ -18,7 +18,7 @@ export const metadata: Metadata = { title: "Joueurs" };
 
 const shortDate = (date: Date) => date.toLocaleDateString("fr-FR", { day: "numeric", month: "short", timeZone: "Europe/Paris" });
 
-export default async function EquipePage({ searchParams }: { searchParams: Promise<{ onglet?: string; q?: string; supprime?: string; avertissement?: string }> }) {
+export default async function EquipePage({ searchParams }: { searchParams: Promise<{ onglet?: string; q?: string; supprime?: string; avertissement?: string | string[] }> }) {
   const { onglet, q, supprime, avertissement } = await searchParams;
   const viewer = await requireUser({ rank: "recruteur" });
   const tab = (TABS.find(item => item.id === onglet)?.id ?? "a-traiter") as TabId;
@@ -54,7 +54,12 @@ export default async function EquipePage({ searchParams }: { searchParams: Promi
       <div className={styles.page}>
         {supprime && (
           <p className={styles.notice} role="status">
-            Compte supprimé.{avertissement ? " Le retrait du rôle « attente de wl » a échoué : retire-le à la main sur Discord." : ""}
+            Compte supprimé.
+            {avertissement && (
+              <span className={styles.noticeWarnings}>
+                À vérifier sur Discord : {[avertissement].flat().map(item => item.slice(0, 120)).join(" · ")}
+              </span>
+            )}
           </p>
         )}
         <div className={styles.toolbar}>
