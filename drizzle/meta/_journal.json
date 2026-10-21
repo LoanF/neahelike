@@ -29,6 +29,13 @@
       "when": 1792582387072,
       "tag": "0003_activer_rls_bot",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792588903175,
+      "tag": "0004_candidatures",
+      "breakpoints": true
     }
   ]
 }
