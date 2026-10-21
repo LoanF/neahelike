@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, FileStack, HelpCircle, LayoutDashboard, Menu, Scale, ScrollText, Users, X } from "lucide-react";
+import { BookOpen, FileStack, HelpCircle, LayoutDashboard, Menu, Scale, ScrollText, UserRound, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -12,6 +12,7 @@ const PORTAL_LINKS = [
   { href: "/portail", label: "Tableau de bord", icon: LayoutDashboard, exact: true },
   { href: "/portail/candidature", label: "Candidature", icon: ScrollText },
   { href: "/portail/dossier", label: "Dossier de reprise", icon: FileStack },
+  { href: "/portail/compte", label: "Mon compte", icon: UserRound },
 ];
 
 const CITY_LINKS = [

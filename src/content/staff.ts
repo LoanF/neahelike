@@ -59,6 +59,12 @@ export const DIRECT_MESSAGES = {
     ],
     footer,
   }),
+  compteSupprime: ({ url }: { url: string }): Embed => ({
+    title: "Compte du portail supprimé",
+    description: `Ton compte sur le portail de Néa Hélikè a été supprimé, comme tu l'as demandé. Ta whitelist est retirée : tu retrouves le rôle **Novice**.\n\nPour rejoindre à nouveau la cité, reconnecte-toi au portail et dépose une nouvelle candidature : ${url}`,
+    color: EMBED_COLOR,
+    footer,
+  }),
   whitelistee: (): Embed => ({
     title: "Bienvenue à Néa Hélikè",
     description: "Ton entretien est validé : tu es whitelisté et tu as reçu le rôle **Magistrat**. La cité t'attend.",

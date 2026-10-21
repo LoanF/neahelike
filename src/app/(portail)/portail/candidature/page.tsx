@@ -5,7 +5,7 @@ import { formatDate, STATUS_LABEL, STATUS_TONE } from "@/components/portal/appli
 import { PortalHeader } from "@/components/portal/shell";
 import { CANDIDATURE_INTRO } from "@/content/candidature";
 import { currentStep, STEPS, stepHref } from "@/lib/application";
-import { getLatestApplication, getOpenApplication, isEditable, startBlock } from "@/lib/applications";
+import { getOpenApplication, getStartBlock, isEditable } from "@/lib/applications";
 import { requireUser } from "@/lib/session";
 import { startCandidature } from "./actions";
 import styles from "./candidature.module.css";
@@ -46,8 +46,7 @@ export default async function CandidaturePage({ searchParams }: { searchParams: 
     );
   }
 
-  const latest = await getLatestApplication(user.id);
-  const block = startBlock(latest);
+  const block = await getStartBlock(user.id);
 
   return (
     <>

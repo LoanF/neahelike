@@ -6,6 +6,8 @@ import { logout } from "@/app/(portail)/actions";
 import { Badge, Logo } from "@/components/plaque";
 import type { User } from "@/db/schema";
 import { avatarUrl, displayName } from "@/lib/discord-cdn";
+import { latestNotifications } from "@/lib/notifications";
+import { NotificationBell } from "./notification-bell";
 import { RANK_LABEL } from "./profile-card";
 import { ShellNav } from "./shell-nav";
 import styles from "./shell.module.css";
@@ -13,7 +15,8 @@ import styles from "./shell.module.css";
 type ShellUser = Pick<User, "id" | "username" | "globalName" | "avatar" | "rank">;
 
 /** Cadre des pages du portail : barre latérale (navigation, joueur) et zone de contenu. */
-export function PortalShell({ user, children }: { user: ShellUser; children: ReactNode }) {
+export async function PortalShell({ user, children }: { user: ShellUser; children: ReactNode }) {
+  const notifications = await latestNotifications(user.id);
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
@@ -39,7 +42,12 @@ export function PortalShell({ user, children }: { user: ShellUser; children: Rea
           }
         />
       </aside>
-      <div className={styles.content}>{children}</div>
+      <div className={styles.content}>
+        <div className={styles.topbar}>
+          <NotificationBell initial={notifications} />
+        </div>
+        {children}
+      </div>
     </div>
   );
 }

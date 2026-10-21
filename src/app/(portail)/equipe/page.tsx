@@ -18,8 +18,8 @@ export const metadata: Metadata = { title: "Joueurs" };
 
 const shortDate = (date: Date) => date.toLocaleDateString("fr-FR", { day: "numeric", month: "short", timeZone: "Europe/Paris" });
 
-export default async function EquipePage({ searchParams }: { searchParams: Promise<{ onglet?: string; q?: string }> }) {
-  const { onglet, q } = await searchParams;
+export default async function EquipePage({ searchParams }: { searchParams: Promise<{ onglet?: string; q?: string; supprime?: string; avertissement?: string | string[] }> }) {
+  const { onglet, q, supprime, avertissement } = await searchParams;
   const viewer = await requireUser({ rank: "recruteur" });
   const tab = (TABS.find(item => item.id === onglet)?.id ?? "a-traiter") as TabId;
   const query = q?.trim().slice(0, 80) ?? "";
@@ -52,6 +52,16 @@ export default async function EquipePage({ searchParams }: { searchParams: Promi
         Les candidatures à lire, les entretiens à faire passer et tous les comptes liés au portail.
       </PortalHeader>
       <div className={styles.page}>
+        {supprime && (
+          <p className={styles.notice} role="status">
+            Compte supprimé.
+            {avertissement && (
+              <span className={styles.noticeWarnings}>
+                À vérifier sur Discord : {[avertissement].flat().map(item => item.slice(0, 120)).join(" · ")}
+              </span>
+            )}
+          </p>
+        )}
         <div className={styles.toolbar}>
           <nav className={styles.tabs} aria-label="Filtrer les joueurs">
             {TABS.map(item => (

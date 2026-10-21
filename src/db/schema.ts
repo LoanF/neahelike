@@ -135,6 +135,36 @@ export const profileViews = pgTable(
   table => [primaryKey({ columns: [table.subjectId, table.viewerId] })],
 );
 
+/** Notifications du portail (cloche) : décisions de l'équipe sur la candidature du joueur. */
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text().notNull(),
+    title: text().notNull(),
+    body: text().notNull(),
+    /** Page à ouvrir au clic. */
+    href: text(),
+    readAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  table => [index("notifications_user_idx").on(table.userId, table.createdAt)],
+);
+
+export type Notification = typeof notifications.$inferSelect;
+
+/**
+ * Délai de recandidature conservé après la suppression d'un compte refusé : seulement l'ID Discord
+ * et la date de fin, pour faire respecter les 3 mois. La ligne est inutile (et purgée) une fois la date passée.
+ */
+export const reapplyLocks = pgTable("reapply_locks", {
+  discordId: text().primaryKey(),
+  until: timestamp({ withTimezone: true }).notNull(),
+});
+
 // ─── Bot Discord (dépôt bot-neahelike) ──────────────────────────────────────
 // Tables écrites uniquement par le bot. Le site ne fait que les lire, s'il en a besoin.
 
