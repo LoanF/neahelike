@@ -44,7 +44,7 @@ Recruteurs et staff (rangs lus depuis Discord) ont une section « Équipe » dan
 - **Fiche joueur** : candidature complète, dossier de reprise mis en avant, chronologie de toutes les actions, œil animé quand un autre membre consulte la fiche.
 - **Décisions** : valider l'écrit (rôle « attente de wl »), demander une modification (seules les parties choisies se rouvrent), refuser avec critères (délai de 3 mois), valider l'entretien (rôle whitelist). Chaque décision envoie un MP ; un échec Discord n'annule jamais la décision. Le staff peut valider avant l'envoi et effacer une candidature.
 - **Notes internes** : jamais visibles par le joueur. Un recruteur écrit pour toute l'équipe ; le staff peut réserver une note au staff.
-- **Suppression d'un compte** (staff) : sur demande du joueur par ticket Discord, depuis sa fiche. Après un refus de moins de 3 mois, seuls l'ID Discord et la fin du délai sont gardés (`reapply_locks`) pour faire respecter le délai.
+- **Suppression d'un compte** (staff) : sur demande du joueur par ticket Discord, depuis sa fiche. Le joueur perd « attente de wl » et « Magistrat (wl) », retrouve le rôle de base (`DISCORD_ROLE_NOVICE`) et reçoit un MP. Après un refus de moins de 3 mois, seuls l'ID Discord et la fin du délai sont gardés (`reapply_locks`) pour faire respecter le délai.
 
 Le joueur est prévenu de chaque décision par la cloche du portail (en plus du MP Discord) : textes dans `src/content/notifications.ts`.
 
