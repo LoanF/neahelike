@@ -36,6 +36,13 @@
       "when": 1792588903175,
       "tag": "0004_candidatures",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792606292673,
+      "tag": "0005_espace_staff",
+      "breakpoints": true
     }
   ]
 }

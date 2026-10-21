@@ -74,6 +74,16 @@ export const applications = pgTable(
     background: jsonb().$type<StepValues>(),
     dossier: jsonb().$type<StepValues>(),
     submittedAt: timestamp({ withTimezone: true }),
+    /** Première ouverture par l'équipe depuis le dernier envoi (badge « Vue »). */
+    viewedAt: timestamp({ withTimezone: true }),
+    /** Dernier membre de l'équipe à avoir pris une décision. */
+    reviewerId: text().references(() => users.id, { onDelete: "set null" }),
+    /** Modification demandée : étapes rouvertes et message au joueur. */
+    changesSteps: text().array(),
+    changesComment: text(),
+    /** Refus : critères cochés (voir content/staff.ts) et commentaire. */
+    refusalCriteria: text().array(),
+    refusalComment: text(),
     decidedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
@@ -87,6 +97,43 @@ export const applications = pgTable(
 );
 
 export type Application = typeof applications.$inferSelect;
+
+/** `equipe` : recruteurs et staff ; `staff` : staff uniquement. */
+export const noteVisibility = pgEnum("note_visibility", ["equipe", "staff"]);
+export type NoteVisibility = (typeof noteVisibility.enumValues)[number];
+
+/** Notes internes sur un joueur, jamais visibles par le joueur. */
+export const staffNotes = pgTable(
+  "staff_notes",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    subjectId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    authorId: text().references(() => users.id, { onDelete: "set null" }),
+    visibility: noteVisibility().notNull().default("equipe"),
+    content: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  table => [index("staff_notes_subject_idx").on(table.subjectId, table.createdAt)],
+);
+
+export type StaffNote = typeof staffNotes.$inferSelect;
+
+/** Qui consulte quelle fiche en ce moment (œil de présence) : une ligne par couple, rafraîchie toutes les quelques secondes. */
+export const profileViews = pgTable(
+  "profile_views",
+  {
+    subjectId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    viewerId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    lastSeenAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  table => [primaryKey({ columns: [table.subjectId, table.viewerId] })],
+);
 
 // ─── Bot Discord (dépôt bot-neahelike) ──────────────────────────────────────
 // Tables écrites uniquement par le bot. Le site ne fait que les lire, s'il en a besoin.
