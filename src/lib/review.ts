@@ -1,5 +1,6 @@
 import "server-only";
 import { and, eq, inArray, isNull } from "drizzle-orm";
+import { NOTIFICATIONS } from "@/content/notifications";
 import { DIRECT_MESSAGES, criterionLabel, REFUSAL_CRITERIA } from "@/content/staff";
 import { db, schema } from "@/db";
 import type { Application, ApplicationStatus, NoteVisibility, User } from "@/db/schema";
@@ -10,6 +11,7 @@ import { reapplyDate } from "./applications";
 import { addRole, removeRole, sendDirectMessage } from "./discord";
 import { env } from "./env";
 import { logEvent } from "./events";
+import { notify } from "./notifications";
 import { hasRank } from "./session";
 import { SITE_URL } from "./site-url";
 
@@ -68,6 +70,7 @@ export async function validateWritten(application: Application, reviewer: Review
   const updated = await transition(application, from, { status: "entretien", reviewerId: reviewer.id, changesSteps: null, changesComment: null });
   if (!updated) return CHANGED;
   await logEvent({ type: "candidature.validee", subjectId: application.userId, actorId: reviewer.id, data: { avant: application.status } });
+  await notify(application.userId, NOTIFICATIONS.validee());
 
   const warnings: string[] = [];
   const role = env().DISCORD_ROLE_ASPIRANT;
@@ -94,6 +97,7 @@ export async function requestChanges(application: Application, reviewer: Reviewe
 
   const warnings: string[] = [];
   const labels = STEPS.filter(step => chosen.includes(step.id as DataStepId)).map(step => step.label);
+  await notify(application.userId, NOTIFICATIONS.modification(labels));
   await discord("Message privé", warnings, () =>
     sendDirectMessage(application.userId, { embeds: [DIRECT_MESSAGES.modification({ steps: labels, comment: comment.trim(), url: `${SITE_URL}/portail/candidature` })] }),
   );
@@ -126,6 +130,7 @@ export async function refuse(application: Application, reviewer: Reviewer, crite
     await discord("Retrait du rôle « attente de wl »", warnings, () => removeRole(application.userId, role, reason(reviewer, "Candidature refusée")));
   }
   const until = formatDate(reapplyDate({ decidedAt })!);
+  await notify(application.userId, NOTIFICATIONS.refusee(until));
   await discord("Message privé", warnings, () =>
     sendDirectMessage(application.userId, { embeds: [DIRECT_MESSAGES.refusee({ criteria: chosen.map(criterionLabel), comment: comment.trim(), until })] }),
   );
@@ -137,6 +142,7 @@ export async function validateInterview(application: Application, reviewer: Revi
   const updated = await transition(application, ["entretien"], { status: "whitelistee", reviewerId: reviewer.id, decidedAt: new Date() });
   if (!updated) return CHANGED;
   await logEvent({ type: "entretien.valide", subjectId: application.userId, actorId: reviewer.id });
+  await notify(application.userId, NOTIFICATIONS.whitelistee());
 
   const warnings: string[] = [];
   const { DISCORD_ROLE_ASPIRANT: waiting, DISCORD_ROLE_HELIKEEN: whitelisted } = env();
@@ -152,6 +158,7 @@ export async function wipeApplication(application: Application, reviewer: Review
   if (!hasRank(reviewer, "staff")) return { error: "Réservé au staff." };
   await db().delete(schema.applications).where(eq(schema.applications.id, application.id));
   await logEvent({ type: "candidature.supprimee", subjectId: application.userId, actorId: reviewer.id, data: { statut: application.status } });
+  await notify(application.userId, NOTIFICATIONS.supprimee());
 
   const warnings: string[] = [];
   const role = env().DISCORD_ROLE_ASPIRANT;
