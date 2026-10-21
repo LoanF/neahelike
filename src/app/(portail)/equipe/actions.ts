@@ -4,21 +4,12 @@ import { desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db, schema } from "@/db";
-import type { NoteVisibility, Rank } from "@/db/schema";
-import { syncMember } from "@/lib/members";
+import type { NoteVisibility } from "@/db/schema";
 import type { ReviewResult } from "@/lib/review";
 import { addNote, deleteNote, deletePlayerAccount, refuse, requestChanges, validateInterview, validateWritten, wipeApplication } from "@/lib/review";
-import { hasRank, requireUser } from "@/lib/session";
+import { requireFreshRank, requireUser } from "@/lib/session";
 import type { Viewer } from "@/lib/team";
 import { leavePresence, presenceFor, touchPresence } from "@/lib/team";
-
-/** Droits relus sur Discord avant toute action sensible : un rôle retiré il y a une minute ne permet plus de décider. */
-async function requireFreshRank(minimum: Rank) {
-  const user = await requireUser({ rank: "recruteur" });
-  const { rank } = await syncMember(user.id).catch(() => ({ rank: user.rank }));
-  if (!hasRank({ rank }, minimum)) throw new Error("Permissions insuffisantes.");
-  return { ...user, rank };
-}
 
 export async function heartbeat(subjectId: string): Promise<Viewer[]> {
   const user = await requireUser({ rank: "recruteur" });
