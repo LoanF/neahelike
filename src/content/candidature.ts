@@ -3,8 +3,8 @@
  * La structure du formulaire (champs, étapes) vit dans lib/application.ts.
  */
 
-/** Âge IRL minimum pour candidater (âge minimum de Discord). */
-export const MIN_AGE_IRL = 13;
+/** Âge IRL minimum pour candidater : le serveur est réservé aux majeurs. */
+export const MIN_AGE_IRL = 18;
 
 /** Délai avant de pouvoir recandidater après un refus. */
 export const REAPPLY_DELAY_MONTHS = 3;
