@@ -156,6 +156,15 @@ export const notifications = pgTable(
 
 export type Notification = typeof notifications.$inferSelect;
 
+/**
+ * Délai de recandidature conservé après la suppression d'un compte refusé : seulement l'ID Discord
+ * et la date de fin, pour faire respecter les 3 mois. La ligne est inutile (et purgée) une fois la date passée.
+ */
+export const reapplyLocks = pgTable("reapply_locks", {
+  discordId: text().primaryKey(),
+  until: timestamp({ withTimezone: true }).notNull(),
+});
+
 // ─── Bot Discord (dépôt bot-neahelike) ──────────────────────────────────────
 // Tables écrites uniquement par le bot. Le site ne fait que les lire, s'il en a besoin.
 
