@@ -7,7 +7,8 @@ import styles from "./profile-card.module.css";
 export const RANK_LABEL: Record<User["rank"], string> = {
   joueur: "Joueur",
   recruteur: "Recruteur",
-  staff: "Staff",
+  admin: "Admin",
+  owner: "Owner",
 };
 
 type ProfileUser = Pick<User, "id" | "username" | "globalName" | "avatar" | "banner" | "rank">;

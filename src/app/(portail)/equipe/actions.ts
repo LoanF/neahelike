@@ -9,8 +9,8 @@ import { syncMember } from "@/lib/members";
 import type { ReviewResult } from "@/lib/review";
 import { addNote, deleteNote, deletePlayerAccount, refuse, requestChanges, validateInterview, validateWritten, wipeApplication } from "@/lib/review";
 import { hasRank, requireUser } from "@/lib/session";
-import type { Viewer } from "@/lib/staff";
-import { leavePresence, presenceFor, touchPresence } from "@/lib/staff";
+import type { Viewer } from "@/lib/team";
+import { leavePresence, presenceFor, touchPresence } from "@/lib/team";
 
 /** Droits relus sur Discord avant toute action sensible : un rôle retiré il y a une minute ne permet plus de décider. */
 async function requireFreshRank(minimum: Rank) {
@@ -45,7 +45,7 @@ export async function decide(_previous: DecisionState, formData: FormData): Prom
   const applicationId = String(formData.get("applicationId"));
   let reviewer;
   try {
-    reviewer = await requireFreshRank(decision === "supprimer" ? "staff" : "recruteur");
+    reviewer = await requireFreshRank(decision === "supprimer" ? "admin" : "recruteur");
   } catch {
     return { error: "Tes permissions ont changé : recharge la page.", at: Date.now() };
   }
@@ -91,7 +91,7 @@ export async function addNoteAction(_previous: NoteState, formData: FormData): P
     return { error: "Tes permissions ont changé : recharge la page.", at: Date.now() };
   }
   const subjectId = String(formData.get("subjectId"));
-  const visibility: NoteVisibility = formData.get("visibility") === "staff" ? "staff" : "equipe";
+  const visibility: NoteVisibility = formData.get("visibility") === "admin" ? "admin" : "equipe";
   const result = await addNote(subjectId, author, String(formData.get("content") ?? ""), visibility);
   if ("error" in result) return { error: result.error, at: Date.now() };
   revalidatePath(`/equipe/joueurs/${subjectId}`);
@@ -107,13 +107,13 @@ export async function deleteNoteAction(formData: FormData) {
 
 export type DeleteAccountState = { error: string; at: number } | null;
 
-/** Staff : suppression d'un compte demandée par ticket. Confirmation par le mot SUPPRIMER. */
+/** Admin : suppression d'un compte demandée par ticket. Confirmation par le mot SUPPRIMER. */
 export async function deleteAccountAction(_previous: DeleteAccountState, formData: FormData): Promise<DeleteAccountState> {
   let reviewer;
   try {
-    reviewer = await requireFreshRank("staff");
+    reviewer = await requireFreshRank("admin");
   } catch {
-    return { error: "Réservé au staff.", at: Date.now() };
+    return { error: "Réservé aux admins.", at: Date.now() };
   }
   if (String(formData.get("confirmation") ?? "").trim().toUpperCase() !== "SUPPRIMER") return { error: "Recopie SUPPRIMER pour confirmer.", at: Date.now() };
 

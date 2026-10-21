@@ -5,7 +5,7 @@ import { Badge, Button, ButtonLink, cx, DotsRow, Pin, Plaque } from "@/component
 import { formatDate, journeyIndex, STATUS_LABEL, STATUS_TONE } from "@/components/portal/application-status";
 import { PortalHeader } from "@/components/portal/shell";
 import { JOURNEY } from "@/content/candidature";
-import { criterionLabel } from "@/content/staff";
+import { criterionLabel } from "@/content/equipe";
 import { SITE } from "@/content/site";
 import type { Application } from "@/db/schema";
 import { currentStep, isStepComplete, stepHref, visibleSteps } from "@/lib/application";

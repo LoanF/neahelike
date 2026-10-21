@@ -32,12 +32,12 @@ function AddButton() {
 }
 
 const VISIBILITY = [
-  { id: "equipe", label: "Toute l'équipe", hint: "Recruteurs et staff", icon: Users },
-  { id: "staff", label: "Staff uniquement", hint: "Invisible pour les recruteurs", icon: Lock },
+  { id: "equipe", label: "Toute l'équipe", hint: "Recruteurs et admins", icon: Users },
+  { id: "admin", label: "Admins uniquement", hint: "Invisible pour les recruteurs", icon: Lock },
 ] as const;
 
-/** Notes internes : jamais visibles par le joueur. Le staff choisit si une note reste entre membres du staff. */
-export function Notes({ subjectId, notes, isStaff }: { subjectId: string; notes: NoteView[]; isStaff: boolean }) {
+/** Notes internes : jamais visibles par le joueur. Un admin choisit si une note reste entre admins. */
+export function Notes({ subjectId, notes, isAdmin }: { subjectId: string; notes: NoteView[]; isAdmin: boolean }) {
   const [state, action] = useActionState<NoteState, FormData>(addNoteAction, null);
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState<NoteVisibility>("equipe");
@@ -61,7 +61,7 @@ export function Notes({ subjectId, notes, isStaff }: { subjectId: string; notes:
           onChange={event => setContent(event.target.value)}
           error={state?.error}
         />
-        {isStaff ? (
+        {isAdmin ? (
           <fieldset className={styles.visibility}>
             <legend>Visible par</legend>
             {VISIBILITY.map(option => {
@@ -93,13 +93,13 @@ export function Notes({ subjectId, notes, isStaff }: { subjectId: string; notes:
       ) : (
         <ul className={styles.noteList}>
           {notes.map(note => (
-            <li key={note.id} className={cx(styles.note, note.visibility === "staff" && styles.noteStaff)}>
+            <li key={note.id} className={cx(styles.note, note.visibility === "admin" && styles.noteAdmin)}>
               <div className={styles.noteHead}>
                 {note.authorId && <Image src={avatarUrl({ id: note.authorId, avatar: note.authorAvatar }, 32)} alt="" width={22} height={22} className={styles.noteAvatar} />}
                 <span className={styles.noteAuthor}>{note.authorName ?? "Ancien membre"}</span>
-                {note.visibility === "staff" && (
+                {note.visibility === "admin" && (
                   <Badge tone="gold">
-                    <Lock size={11} aria-hidden="true" /> Staff
+                    <Lock size={11} aria-hidden="true" /> Admins
                   </Badge>
                 )}
                 <span className={styles.noteDate}>{note.date}</span>

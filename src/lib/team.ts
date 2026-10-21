@@ -1,8 +1,8 @@
 import "server-only";
 import { and, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import type { StaffBadge, TabId } from "@/components/staff/badges";
-import { TABS } from "@/components/staff/badges";
+import type { TeamBadge, TabId } from "@/components/equipe/badges";
+import { TABS } from "@/components/equipe/badges";
 import { db, schema } from "@/db";
 import type { Application, NoteVisibility, User } from "@/db/schema";
 import { isStepComplete, wantsDossier } from "./application";
@@ -12,7 +12,7 @@ import { hasRank } from "./session";
 const PRESENCE_WINDOW_SECONDS = 30;
 
 /** Badge de la liste et de la fiche (hors œil de présence, calculé en direct). */
-export function staffBadge(application: Application | null): StaffBadge {
+export function teamBadge(application: Application | null): TeamBadge {
   if (!application) return "aucune";
   switch (application.status) {
     case "brouillon":
@@ -27,7 +27,7 @@ export function staffBadge(application: Application | null): StaffBadge {
 export interface PlayerRow {
   user: User;
   application: Application | null;
-  badge: StaffBadge;
+  badge: TeamBadge;
 }
 
 function normalize(value: string) {
@@ -53,15 +53,15 @@ export async function listPlayers({ tab, query }: { tab: TabId; query?: string }
 
   const rows: PlayerRow[] = users.map(user => {
     const application = latest.get(user.id) ?? null;
-    return { user, application, badge: staffBadge(application) };
+    return { user, application, badge: teamBadge(application) };
   });
 
-  const counts = Object.fromEntries(TABS.map(item => [item.id, item.badges ? rows.filter(row => (item.badges as readonly StaffBadge[]).includes(row.badge)).length : rows.length])) as Record<TabId, number>;
+  const counts = Object.fromEntries(TABS.map(item => [item.id, item.badges ? rows.filter(row => (item.badges as readonly TeamBadge[]).includes(row.badge)).length : rows.length])) as Record<TabId, number>;
 
   const current = TABS.find(item => item.id === tab) ?? TABS[0];
   const needle = query ? normalize(query) : "";
   const filtered = rows
-    .filter(row => !current.badges || (current.badges as readonly StaffBadge[]).includes(row.badge))
+    .filter(row => !current.badges || (current.badges as readonly TeamBadge[]).includes(row.badge))
     .filter(row => !needle || matches(row, needle));
 
   // À traiter : les plus anciennes d'abord, pour ne laisser personne attendre.
@@ -136,9 +136,9 @@ export async function timeline(subjectId: string) {
 
 export type TimelineEntry = Awaited<ReturnType<typeof timeline>>[number];
 
-/** Visibilités qu'un membre de l'équipe peut lire : le recruteur ne voit pas les notes réservées au staff. */
+/** Visibilités qu'un membre de l'équipe peut lire : le recruteur ne voit pas les notes réservées aux admins. */
 export function readableVisibilities(viewer: Pick<User, "rank">): NoteVisibility[] {
-  return hasRank(viewer, "staff") ? ["equipe", "staff"] : ["equipe"];
+  return hasRank(viewer, "admin") ? ["equipe", "admin"] : ["equipe"];
 }
 
 const author = alias(schema.users, "author");
@@ -146,23 +146,23 @@ const author = alias(schema.users, "author");
 export async function notesFor(subjectId: string, viewer: Pick<User, "rank">) {
   return db()
     .select({
-      id: schema.staffNotes.id,
-      content: schema.staffNotes.content,
-      visibility: schema.staffNotes.visibility,
-      createdAt: schema.staffNotes.createdAt,
-      authorId: schema.staffNotes.authorId,
+      id: schema.teamNotes.id,
+      content: schema.teamNotes.content,
+      visibility: schema.teamNotes.visibility,
+      createdAt: schema.teamNotes.createdAt,
+      authorId: schema.teamNotes.authorId,
       authorName: sql<string | null>`coalesce(${author.globalName}, ${author.username})`,
       authorAvatar: author.avatar,
     })
-    .from(schema.staffNotes)
-    .leftJoin(author, eq(author.id, schema.staffNotes.authorId))
-    .where(and(eq(schema.staffNotes.subjectId, subjectId), inArray(schema.staffNotes.visibility, readableVisibilities(viewer))))
-    .orderBy(desc(schema.staffNotes.createdAt));
+    .from(schema.teamNotes)
+    .leftJoin(author, eq(author.id, schema.teamNotes.authorId))
+    .where(and(eq(schema.teamNotes.subjectId, subjectId), inArray(schema.teamNotes.visibility, readableVisibilities(viewer))))
+    .orderBy(desc(schema.teamNotes.createdAt));
 }
 
 export type NoteEntry = Awaited<ReturnType<typeof notesFor>>[number];
 
-/** Le recruteur supprime ses propres notes ; le staff peut supprimer toutes celles qu'il voit. */
+/** Le recruteur supprime ses propres notes ; un admin peut supprimer toutes celles qu'il voit. */
 export function canDeleteNote(note: Pick<NoteEntry, "authorId">, viewer: Pick<User, "id" | "rank">) {
-  return hasRank(viewer, "staff") || note.authorId === viewer.id;
+  return hasRank(viewer, "admin") || note.authorId === viewer.id;
 }

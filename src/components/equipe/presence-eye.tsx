@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { cx } from "@/components/plaque";
-import type { Viewer } from "@/lib/staff";
+import type { Viewer } from "@/lib/team";
 import { avatarUrl, displayName } from "@/lib/discord-cdn";
 import styles from "./presence-eye.module.css";
 

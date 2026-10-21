@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { heartbeat, leaveProfile } from "@/app/(portail)/equipe/actions";
-import type { Viewer } from "@/lib/staff";
+import type { Viewer } from "@/lib/team";
 import { PresenceEye } from "./presence-eye";
 
 const HEARTBEAT_MS = 10_000;

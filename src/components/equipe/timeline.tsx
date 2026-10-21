@@ -2,15 +2,15 @@ import { Ban, BadgeCheck, Check, Eye, FilePen, FileText, Link2, LogIn, MessageSq
 import type { LucideIcon } from "lucide-react";
 import Image from "next/image";
 import { cx } from "@/components/plaque";
-import { criterionLabel } from "@/content/staff";
+import { criterionLabel } from "@/content/equipe";
 import { STEPS } from "@/lib/application";
 import { avatarUrl } from "@/lib/discord-cdn";
-import type { TimelineEntry } from "@/lib/staff";
+import type { TimelineEntry } from "@/lib/team";
 import styles from "./timeline.module.css";
 
 type Tone = "default" | "gold" | "success" | "danger";
 
-const RANK: Record<string, string> = { joueur: "Joueur", recruteur: "Recruteur", staff: "Staff" };
+const RANK: Record<string, string> = { joueur: "Joueur", recruteur: "Recruteur", admin: "Admin", owner: "Owner" };
 const stepLabel = (id: unknown) => STEPS.find(step => step.id === id)?.label ?? String(id);
 const list = (value: unknown) => (Array.isArray(value) ? value.map(String) : []);
 
@@ -61,7 +61,7 @@ function describe(entry: TimelineEntry): { icon: LucideIcon; tone: Tone; text: s
     case "candidature.supprimee":
       return { icon: Trash2, tone: "danger", text: `${who} a effacé la candidature` };
     case "note.ajoutee":
-      return { icon: MessageSquare, tone: "default", text: `${who} a ajouté une note${data.visibilite === "staff" ? " (staff uniquement)" : ""}` };
+      return { icon: MessageSquare, tone: "default", text: `${who} a ajouté une note${data.visibilite === "admin" ? " (admins uniquement)" : ""}` };
     default:
       return { icon: Check, tone: "default", text: entry.type };
   }

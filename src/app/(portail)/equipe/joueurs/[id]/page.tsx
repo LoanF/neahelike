@@ -7,17 +7,17 @@ import { eq } from "drizzle-orm";
 import { Badge, DotsRow, Plaque } from "@/components/plaque";
 import { formatDate } from "@/components/portal/application-status";
 import { RANK_LABEL } from "@/components/portal/profile-card";
-import { BADGE_LABEL, BADGE_TONE } from "@/components/staff/badges";
-import { ProfilePresence } from "@/components/staff/live-presence";
-import { Timeline } from "@/components/staff/timeline";
-import { criterionLabel } from "@/content/staff";
+import { BADGE_LABEL, BADGE_TONE } from "@/components/equipe/badges";
+import { ProfilePresence } from "@/components/equipe/live-presence";
+import { Timeline } from "@/components/equipe/timeline";
+import { criterionLabel } from "@/content/equipe";
 import { db, schema } from "@/db";
 import { dossierTargetLabel, isStepComplete, visibleSteps, wantsDossier } from "@/lib/application";
 import { getLatestApplication } from "@/lib/applications";
 import { avatarUrl, bannerUrl, displayName } from "@/lib/discord-cdn";
 import { markViewed } from "@/lib/review";
 import { hasRank, requireUser } from "@/lib/session";
-import { canDeleteNote, notesFor, staffBadge, timeline } from "@/lib/staff";
+import { canDeleteNote, notesFor, teamBadge, timeline } from "@/lib/team";
 import { ApplicationRecap } from "../../../portail/candidature/recap";
 import { DecisionPanel } from "./decision-panel";
 import { DeleteAccount } from "./delete-account";
@@ -38,11 +38,11 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
 
   const application = await getLatestApplication(player.id);
   if (application) await markViewed(application, viewer);
-  const isStaff = hasRank(viewer, "staff");
+  const isAdmin = hasRank(viewer, "admin");
 
   const [events, notes] = await Promise.all([timeline(player.id), notesFor(player.id, viewer)]);
-  // Un recruteur ne doit pas deviner l'existence d'une note réservée au staff.
-  const visibleEvents = isStaff ? events : events.filter(event => !(event.type === "note.ajoutee" && (event.data as { visibilite?: string }).visibilite === "staff"));
+  // Un recruteur ne doit pas deviner l'existence d'une note réservée aux admins.
+  const visibleEvents = isAdmin ? events : events.filter(event => !(event.type === "note.ajoutee" && (event.data as { visibilite?: string }).visibilite === "admin"));
   const noteViews: NoteView[] = notes.map(note => ({
     id: note.id,
     content: note.content,
@@ -51,10 +51,10 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
     authorId: note.authorId,
     authorName: note.authorName,
     authorAvatar: note.authorAvatar,
-    canDelete: canDeleteNote(note, viewer) && (isStaff || note.visibility === "equipe"),
+    canDelete: canDeleteNote(note, viewer) && (isAdmin || note.visibility === "equipe"),
   }));
 
-  const badge = staffBadge(application);
+  const badge = teamBadge(application);
   const banner = bannerUrl(player, 960);
   const rp = application?.rp;
   const rpName = [rp?.firstName, rp?.lastName].filter(value => typeof value === "string" && value.trim()).join(" ");
@@ -127,18 +127,18 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
           {application && (
             <Plaque className={styles.panel}>
               <h2 className={styles.panelTitle}>Décision</h2>
-              <DecisionPanel subjectId={player.id} applicationId={application.id} status={application.status} isStaff={isStaff} steps={filledSteps} />
+              <DecisionPanel subjectId={player.id} applicationId={application.id} status={application.status} isAdmin={isAdmin} steps={filledSteps} />
             </Plaque>
           )}
           <Plaque className={styles.panel}>
             <h2 className={styles.panelTitle}>Notes internes</h2>
-            <Notes subjectId={player.id} notes={noteViews} isStaff={isStaff} />
+            <Notes subjectId={player.id} notes={noteViews} isAdmin={isAdmin} />
           </Plaque>
           <Plaque className={styles.panel}>
             <h2 className={styles.panelTitle}>Chronologie</h2>
             <Timeline entries={visibleEvents} />
           </Plaque>
-          {isStaff && player.id !== viewer.id && (
+          {isAdmin && player.id !== viewer.id && (
             <Plaque className={`${styles.panel} ${styles.dangerPanel}`} rivets="none">
               <h2 className={`${styles.panelTitle} ${styles.dangerTitle}`}>Compte</h2>
               <DeleteAccount subjectId={player.id} />

@@ -1,7 +1,8 @@
 import { sql } from "drizzle-orm";
 import { boolean, check, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
-export const rank = pgEnum("rank", ["joueur", "recruteur", "staff"]);
+/** Rangs du site : joueur < recruteur < admin < owner. */
+export const rank = pgEnum("rank", ["joueur", "recruteur", "admin", "owner"]);
 export type Rank = (typeof rank.enumValues)[number];
 
 /**
@@ -28,7 +29,7 @@ export type User = typeof users.$inferSelect;
 
 /**
  * Journal : chaque étape d'un joueur et chaque action de l'équipe.
- * `subjectId` = le joueur concerné, `actorId` = qui a agi (lui-même ou un membre du staff).
+ * `subjectId` = le joueur concerné, `actorId` = qui a agi (lui-même ou un membre de l'équipe).
  * À la suppression d'un compte, les lignes restent mais perdent le lien (anonymisation).
  */
 export const events = pgTable(
@@ -81,7 +82,7 @@ export const applications = pgTable(
     /** Modification demandée : étapes rouvertes et message au joueur. */
     changesSteps: text().array(),
     changesComment: text(),
-    /** Refus : critères cochés (voir content/staff.ts) et commentaire. */
+    /** Refus : critères cochés (voir content/equipe.ts) et commentaire. */
     refusalCriteria: text().array(),
     refusalComment: text(),
     decidedAt: timestamp({ withTimezone: true }),
@@ -98,12 +99,13 @@ export const applications = pgTable(
 
 export type Application = typeof applications.$inferSelect;
 
-/** `equipe` : recruteurs et staff ; `staff` : staff uniquement. */
-export const noteVisibility = pgEnum("note_visibility", ["equipe", "staff"]);
+/** `equipe` : recruteurs et admins ; `admin` : admins uniquement. */
+export const noteVisibility = pgEnum("note_visibility", ["equipe", "admin"]);
 export type NoteVisibility = (typeof noteVisibility.enumValues)[number];
 
 /** Notes internes sur un joueur, jamais visibles par le joueur. */
-export const staffNotes = pgTable(
+// Table nommée « staff_notes » en base (nom connu du bot), « teamNotes » dans le code.
+export const teamNotes = pgTable(
   "staff_notes",
   {
     id: uuid().primaryKey().defaultRandom(),
@@ -118,7 +120,7 @@ export const staffNotes = pgTable(
   table => [index("staff_notes_subject_idx").on(table.subjectId, table.createdAt)],
 );
 
-export type StaffNote = typeof staffNotes.$inferSelect;
+export type TeamNote = typeof teamNotes.$inferSelect;
 
 /** Qui consulte quelle fiche en ce moment (œil de présence) : une ligne par couple, rafraîchie toutes les quelques secondes. */
 export const profileViews = pgTable(

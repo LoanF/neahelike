@@ -26,7 +26,7 @@ export const RULES: RuleChapter[] = [
       { title: "Âge minimum", text: "Le serveur est accessible à partir de 18 ans. Un mensonge sur l'âge entraîne le retrait de la whitelist." },
       { title: "Respect", text: "Le respect entre joueurs et envers l'équipe est obligatoire, en jeu comme sur le Discord. Aucune forme de harcèlement, de discrimination ou d'insulte HRP n'est tolérée." },
       { title: "Matériel", text: "Un micro de qualité correcte est obligatoire. Le chat écrit ne remplace pas la voix en jeu." },
-      { title: "Décisions de l'équipe", text: "Les décisions du staff s'appliquent immédiatement. Une contestation se fait calmement, par ticket sur le Discord, jamais en jeu." },
+      { title: "Décisions de l'équipe", text: "Les décisions des admins s'appliquent immédiatement. Une contestation se fait calmement, par ticket sur le Discord, jamais en jeu." },
     ],
   },
   {

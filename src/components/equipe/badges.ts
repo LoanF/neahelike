@@ -1,9 +1,9 @@
 import type { BadgeTone } from "@/components/plaque";
 
 /** Badges vus par l'équipe. « En cours de lecture » est à part : c'est l'œil de présence, calculé en direct. */
-export type StaffBadge = "aucune" | "brouillon" | "dossier" | "a_lire" | "vue" | "a_modifier" | "entretien" | "whitelistee" | "refusee";
+export type TeamBadge = "aucune" | "brouillon" | "dossier" | "a_lire" | "vue" | "a_modifier" | "entretien" | "whitelistee" | "refusee";
 
-export const BADGE_LABEL: Record<StaffBadge, string> = {
+export const BADGE_LABEL: Record<TeamBadge, string> = {
   aucune: "Pas de candidature",
   brouillon: "Brouillon",
   dossier: "Dossier de reprise en attente",
@@ -15,7 +15,7 @@ export const BADGE_LABEL: Record<StaffBadge, string> = {
   refusee: "Refusée",
 };
 
-export const BADGE_TONE: Record<StaffBadge, BadgeTone> = {
+export const BADGE_TONE: Record<TeamBadge, BadgeTone> = {
   aucune: "default",
   brouillon: "default",
   dossier: "gold",
@@ -35,6 +35,6 @@ export const TABS = [
   { id: "validees", label: "Whitelistés", badges: ["whitelistee"] },
   { id: "refusees", label: "Refusées", badges: ["refusee"] },
   { id: "tous", label: "Tous", badges: null },
-] as const satisfies readonly { id: string; label: string; badges: readonly StaffBadge[] | null }[];
+] as const satisfies readonly { id: string; label: string; badges: readonly TeamBadge[] | null }[];
 
 export type TabId = (typeof TABS)[number]["id"];

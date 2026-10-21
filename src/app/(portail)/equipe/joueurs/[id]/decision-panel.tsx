@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button, PinCheckbox, TextAreaField } from "@/components/plaque";
-import { REFUSAL_CRITERIA } from "@/content/staff";
+import { REFUSAL_CRITERIA } from "@/content/equipe";
 import type { ApplicationStatus } from "@/db/schema";
 import type { DecisionState } from "../../actions";
 import { decide } from "../../actions";
@@ -15,7 +15,7 @@ interface DecisionPanelProps {
   subjectId: string;
   applicationId: string;
   status: ApplicationStatus;
-  isStaff: boolean;
+  isAdmin: boolean;
   /** Étapes que le joueur a remplies, pour « Demander une modification ». */
   steps: { id: string; label: string }[];
 }
@@ -38,7 +38,7 @@ function Submit({ mode }: { mode: Mode }) {
 }
 
 /** Actions de l'équipe sur une candidature, chacune avec une étape de confirmation. */
-export function DecisionPanel({ subjectId, applicationId, status, isStaff, steps }: DecisionPanelProps) {
+export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps }: DecisionPanelProps) {
   const [state, action] = useActionState<DecisionState, FormData>(decide, null);
   const [mode, setMode] = useState<Mode | null>(null);
 
@@ -55,11 +55,11 @@ export function DecisionPanel({ subjectId, applicationId, status, isStaff, steps
   } else if (status === "entretien") {
     choices.push({ mode: "entretien", label: "Valider l'entretien vocal", variant: "primary" });
     choices.push({ mode: "refuser", label: "Refuser", variant: "danger" });
-  } else if (isStaff && (status === "brouillon" || status === "a_modifier")) {
+  } else if (isAdmin && (status === "brouillon" || status === "a_modifier")) {
     choices.push({ mode: "valider", label: "Valider sans attendre", variant: "primary" });
     choices.push({ mode: "refuser", label: "Refuser", variant: "danger" });
   }
-  if (isStaff) choices.push({ mode: "supprimer", label: "Effacer la candidature", variant: "ghost" });
+  if (isAdmin) choices.push({ mode: "supprimer", label: "Effacer la candidature", variant: "ghost" });
 
   const waiting =
     status === "brouillon" || status === "a_modifier"
@@ -72,7 +72,7 @@ export function DecisionPanel({ subjectId, applicationId, status, isStaff, steps
 
   return (
     <div className={styles.decision}>
-      {waiting && <p className={styles.waiting}>{waiting}{!isStaff && (status === "brouillon" || status === "a_modifier") ? " Seul le staff peut la valider avant l'envoi." : ""}</p>}
+      {waiting && <p className={styles.waiting}>{waiting}{!isAdmin && (status === "brouillon" || status === "a_modifier") ? " Seul un admin peut la valider avant l'envoi." : ""}</p>}
 
       {state && "error" in state && <p className={styles.formError} role="alert">{state.error}</p>}
       {state && "ok" in state && (

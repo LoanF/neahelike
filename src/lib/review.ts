@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { NOTIFICATIONS } from "@/content/notifications";
-import { DIRECT_MESSAGES, criterionLabel, REFUSAL_CRITERIA } from "@/content/staff";
+import { DIRECT_MESSAGES, criterionLabel, REFUSAL_CRITERIA } from "@/content/equipe";
 import { db, schema } from "@/db";
 import type { Application, ApplicationStatus, NoteVisibility, User } from "@/db/schema";
 import { formatDate } from "@/components/portal/application-status";
@@ -19,7 +19,7 @@ type Reviewer = Pick<User, "id" | "rank" | "username" | "globalName">;
 
 export type ReviewResult = { ok: true; warnings: string[] } | { error: string };
 
-const OPEN_FOR_STAFF: ApplicationStatus[] = ["brouillon", "envoyee", "a_modifier"];
+const OPEN_FOR_ADMIN: ApplicationStatus[] = ["brouillon", "envoyee", "a_modifier"];
 
 /**
  * Passe la candidature d'un statut à l'autre, seulement si elle n'a pas changé entre-temps
@@ -62,10 +62,10 @@ export async function markViewed(application: Application, viewer: Reviewer) {
   if (updated) await logEvent({ type: "candidature.vue", subjectId: application.userId, actorId: viewer.id });
 }
 
-/** Candidature écrite validée : rôle « attente de wl » et MP. Le staff peut valider à tout moment, le recruteur seulement une candidature envoyée. */
+/** Candidature écrite validée : rôle « attente de wl » et MP. Un admin peut valider à tout moment, le recruteur seulement une candidature envoyée. */
 export async function validateWritten(application: Application, reviewer: Reviewer): Promise<ReviewResult> {
-  const from: ApplicationStatus[] = hasRank(reviewer, "staff") ? OPEN_FOR_STAFF : ["envoyee"];
-  if (!from.includes(application.status)) return { error: "Seul le staff peut valider une candidature qui n'a pas été envoyée." };
+  const from: ApplicationStatus[] = hasRank(reviewer, "admin") ? OPEN_FOR_ADMIN : ["envoyee"];
+  if (!from.includes(application.status)) return { error: "Seul un admin peut valider une candidature qui n'a pas été envoyée." };
 
   const updated = await transition(application, from, { status: "entretien", reviewerId: reviewer.id, changesSteps: null, changesComment: null });
   if (!updated) return CHANGED;
@@ -110,7 +110,7 @@ export async function refuse(application: Application, reviewer: Reviewer, crite
   if (chosen.length === 0) return { error: "Coche au moins un critère de refus." };
   if (chosen.includes("autre") && comment.trim().length < 5) return { error: "Précise le critère « Autre » dans le commentaire." };
 
-  const from: ApplicationStatus[] = hasRank(reviewer, "staff") ? [...OPEN_FOR_STAFF, "entretien"] : ["envoyee", "entretien"];
+  const from: ApplicationStatus[] = hasRank(reviewer, "admin") ? [...OPEN_FOR_ADMIN, "entretien"] : ["envoyee", "entretien"];
   if (!from.includes(application.status)) return { error: "Cette candidature ne peut pas être refusée dans son état actuel." };
 
   const decidedAt = new Date();
@@ -153,9 +153,9 @@ export async function validateInterview(application: Application, reviewer: Revi
   return { ok: true, warnings };
 }
 
-/** Staff : efface la candidature (le joueur peut recommencer tout de suite, sans délai). */
+/** Admin : efface la candidature (le joueur peut recommencer tout de suite, sans délai). */
 export async function wipeApplication(application: Application, reviewer: Reviewer): Promise<ReviewResult> {
-  if (!hasRank(reviewer, "staff")) return { error: "Réservé au staff." };
+  if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
   await db().delete(schema.applications).where(eq(schema.applications.id, application.id));
   await logEvent({ type: "candidature.supprimee", subjectId: application.userId, actorId: reviewer.id, data: { statut: application.status } });
   await notify(application.userId, NOTIFICATIONS.supprimee());
@@ -170,34 +170,34 @@ export async function wipeApplication(application: Application, reviewer: Review
 
 export const NOTE_MAX_LENGTH = 2000;
 
-/** Le recruteur écrit toujours pour toute l'équipe ; le staff choisit la visibilité. */
+/** Le recruteur écrit toujours pour toute l'équipe ; un admin choisit la visibilité. */
 export async function addNote(subjectId: string, author: Reviewer, content: string, visibility: NoteVisibility) {
   const text = content.trim();
   if (!text) return { error: "La note est vide." };
   if (text.length > NOTE_MAX_LENGTH) return { error: `${NOTE_MAX_LENGTH} caractères maximum.` };
-  const finalVisibility: NoteVisibility = hasRank(author, "staff") ? visibility : "equipe";
-  await db().insert(schema.staffNotes).values({ subjectId, authorId: author.id, content: text, visibility: finalVisibility });
+  const finalVisibility: NoteVisibility = hasRank(author, "admin") ? visibility : "equipe";
+  await db().insert(schema.teamNotes).values({ subjectId, authorId: author.id, content: text, visibility: finalVisibility });
   await logEvent({ type: "note.ajoutee", subjectId, actorId: author.id, data: { visibilite: finalVisibility } });
   return { ok: true as const };
 }
 
 export async function deleteNote(noteId: string, viewer: Reviewer) {
-  const [note] = await db().select().from(schema.staffNotes).where(eq(schema.staffNotes.id, noteId));
+  const [note] = await db().select().from(schema.teamNotes).where(eq(schema.teamNotes.id, noteId));
   if (!note) return { error: "Note introuvable." };
-  // Un recruteur ne peut ni voir ni supprimer une note réservée au staff, et seulement ses propres notes.
-  const allowed = hasRank(viewer, "staff") || (note.authorId === viewer.id && note.visibility === "equipe");
+  // Un recruteur ne peut ni voir ni supprimer une note réservée aux admins, et seulement ses propres notes.
+  const allowed = hasRank(viewer, "admin") || (note.authorId === viewer.id && note.visibility === "equipe");
   if (!allowed) return { error: "Tu ne peux pas supprimer cette note." };
-  await db().delete(schema.staffNotes).where(eq(schema.staffNotes.id, noteId));
+  await db().delete(schema.teamNotes).where(eq(schema.teamNotes.id, noteId));
   return { ok: true as const, subjectId: note.subjectId };
 }
 
 /**
- * Staff : suppression d'un compte à la demande du joueur (ticket Discord).
+ * Admin : suppression d'un compte à la demande du joueur (ticket Discord).
  * Tout part avec le compte, sauf, après un refus de moins de 3 mois, l'ID Discord et la fin du délai.
  * Sur Discord, le joueur perd ses rôles de whitelist et retrouve le rôle de base.
  */
 export async function deletePlayerAccount(subjectId: string, reviewer: Reviewer): Promise<ReviewResult> {
-  if (!hasRank(reviewer, "staff")) return { error: "Réservé au staff." };
+  if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
   if (subjectId === reviewer.id) return { error: "Tu ne peux pas supprimer ton propre compte d'ici." };
   const [player] = await db().select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.id, subjectId));
   if (!player) return { error: "Ce compte n'existe plus." };

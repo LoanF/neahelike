@@ -1,7 +1,7 @@
 import type { BadgeTone } from "@/components/plaque";
 import type { ApplicationStatus } from "@/db/schema";
 
-/** Libellés vus par le joueur. Les badges de l'équipe (vue, en lecture…) viendront avec l'espace staff. */
+/** Libellés vus par le joueur. Les badges de l'équipe (vue, en lecture…) sont dans components/equipe/badges.ts. */
 export const STATUS_LABEL: Record<ApplicationStatus, string> = {
   brouillon: "Brouillon",
   envoyee: "Envoyée",

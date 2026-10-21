@@ -16,7 +16,7 @@ function Submit({ ready }: { ready: boolean }) {
   );
 }
 
-/** Staff : suppression du compte à la demande du joueur (ticket Discord). */
+/** Admin : suppression du compte à la demande du joueur (ticket Discord). */
 export function DeleteAccount({ subjectId }: { subjectId: string }) {
   const [state, action] = useActionState<DeleteAccountState, FormData>(deleteAccountAction, null);
   const [open, setOpen] = useState(false);

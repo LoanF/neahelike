@@ -71,6 +71,13 @@
       "when": 1792621065995,
       "tag": "0009_delai_recandidature",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792624778005,
+      "tag": "0010_rangs_admin_owner",
+      "breakpoints": true
     }
   ]
 }

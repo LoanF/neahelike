@@ -16,8 +16,11 @@ const schema = z.object({
   AUTH_DISCORD_SECRET: z.string().min(1),
   DISCORD_BOT_TOKEN: z.string().min(1),
   DISCORD_GUILD_ID: snowflake,
-  DISCORD_ROLE_RECRUTEUR: roleList,
-  DISCORD_ROLE_STAFF: roleList,
+  /** Rôles par rang avant la configuration depuis le site (voir lib/permissions.ts). */
+  DISCORD_ROLE_RECRUTEUR: roleList.optional(),
+  DISCORD_ROLE_ADMIN: roleList.optional(),
+  /** Ancien nom de DISCORD_ROLE_ADMIN, encore lu s'il est défini. */
+  DISCORD_ROLE_STAFF: roleList.optional(),
   DISCORD_ROLE_ASPIRANT: snowflake.optional(),
   DISCORD_ROLE_HELIKEEN: snowflake.optional(),
   DISCORD_ROLE_NOVICE: snowflake.optional(),

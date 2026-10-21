@@ -8,9 +8,9 @@ import { db, schema } from "@/db";
 import type { Rank, User } from "@/db/schema";
 import { rolesAreStale, syncMember } from "./members";
 
-const RANK_ORDER: Record<Rank, number> = { joueur: 0, recruteur: 1, staff: 2 };
+const RANK_ORDER: Record<Rank, number> = { joueur: 0, recruteur: 1, admin: 2, owner: 3 };
 
-/** Le staff a toutes les permissions du recruteur, qui a toutes celles du joueur. */
+/** Chaque rang a toutes les permissions des rangs inférieurs : owner > admin > recruteur > joueur. */
 export function hasRank(user: Pick<User, "rank">, minimum: Rank) {
   return RANK_ORDER[user.rank] >= RANK_ORDER[minimum];
 }

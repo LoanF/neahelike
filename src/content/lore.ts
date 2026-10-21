@@ -73,7 +73,7 @@ export const ASSEMBLY_INTRO =
   "Ici, ni roi ni chef. Autour de la Table d'Olympe, une grande table ronde de marbre, siègent cinq conseillers égaux. Chaque voix compte autant que les autres.";
 
 export const POLES: { pole: string; god: string; text: string; emblem: EmblemName }[] = [
-  { pole: "Santé", god: "Asclépios", text: "Soigneurs, remèdes et bains de guérison.", emblem: "staff" },
+  { pole: "Santé", god: "Asclépios", text: "Soigneurs, remèdes et bains de guérison.", emblem: "baton" },
   { pole: "Justice", god: "Thémis", text: "Fait respecter les lois, juge les conflits et sanctionne.", emblem: "scales" },
   { pole: "Économie", god: "Hermès", text: "Commerce, métiers, banque, entrepôt et ressources.", emblem: "coin" },
   { pole: "Social", god: "Hestia", text: "Concorde, fêtes et accueil des nouveaux arrivants.", emblem: "hearth" },
