@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 export const rank = pgEnum("rank", ["joueur", "recruteur", "staff"]);
 export type Rank = (typeof rank.enumValues)[number];
@@ -215,4 +215,41 @@ export const botMessages = pgTable(
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   table => [primaryKey({ columns: [table.guildId, table.key] })],
+);
+
+export const ticketStatus = pgEnum("ticket_status", ["ouvert", "ferme"]);
+
+/** Tickets du bot Discord : un salon privé par demande, avec sa transcription à la fermeture. */
+export const botTickets = pgTable(
+  "bot_tickets",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    /** Numéro lisible du ticket (#0042), attribué par la base. */
+    number: integer().generatedAlwaysAsIdentity(),
+    guildId: text().notNull(),
+    channelId: text().notNull().unique(),
+    /** Identifiant de la catégorie dans les réglages du module, et son nom au moment de l'ouverture. */
+    categoryId: text().notNull(),
+    categoryLabel: text().notNull(),
+    openerId: text().notNull(),
+    claimedById: text(),
+    status: ticketStatus().notNull().default("ouvert"),
+    /** Réponses au formulaire d'ouverture. */
+    answers: jsonb().$type<{ question: string; answer: string }[]>().notNull().default([]),
+    closeReason: text(),
+    closedById: text(),
+    /** Transcription HTML enregistrée à la fermeture. */
+    transcript: text(),
+    /** Note de satisfaction de 1 à 5, donnée en MP après la fermeture. */
+    rating: integer(),
+    lastActivityAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    closedAt: timestamp({ withTimezone: true }),
+  },
+  table => [
+    // Un seul ticket ouvert par membre et par catégorie.
+    uniqueIndex("bot_tickets_un_ouvert_par_categorie").on(table.guildId, table.openerId, table.categoryId).where(sql`${table.status} = 'ouvert'`),
+    index("bot_tickets_inactifs_idx").on(table.status, table.lastActivityAt),
+    check("bot_tickets_note", sql`${table.rating} between 1 and 5`),
+  ],
 );

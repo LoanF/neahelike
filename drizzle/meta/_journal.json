@@ -43,6 +43,13 @@
       "when": 1792606292673,
       "tag": "0005_espace_staff",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792607768782,
+      "tag": "0006_sudden_loki",
+      "breakpoints": true
     }
   ]
 }
