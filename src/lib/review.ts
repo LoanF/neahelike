@@ -7,7 +7,7 @@ import type { Application, ApplicationStatus, NoteVisibility, User } from "@/db/
 import { formatDate } from "@/components/portal/application-status";
 import type { DataStepId } from "./application";
 import { DATA_STEPS, STEPS, visibleSteps } from "./application";
-import { reapplyDate } from "./applications";
+import { getLatestApplication, reapplyDate } from "./applications";
 import { addRole, removeRole, sendDirectMessage } from "./discord";
 import { env } from "./env";
 import { logEvent } from "./events";
@@ -189,4 +189,35 @@ export async function deleteNote(noteId: string, viewer: Reviewer) {
   if (!allowed) return { error: "Tu ne peux pas supprimer cette note." };
   await db().delete(schema.staffNotes).where(eq(schema.staffNotes.id, noteId));
   return { ok: true as const, subjectId: note.subjectId };
+}
+
+/**
+ * Staff : suppression d'un compte à la demande du joueur (ticket Discord).
+ * Tout part avec le compte, sauf, après un refus de moins de 3 mois, l'ID Discord et la fin du délai.
+ */
+export async function deletePlayerAccount(subjectId: string, reviewer: Reviewer): Promise<ReviewResult> {
+  if (!hasRank(reviewer, "staff")) return { error: "Réservé au staff." };
+  if (subjectId === reviewer.id) return { error: "Tu ne peux pas supprimer ton propre compte d'ici." };
+  const [player] = await db().select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.id, subjectId));
+  if (!player) return { error: "Ce compte n'existe plus." };
+
+  const warnings: string[] = [];
+  const latest = await getLatestApplication(subjectId);
+  const until = latest?.status === "refusee" ? reapplyDate(latest) : null;
+  const keepDelay = !!until && until > new Date();
+  if (keepDelay) {
+    await db()
+      .insert(schema.reapplyLocks)
+      .values({ discordId: subjectId, until: until! })
+      .onConflictDoUpdate({ target: schema.reapplyLocks.discordId, set: { until: until! } });
+  }
+
+  const role = env().DISCORD_ROLE_ASPIRANT;
+  if (role && latest?.status === "entretien") {
+    await discord("Retrait du rôle « attente de wl »", warnings, () => removeRole(subjectId, role, reason(reviewer, "Compte du portail supprimé")));
+  }
+
+  await db().delete(schema.users).where(eq(schema.users.id, subjectId));
+  await logEvent({ type: "compte.supprime", subjectId: null, actorId: reviewer.id, data: keepDelay ? { delaiConserve: true } : {} });
+  return { ok: true, warnings };
 }

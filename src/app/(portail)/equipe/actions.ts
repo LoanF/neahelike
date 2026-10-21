@@ -2,11 +2,12 @@
 
 import { desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { db, schema } from "@/db";
 import type { NoteVisibility, Rank } from "@/db/schema";
 import { syncMember } from "@/lib/members";
 import type { ReviewResult } from "@/lib/review";
-import { addNote, deleteNote, refuse, requestChanges, validateInterview, validateWritten, wipeApplication } from "@/lib/review";
+import { addNote, deleteNote, deletePlayerAccount, refuse, requestChanges, validateInterview, validateWritten, wipeApplication } from "@/lib/review";
 import { hasRank, requireUser } from "@/lib/session";
 import type { Viewer } from "@/lib/staff";
 import { leavePresence, presenceFor, touchPresence } from "@/lib/staff";
@@ -102,4 +103,22 @@ export async function deleteNoteAction(formData: FormData) {
   if (!viewer) return;
   const result = await deleteNote(String(formData.get("noteId")), viewer);
   if ("subjectId" in result && result.subjectId) revalidatePath(`/equipe/joueurs/${result.subjectId}`);
+}
+
+export type DeleteAccountState = { error: string; at: number } | null;
+
+/** Staff : suppression d'un compte demandée par ticket. Confirmation par le mot SUPPRIMER. */
+export async function deleteAccountAction(_previous: DeleteAccountState, formData: FormData): Promise<DeleteAccountState> {
+  let reviewer;
+  try {
+    reviewer = await requireFreshRank("staff");
+  } catch {
+    return { error: "Réservé au staff.", at: Date.now() };
+  }
+  if (String(formData.get("confirmation") ?? "").trim().toUpperCase() !== "SUPPRIMER") return { error: "Recopie SUPPRIMER pour confirmer.", at: Date.now() };
+
+  const result = await deletePlayerAccount(String(formData.get("subjectId")), reviewer);
+  if ("error" in result) return { error: result.error, at: Date.now() };
+  revalidatePath("/equipe");
+  redirect(`/equipe?onglet=tous&supprime=1${result.warnings.length ? "&avertissement=1" : ""}`);
 }
