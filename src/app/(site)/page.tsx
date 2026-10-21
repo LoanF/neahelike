@@ -9,7 +9,7 @@ import styles from "./home.module.css";
 const FACTS = [
   { k: "Accès", v: "Whitelist" },
   { k: "Univers", v: "Grèce antique, 360 av. J.-C." },
-  { k: "Âge minimum", v: "16 ans" },
+  { k: "Âge minimum", v: "18 ans" },
   { k: "Langue", v: "Français" },
 ];
 

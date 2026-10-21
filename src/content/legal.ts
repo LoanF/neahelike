@@ -13,10 +13,10 @@ export const LEGAL: Record<"cgu" | "confidentialite" | "mentions-legales", Legal
   cgu: {
     title: "Conditions générales d'utilisation",
     lead: "Les règles d'utilisation du site et du portail whitelist de Néa Hélikè.",
-    updatedAt: "2026-10-20",
+    updatedAt: "2026-10-21",
     sections: [
       { title: "Objet", text: "Le site présente le serveur roleplay FiveM Néa Hélikè et permet de déposer une candidature à la whitelist. Il s'agit d'un projet communautaire, gratuit, sans lien avec Rockstar Games ni Take-Two Interactive." },
-      { title: "Accès au portail", text: "Le portail est accessible via un compte Discord. En liant ton compte, tu autorises le site à lire ton identifiant, ton pseudo, ton avatar et tes rôles sur le serveur Discord de Néa Hélikè. Il faut avoir au moins 16 ans." },
+      { title: "Accès au portail", text: "Le portail est accessible via un compte Discord. En liant ton compte, tu autorises le site à lire ton identifiant, ton pseudo, ton avatar et tes rôles sur le serveur Discord de Néa Hélikè. Il faut avoir au moins 18 ans." },
       { title: "Candidature", text: "Tu t'engages à fournir des informations exactes. Les liens que tu partages (background, dossier) doivent être accessibles en lecture et ne contenir aucun contenu illégal, haineux ou à caractère sexuel." },
       { title: "Décisions de l'équipe", text: "L'équipe de recrutement est libre d'accepter, de refuser ou de demander la modification d'une candidature. Après un refus, une nouvelle candidature est possible au minimum 3 mois plus tard." },
       { title: "Messages Discord", text: "Le bot du serveur peut t'envoyer des messages privés pour t'informer de l'avancement de ta candidature et t'attribuer des rôles sur le Discord." },

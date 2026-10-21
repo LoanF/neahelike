@@ -36,7 +36,7 @@ export function KitDemo() {
   const [current, setCurrent] = useState(0);
 
   const ageNumber = Number(age);
-  const ageError = age && (!Number.isInteger(ageNumber) || ageNumber < 16) ? "16 ans minimum." : undefined;
+  const ageError = age && (!Number.isInteger(ageNumber) || ageNumber < 18) ? "18 ans minimum." : undefined;
 
   return (
     <main className={`nh-container ${styles.page}`}>
@@ -129,7 +129,7 @@ export function KitDemo() {
           <div className={styles.form}>
             <TextField label="Pseudo Discord" locked defaultValue="thalia.wav" />
             <TextField label="ID Discord" locked defaultValue="284019375610482688" />
-            <TextField label="Âge IRL" required inputMode="numeric" placeholder="16 ans minimum" value={age} onChange={e => setAge(e.target.value)} error={ageError} />
+            <TextField label="Âge IRL" required inputMode="numeric" placeholder="18 ans minimum" value={age} onChange={e => setAge(e.target.value)} error={ageError} />
             <TextField label="Heures de RP" required inputMode="numeric" placeholder="Total approximatif" />
             <TextAreaField
               className={styles.full}
