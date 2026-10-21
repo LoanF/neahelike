@@ -2,7 +2,7 @@ export const SITE = {
   name: "Néa Hélikè",
   tagline: "La cité renée des flots",
   discordUrl: "https://discord.gg/RScWE8buxP",
-  /** Point d'entrée du portail whitelist (OAuth Discord, Phase 2). */
+  /** Point d'entrée du portail whitelist (connexion Discord). */
   joinUrl: "/connexion",
 };
 
@@ -26,8 +26,8 @@ export const FOOTER_COLUMNS = [
     title: "Le portail",
     links: [
       { href: "/connexion", label: "Se connecter" },
-      { href: "/portail", label: "Ma candidature" },
-      { href: "/portail", label: "Dossiers" },
+      { href: "/portail/candidature", label: "Ma candidature" },
+      { href: "/portail/dossier", label: "Dossier de reprise" },
     ],
   },
 ] as const;
