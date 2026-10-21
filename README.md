@@ -20,6 +20,13 @@ pnpm lint
 pnpm build
 ```
 
+## Base de données et migrations
+
+- Le schéma vit dans `src/db/schema.ts` ; `pnpm db:generate` crée la migration SQL dans `drizzle/`. C'est le **seul** endroit où la structure de la base change (le bot Discord ne fait qu'utiliser les tables).
+- **Migrations automatiques** : à chaque déploiement de **production** (`main`) sur Vercel, `scripts/migrate.mjs` applique les nouvelles migrations avant le build (script `vercel-build`). Si une migration échoue, le déploiement s'arrête et l'ancienne version reste en ligne. Les déploiements de `dev` ne touchent jamais la base.
+- Variables : `DB_SCHEMAS` (schéma(s) Postgres gérés, `public` par défaut), `DB_AUTO_MIGRATE=false` pour couper l'automatisme, `DATABASE_URL_MIGRATIONS` pour une connexion dédiée (Session pooler Supabase conseillé).
+- Appliquer à la main : `pnpm db:migrate`.
+
 ## Portail : configuration Discord
 
 1. Créer une application sur https://discord.com/developers/applications.
