@@ -5,6 +5,7 @@ import { Badge, Button, ButtonLink, cx, DotsRow, Pin, Plaque } from "@/component
 import { formatDate, journeyIndex, STATUS_LABEL, STATUS_TONE } from "@/components/portal/application-status";
 import { PortalHeader } from "@/components/portal/shell";
 import { JOURNEY } from "@/content/candidature";
+import { criterionLabel } from "@/content/staff";
 import { SITE } from "@/content/site";
 import type { Application } from "@/db/schema";
 import { currentStep, isStepComplete, stepHref, visibleSteps } from "@/lib/application";
@@ -114,8 +115,21 @@ function ApplicationState({ application, latest, block }: { application: Applica
   }
 
   if (!application) {
+    const refused = latest?.status === "refusee" ? latest : null;
     return (
       <>
+        {refused && (refused.refusalCriteria?.length || refused.refusalComment) ? (
+          <div className={styles.refusal}>
+            {!!refused.refusalCriteria?.length && (
+              <ul>
+                {refused.refusalCriteria.map(id => (
+                  <li key={id}>{criterionLabel(id)}</li>
+                ))}
+              </ul>
+            )}
+            {refused.refusalComment && <p className={styles.quote}>« {refused.refusalComment} »</p>}
+          </div>
+        ) : null}
         <p className={styles.stateText}>
           {block?.reason === "delai"
             ? `Ta dernière candidature a été refusée. Tu pourras en déposer une nouvelle à partir du ${formatDate(block.until)}.`
@@ -147,6 +161,7 @@ function ApplicationState({ application, latest, block }: { application: Applica
       return (
         <>
           <p className={styles.stateText}>L&apos;équipe te demande de modifier une partie de ta candidature avant de la relire.</p>
+          {application.changesComment && <p className={styles.quote}>« {application.changesComment} »</p>}
           <div className={styles.cta}>
             <ButtonLink href="/portail/candidature" size="lg">Voir les modifications</ButtonLink>
           </div>

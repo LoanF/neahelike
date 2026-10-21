@@ -1,0 +1,122 @@
+"use client";
+
+import { Lock, Trash2, Users } from "lucide-react";
+import Image from "next/image";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
+import { Badge, Button, cx, TextAreaField } from "@/components/plaque";
+import type { NoteVisibility } from "@/db/schema";
+import { avatarUrl } from "@/lib/discord-cdn";
+import type { NoteState } from "../../actions";
+import { addNoteAction, deleteNoteAction } from "../../actions";
+import styles from "./fiche.module.css";
+
+export interface NoteView {
+  id: string;
+  content: string;
+  visibility: NoteVisibility;
+  date: string;
+  authorId: string | null;
+  authorName: string | null;
+  authorAvatar: string | null;
+  canDelete: boolean;
+}
+
+function AddButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" size="sm" loading={pending}>
+      Ajouter la note
+    </Button>
+  );
+}
+
+const VISIBILITY = [
+  { id: "equipe", label: "Toute l'équipe", hint: "Recruteurs et staff", icon: Users },
+  { id: "staff", label: "Staff uniquement", hint: "Invisible pour les recruteurs", icon: Lock },
+] as const;
+
+/** Notes internes : jamais visibles par le joueur. Le staff choisit si une note reste entre membres du staff. */
+export function Notes({ subjectId, notes, isStaff }: { subjectId: string; notes: NoteView[]; isStaff: boolean }) {
+  const [state, action] = useActionState<NoteState, FormData>(addNoteAction, null);
+  const [content, setContent] = useState("");
+  const [visibility, setVisibility] = useState<NoteVisibility>("equipe");
+  const form = useRef<HTMLFormElement>(null);
+
+  // Note ajoutée : on vide le champ.
+  useEffect(() => {
+    if (state && !state.error) setContent("");
+  }, [state]);
+
+  return (
+    <div className={styles.notes}>
+      <form ref={form} action={action} className={styles.noteForm}>
+        <input type="hidden" name="subjectId" value={subjectId} />
+        <TextAreaField
+          name="content"
+          label="Nouvelle note"
+          maxLength={2000}
+          placeholder="Impression, point à vérifier à l'entretien, échange avec le joueur…"
+          value={content}
+          onChange={event => setContent(event.target.value)}
+          error={state?.error}
+        />
+        {isStaff ? (
+          <fieldset className={styles.visibility}>
+            <legend>Visible par</legend>
+            {VISIBILITY.map(option => {
+              const Icon = option.icon;
+              return (
+                <label key={option.id} className={cx(styles.visibilityOption, visibility === option.id && styles.visibilityActive)}>
+                  <input type="radio" name="visibility" value={option.id} checked={visibility === option.id} onChange={() => setVisibility(option.id)} />
+                  <Icon size={15} aria-hidden="true" />
+                  <span>
+                    {option.label}
+                    <small>{option.hint}</small>
+                  </span>
+                </label>
+              );
+            })}
+          </fieldset>
+        ) : (
+          <p className={styles.noteHint}>
+            <Users size={14} aria-hidden="true" /> Visible par toute l&apos;équipe, jamais par le joueur.
+          </p>
+        )}
+        <div className={styles.noteSubmit}>
+          <AddButton />
+        </div>
+      </form>
+
+      {notes.length === 0 ? (
+        <p className={styles.waiting}>Aucune note pour l&apos;instant.</p>
+      ) : (
+        <ul className={styles.noteList}>
+          {notes.map(note => (
+            <li key={note.id} className={cx(styles.note, note.visibility === "staff" && styles.noteStaff)}>
+              <div className={styles.noteHead}>
+                {note.authorId && <Image src={avatarUrl({ id: note.authorId, avatar: note.authorAvatar }, 32)} alt="" width={22} height={22} className={styles.noteAvatar} />}
+                <span className={styles.noteAuthor}>{note.authorName ?? "Ancien membre"}</span>
+                {note.visibility === "staff" && (
+                  <Badge tone="gold">
+                    <Lock size={11} aria-hidden="true" /> Staff
+                  </Badge>
+                )}
+                <span className={styles.noteDate}>{note.date}</span>
+                {note.canDelete && (
+                  <form action={deleteNoteAction} className={styles.noteDelete}>
+                    <input type="hidden" name="noteId" value={note.id} />
+                    <button type="submit" aria-label="Supprimer la note" title="Supprimer la note">
+                      <Trash2 size={14} aria-hidden="true" />
+                    </button>
+                  </form>
+                )}
+              </div>
+              <p className={styles.noteContent}>{note.content}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

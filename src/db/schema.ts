@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 export const rank = pgEnum("rank", ["joueur", "recruteur", "staff"]);
 export type Rank = (typeof rank.enumValues)[number];
@@ -74,6 +74,16 @@ export const applications = pgTable(
     background: jsonb().$type<StepValues>(),
     dossier: jsonb().$type<StepValues>(),
     submittedAt: timestamp({ withTimezone: true }),
+    /** Première ouverture par l'équipe depuis le dernier envoi (badge « Vue »). */
+    viewedAt: timestamp({ withTimezone: true }),
+    /** Dernier membre de l'équipe à avoir pris une décision. */
+    reviewerId: text().references(() => users.id, { onDelete: "set null" }),
+    /** Modification demandée : étapes rouvertes et message au joueur. */
+    changesSteps: text().array(),
+    changesComment: text(),
+    /** Refus : critères cochés (voir content/staff.ts) et commentaire. */
+    refusalCriteria: text().array(),
+    refusalComment: text(),
     decidedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
@@ -87,6 +97,43 @@ export const applications = pgTable(
 );
 
 export type Application = typeof applications.$inferSelect;
+
+/** `equipe` : recruteurs et staff ; `staff` : staff uniquement. */
+export const noteVisibility = pgEnum("note_visibility", ["equipe", "staff"]);
+export type NoteVisibility = (typeof noteVisibility.enumValues)[number];
+
+/** Notes internes sur un joueur, jamais visibles par le joueur. */
+export const staffNotes = pgTable(
+  "staff_notes",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    subjectId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    authorId: text().references(() => users.id, { onDelete: "set null" }),
+    visibility: noteVisibility().notNull().default("equipe"),
+    content: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  table => [index("staff_notes_subject_idx").on(table.subjectId, table.createdAt)],
+);
+
+export type StaffNote = typeof staffNotes.$inferSelect;
+
+/** Qui consulte quelle fiche en ce moment (œil de présence) : une ligne par couple, rafraîchie toutes les quelques secondes. */
+export const profileViews = pgTable(
+  "profile_views",
+  {
+    subjectId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    viewerId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    lastSeenAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  table => [primaryKey({ columns: [table.subjectId, table.viewerId] })],
+);
 
 // ─── Bot Discord (dépôt bot-neahelike) ──────────────────────────────────────
 // Tables écrites uniquement par le bot. Le site ne fait que les lire, s'il en a besoin.
@@ -168,4 +215,41 @@ export const botMessages = pgTable(
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   table => [primaryKey({ columns: [table.guildId, table.key] })],
+);
+
+export const ticketStatus = pgEnum("ticket_status", ["ouvert", "ferme"]);
+
+/** Tickets du bot Discord : un salon privé par demande, avec sa transcription à la fermeture. */
+export const botTickets = pgTable(
+  "bot_tickets",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    /** Numéro lisible du ticket (#0042), attribué par la base. */
+    number: integer().generatedAlwaysAsIdentity(),
+    guildId: text().notNull(),
+    channelId: text().notNull().unique(),
+    /** Identifiant de la catégorie dans les réglages du module, et son nom au moment de l'ouverture. */
+    categoryId: text().notNull(),
+    categoryLabel: text().notNull(),
+    openerId: text().notNull(),
+    claimedById: text(),
+    status: ticketStatus().notNull().default("ouvert"),
+    /** Réponses au formulaire d'ouverture. */
+    answers: jsonb().$type<{ question: string; answer: string }[]>().notNull().default([]),
+    closeReason: text(),
+    closedById: text(),
+    /** Transcription HTML enregistrée à la fermeture. */
+    transcript: text(),
+    /** Note de satisfaction de 1 à 5, donnée en MP après la fermeture. */
+    rating: integer(),
+    lastActivityAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    closedAt: timestamp({ withTimezone: true }),
+  },
+  table => [
+    // Un seul ticket ouvert par membre et par catégorie.
+    uniqueIndex("bot_tickets_un_ouvert_par_categorie").on(table.guildId, table.openerId, table.categoryId).where(sql`${table.status} = 'ouvert'`),
+    index("bot_tickets_inactifs_idx").on(table.status, table.lastActivityAt),
+    check("bot_tickets_note", sql`${table.rating} between 1 and 5`),
+  ],
 );

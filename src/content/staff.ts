@@ -1,0 +1,68 @@
+/*
+ * Textes de l'espace équipe : critères de refus et messages privés envoyés par le bot.
+ * Les critères seront gérables depuis l'administration ; en attendant, les modifier ici.
+ */
+
+export const REFUSAL_CRITERIA = [
+  { id: "background", label: "Background trop court ou peu travaillé" },
+  { id: "coherence", label: "Personnage incohérent" },
+  { id: "lore", label: "Non-respect du lore" },
+  { id: "redaction", label: "Orthographe et rédaction" },
+  { id: "experience", label: "Expérience RP insuffisante" },
+  { id: "hrp", label: "Informations HRP incomplètes ou incohérentes" },
+  { id: "document", label: "Document inaccessible" },
+  { id: "dossier", label: "Dossier de reprise insuffisant" },
+  { id: "entretien", label: "Entretien vocal non concluant" },
+  { id: "autre", label: "Autre (voir le commentaire)" },
+] as const;
+
+export type RefusalCriterion = (typeof REFUSAL_CRITERIA)[number]["id"];
+
+export function criterionLabel(id: string) {
+  return REFUSAL_CRITERIA.find(item => item.id === id)?.label ?? id;
+}
+
+/** Couleur des embeds Discord (or du site). */
+const EMBED_COLOR = 0xd1a64a;
+const EMBED_DANGER = 0xc4583a;
+const EMBED_SUCCESS = 0x8fae5a;
+
+type Embed = { title: string; description: string; color: number; fields?: { name: string; value: string }[]; footer?: { text: string } };
+
+const footer = { text: "Néa Hélikè · Portail whitelist" };
+
+export const DIRECT_MESSAGES = {
+  validee: (): Embed => ({
+    title: "Candidature validée",
+    description:
+      "Ta candidature écrite à Néa Hélikè est validée.\n\nTu as reçu le rôle **attente de wl** : rejoins un salon d'attente vocal sur le Discord pour passer ton entretien.",
+    color: EMBED_COLOR,
+    footer,
+  }),
+  modification: ({ steps, comment, url }: { steps: string[]; comment: string; url: string }): Embed => ({
+    title: "Modification demandée",
+    description: `L'équipe te demande de modifier ta candidature avant de la relire.\n\nRends-toi sur le portail : ${url}`,
+    color: EMBED_COLOR,
+    fields: [
+      { name: "Parties à reprendre", value: steps.join(", ") },
+      ...(comment ? [{ name: "Message de l'équipe", value: comment.slice(0, 1000) }] : []),
+    ],
+    footer,
+  }),
+  refusee: ({ criteria, comment, until }: { criteria: string[]; comment: string; until: string }): Embed => ({
+    title: "Candidature refusée",
+    description: `Ta candidature à Néa Hélikè a été refusée. Tu pourras en déposer une nouvelle à partir du **${until}**, soit 3 mois minimum.`,
+    color: EMBED_DANGER,
+    fields: [
+      ...(criteria.length > 0 ? [{ name: "Critères", value: criteria.map(item => `• ${item}`).join("\n") }] : []),
+      ...(comment ? [{ name: "Message de l'équipe", value: comment.slice(0, 1000) }] : []),
+    ],
+    footer,
+  }),
+  whitelistee: (): Embed => ({
+    title: "Bienvenue à Néa Hélikè",
+    description: "Ton entretien est validé : tu es whitelisté et tu as reçu le rôle **Magistrat**. La cité t'attend.",
+    color: EMBED_SUCCESS,
+    footer,
+  }),
+};

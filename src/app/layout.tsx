@@ -3,6 +3,7 @@ import { Marcellus } from "next/font/google";
 import "@/components/arc/foundation.css";
 import "@/styles/tokens.css";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site-url";
 
 const marcellus = Marcellus({
   weight: "400",
@@ -11,15 +12,12 @@ const marcellus = Marcellus({
   display: "swap",
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
 
 // Le site reste invisible des moteurs de recherche tant que NEXT_PUBLIC_INDEXABLE n'est pas « true ».
 const indexable = process.env.NEXT_PUBLIC_INDEXABLE === "true";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
   robots: indexable ? undefined : { index: false, follow: false },
   title: {
     default: "Néa Hélikè · Serveur RP FiveM whitelist",

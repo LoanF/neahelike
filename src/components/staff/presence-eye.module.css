@@ -1,0 +1,78 @@
+.eye {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  padding: 4px 6px;
+  border-radius: var(--nh-radius);
+  background: var(--nh-sel-bg);
+  box-shadow: var(--nh-sel-ring);
+  cursor: default;
+  outline: none;
+}
+
+.eye:focus-visible {
+  outline: 2px solid var(--nh-gold);
+  outline-offset: 2px;
+}
+
+/* Clignement : l'œil se ferme brièvement toutes les quatre secondes. */
+.lid {
+  transform-origin: 50% 50%;
+  animation: nh-blink 4s infinite;
+}
+
+@keyframes nh-blink {
+  0%, 44%, 52%, 100% {
+    transform: scaleY(1);
+  }
+  48% {
+    transform: scaleY(.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lid {
+    animation: none;
+  }
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 50%;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 170px;
+  padding: 10px 12px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--nh-parchment);
+  background: var(--nh-plaque-bg);
+  box-shadow: var(--nh-rim), var(--nh-lift);
+  border-radius: var(--nh-radius);
+}
+
+.eye:hover .tooltip,
+.eye:focus-visible .tooltip {
+  display: flex;
+}
+
+.tooltipTitle {
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--nh-gold);
+}
+
+.viewer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  border-radius: 50%;
+}

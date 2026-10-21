@@ -15,7 +15,7 @@ interface DossierFormProps {
   initial: StepValues;
   affinities: Choice[];
   creatures: Choice[];
-  backHref: string;
+  backHref?: string;
 }
 
 export function DossierForm({ initial, affinities, creatures, backHref }: DossierFormProps) {

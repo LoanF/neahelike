@@ -1,0 +1,446 @@
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  font-size: 14px;
+  color: var(--nh-parchment-dim);
+}
+
+.back:hover {
+  color: var(--nh-gold-lit);
+}
+
+/* ---------- En-tête du joueur ---------- */
+
+.hero {
+  overflow: visible;
+}
+
+.banner {
+  position: relative;
+  height: 110px;
+  overflow: hidden;
+  background: var(--nh-scene);
+  border-radius: var(--nh-radius) var(--nh-radius) 0 0;
+}
+
+.bannerImage {
+  object-fit: cover;
+}
+
+/* Positionné pour passer au-dessus de la bannière qu'il chevauche. */
+.heroBody {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  padding: 0 24px 20px;
+  margin-top: -36px;
+}
+
+.heroAvatar {
+  position: relative;
+  flex: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--nh-bronze), 0 0 0 5px var(--nh-gold-deep);
+}
+
+.heroText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* Le texte commence sous la bannière ; seul l'avatar la chevauche. */
+  padding-top: 44px;
+  padding-bottom: 2px;
+}
+
+.heroName {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.heroName h1 {
+  margin: 0;
+  font-family: var(--nh-font-title);
+  font-weight: 400;
+  font-size: 28px;
+  letter-spacing: .05em;
+  color: var(--nh-parchment);
+  text-shadow: 0 2px 0 #000;
+}
+
+.heroMeta {
+  font-size: 13px;
+  color: var(--nh-placeholder);
+  overflow-wrap: anywhere;
+}
+
+.heroRp {
+  font-family: var(--nh-font-title);
+  font-size: 17px;
+  letter-spacing: .04em;
+  color: var(--nh-gold-lit);
+}
+
+.heroStatus {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- Colonnes ---------- */
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+  gap: var(--nh-grid-gap);
+  align-items: start;
+}
+
+.mainColumn,
+.sideColumn {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--nh-grid-gap);
+}
+
+.panel {
+  padding: 24px 24px 26px;
+}
+
+.dots {
+  margin: 0 auto 18px;
+  width: 40%;
+}
+
+.panelTitle {
+  margin: 0 0 14px;
+  font-family: var(--nh-font-title);
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: .08em;
+  color: var(--nh-gold-lit);
+  text-shadow: 0 1px 0 #000;
+}
+
+.panelMeta {
+  margin: -6px 0 16px;
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+}
+
+.dossier {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  font-size: 15px;
+  color: var(--nh-parchment);
+  background: var(--nh-sel-bg);
+  box-shadow: var(--nh-sel-ring);
+  border-radius: var(--nh-radius);
+}
+
+.dossier svg {
+  color: var(--nh-gold);
+}
+
+.dossier strong {
+  color: var(--nh-gold-lit);
+}
+
+.refusal {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--nh-parchment-dim);
+  background: var(--nh-bronze-deep);
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px var(--nh-terracotta);
+  border-radius: var(--nh-radius);
+}
+
+.refusal strong {
+  color: #e98a6f;
+}
+
+.waiting {
+  margin: 0;
+  font-size: 14px;
+  color: var(--nh-parchment-dim);
+}
+
+/* ---------- Décision ---------- */
+
+.decision {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.choices > * {
+  width: 100%;
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.confirmText {
+  margin: 0;
+  font-size: 14px;
+  color: var(--nh-parchment-dim);
+}
+
+.fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fieldset legend {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--nh-parchment);
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.formError {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #e98a6f;
+  background: var(--nh-bronze-deep);
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px var(--nh-terracotta);
+  border-radius: var(--nh-radius);
+}
+
+.success {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #b9d08a;
+  background: var(--nh-bronze-deep);
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px #6f8a43;
+  border-radius: var(--nh-radius);
+}
+
+.success ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--nh-gold-lit);
+}
+
+/* ---------- Notes ---------- */
+
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.noteForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.noteForm textarea {
+  min-height: 96px;
+}
+
+.visibility {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.visibility legend {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--nh-parchment);
+}
+
+.visibilityOption {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px;
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket-locked);
+  border-radius: var(--nh-radius);
+  cursor: pointer;
+}
+
+.visibilityOption input {
+  position: absolute;
+  opacity: 0;
+}
+
+.visibilityOption:has(input:focus-visible) {
+  outline: 2px solid var(--nh-gold);
+  outline-offset: 2px;
+}
+
+.visibilityOption svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.visibilityOption small {
+  display: block;
+  font-size: 12px;
+  color: var(--nh-placeholder);
+}
+
+.visibilityActive {
+  color: var(--nh-gold-lit);
+  background: var(--nh-sel-bg);
+  box-shadow: var(--nh-sel-ring);
+}
+
+.noteHint {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--nh-placeholder);
+}
+
+.noteSubmit {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.noteList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.note {
+  padding: 12px 14px;
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket-locked);
+  border-radius: var(--nh-radius);
+}
+
+.noteStaff {
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px var(--nh-gold);
+}
+
+.noteHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.noteAvatar {
+  border-radius: 50%;
+}
+
+.noteAuthor {
+  font-weight: 700;
+  color: var(--nh-parchment);
+}
+
+.noteDate {
+  margin-left: auto;
+  color: var(--nh-placeholder);
+}
+
+.noteDelete button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  color: var(--nh-placeholder);
+  background: none;
+  border-radius: var(--nh-radius);
+  cursor: pointer;
+}
+
+.noteDelete button:hover {
+  color: #e98a6f;
+  background: rgba(196, 88, 58, .12);
+}
+
+.noteContent {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  color: var(--nh-parchment);
+}
+
+@media (max-width: 1000px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .heroBody {
+    flex-wrap: wrap;
+    padding: 0 16px 18px;
+  }
+
+  .heroStatus {
+    width: 100%;
+  }
+
+  .panel {
+    padding: 20px 16px 22px;
+  }
+
+  .visibility {
+    grid-template-columns: 1fr;
+  }
+}
