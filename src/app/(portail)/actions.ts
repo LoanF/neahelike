@@ -7,6 +7,7 @@ import { CGU_VERSION } from "@/content/legal";
 import { db, schema } from "@/db";
 import { logEvent } from "@/lib/events";
 import { syncMember } from "@/lib/members";
+import { latestNotifications, markAllRead } from "@/lib/notifications";
 import { getCurrentUser } from "@/lib/session";
 
 export async function loginWithDiscord() {
@@ -41,4 +42,17 @@ export async function recheckGuild() {
   if (!user) redirect("/connexion");
   const { inGuild } = await syncMember(user.id);
   redirect(inGuild ? "/liaison" : "/rejoindre-discord?erreur=absent");
+}
+
+/** Cloche : dernières notifications du joueur connecté. */
+export async function fetchNotifications() {
+  const user = await getCurrentUser();
+  if (!user) return { items: [], unread: 0 };
+  return latestNotifications(user.id);
+}
+
+/** Ouverture de la cloche : tout est marqué comme lu. */
+export async function markNotificationsRead() {
+  const user = await getCurrentUser();
+  if (user) await markAllRead(user.id);
 }

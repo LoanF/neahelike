@@ -165,6 +165,14 @@
   padding: 40px var(--nh-gutter-portal) 64px;
 }
 
+/* Barre du haut du contenu : la cloche, en haut à droite. */
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  max-width: 1100px;
+  margin: -16px auto 8px;
+}
+
 .pageHead {
   display: flex;
   align-items: flex-end;
