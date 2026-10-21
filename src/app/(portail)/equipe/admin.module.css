@@ -283,3 +283,208 @@
     align-items: stretch;
   }
 }
+
+/* ---------- Affinités, créatures, entreprises ---------- */
+
+.factionRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 12px 14px;
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket-locked);
+  border-radius: var(--nh-radius);
+}
+
+.factionName {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  color: var(--nh-parchment);
+}
+
+.factionName strong {
+  display: block;
+  font-family: var(--nh-font-title);
+  font-weight: 400;
+  font-size: 16px;
+  letter-spacing: .04em;
+}
+
+.factionEmblem {
+  flex: none;
+  color: var(--nh-gold);
+}
+
+.factionControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.inlineForm {
+  display: flex;
+}
+
+/* Interrupteur doré : piste en cavité, dôme qui glisse. */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 150px;
+  padding: 6px 10px;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+  background: none;
+  border-radius: var(--nh-radius);
+  cursor: pointer;
+}
+
+.switch:hover {
+  background: var(--nh-hover-wash);
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--nh-gold);
+  outline-offset: 2px;
+}
+
+.switchTrack {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 18px;
+  background: var(--nh-bronze);
+  box-shadow: var(--nh-socket);
+  border-radius: 9px;
+}
+
+.switchThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--nh-placeholder);
+  transition: transform var(--nh-dur-band) var(--nh-ease-band), background var(--nh-dur-band) ease-out;
+}
+
+.switch[aria-pressed="true"] {
+  color: var(--nh-gold-lit);
+}
+
+.switch[aria-pressed="true"] .switchThumb {
+  transform: translateX(16px);
+  background: var(--nh-dome);
+  box-shadow: var(--nh-dome-shadow);
+}
+
+.iconButton:disabled {
+  opacity: .3;
+  cursor: default;
+}
+
+.iconButton:disabled:hover {
+  color: var(--nh-parchment-dim);
+  background: none;
+}
+
+.textButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--nh-gold-lit);
+  background: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.editSlot {
+  grid-column: 1 / -1;
+}
+
+.editBox {
+  margin-top: 10px;
+  padding: 16px;
+  background: var(--nh-bronze);
+  box-shadow: var(--nh-rim);
+  border-radius: var(--nh-radius);
+}
+
+.emblems {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.emblems legend {
+  margin-bottom: 10px;
+  font-size: 15px;
+  color: var(--nh-parchment);
+}
+
+.emblemGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.emblemChoice {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  color: var(--nh-parchment-dim);
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket);
+  border-radius: var(--nh-radius);
+  cursor: pointer;
+}
+
+.emblemChoice:hover {
+  color: var(--nh-gold-lit);
+}
+
+.emblemOn {
+  color: var(--nh-gold-lit);
+  background: var(--nh-sel-bg);
+  box-shadow: var(--nh-sel-ring);
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 760px) {
+  .factionRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .factionControls {
+    justify-content: flex-start;
+  }
+
+  .fieldGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
