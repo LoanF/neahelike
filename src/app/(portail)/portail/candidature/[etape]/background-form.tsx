@@ -8,7 +8,7 @@ import { LinkFields } from "./link-fields";
 import { StepFooter } from "./step-footer";
 import { useStepForm } from "./use-step-form";
 
-export function BackgroundForm({ initial, backHref }: { initial: StepValues; backHref: string }) {
+export function BackgroundForm({ initial, backHref }: { initial: StepValues; backHref?: string }) {
   const form = useStepForm("background", { shared: false, ...initial });
   return (
     <form

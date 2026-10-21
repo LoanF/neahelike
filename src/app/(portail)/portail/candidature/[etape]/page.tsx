@@ -5,9 +5,10 @@ import { PortalHeader } from "@/components/portal/shell";
 import { AFFINITY_AVAILABILITY, CREATURE_AVAILABILITY } from "@/content/availability";
 import { AFFINITIES, CREATURES } from "@/content/lore";
 import type { StepId } from "@/lib/application";
-import { canAccessStep, currentStep, isStepId, STEPS, stepHref, visibleSteps } from "@/lib/application";
+import { canAccessStep, currentStep, isStepId, previousStep, STEPS, stepHref, visibleSteps } from "@/lib/application";
 import { getOpenApplication, isEditable } from "@/lib/applications";
 import { requireUser } from "@/lib/session";
+import { ChangesNotice } from "../changes-notice";
 import { ApplicationRecap } from "../recap";
 import { Stepper } from "../stepper";
 import styles from "../candidature.module.css";
@@ -39,7 +40,8 @@ export default async function StepPage({ params, searchParams }: { params: Promi
   const step = STEPS.find(item => item.id === etape)!;
   const steps = visibleSteps(application);
   const index = steps.findIndex(item => item.id === etape);
-  const backHref = index > 0 ? stepHref(steps[index - 1].id) : undefined;
+  const previous = previousStep(application, etape);
+  const backHref = previous ? stepHref(previous) : undefined;
 
   // Places closes : lues côté serveur à chaque affichage.
   const affinities = AFFINITY_CHOICES.map(choice => ({ ...choice, closed: AFFINITY_AVAILABILITY[choice.id as keyof typeof AFFINITY_AVAILABILITY] === false }));
@@ -50,6 +52,7 @@ export default async function StepPage({ params, searchParams }: { params: Promi
       <PortalHeader eyebrow={`Candidature · étape ${index + 1} sur ${steps.length}`} title={step.title} />
       <div className={styles.layout}>
         <Stepper application={application} current={etape} />
+        {application.status === "a_modifier" && <ChangesNotice steps={application.changesSteps ?? []} comment={application.changesComment} />}
         <Plaque unveil className={styles.panel}>
           <DotsRow className={styles.dots} />
           <StepContent
@@ -82,11 +85,11 @@ function StepContent({ step, application, user, backHref, affinities, creatures,
     case "hrp":
       return <HrpForm initial={application.hrp ?? {}} discord={{ username: user.username, id: user.id }} />;
     case "rp":
-      return <RpForm initial={application.rp ?? {}} affinities={affinities} creatures={creatures} backHref={backHref!} />;
+      return <RpForm initial={application.rp ?? {}} affinities={affinities} creatures={creatures} backHref={backHref} />;
     case "background":
-      return <BackgroundForm initial={application.background ?? {}} backHref={backHref!} />;
+      return <BackgroundForm initial={application.background ?? {}} backHref={backHref} />;
     case "dossier":
-      return <DossierForm initial={application.dossier ?? {}} affinities={affinities.map(choice => ({ ...choice, closed: false }))} creatures={creatures.map(choice => ({ ...choice, closed: false }))} backHref={backHref!} />;
+      return <DossierForm initial={application.dossier ?? {}} affinities={affinities.map(choice => ({ ...choice, closed: false }))} creatures={creatures.map(choice => ({ ...choice, closed: false }))} backHref={backHref} />;
     case "recapitulatif":
       return (
         <>

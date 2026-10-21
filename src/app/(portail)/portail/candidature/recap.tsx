@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { AFFINITIES, CREATURES } from "@/content/lore";
 import type { Application, StepValues, User } from "@/db/schema";
 import type { DataStepId } from "@/lib/application";
-import { dossierTargetLabel, stepHref, wantsDossier } from "@/lib/application";
+import { dossierTargetLabel, isStepEditable, stepHref, wantsDossier } from "@/lib/application";
 import styles from "./candidature.module.css";
 
 function value(values: StepValues | null, field: string) {
@@ -61,7 +61,7 @@ export function ApplicationRecap({ application, user, editable }: { application:
         </p>
       )}
 
-      <Section title="HRP" step="hrp" editable={editable}>
+      <Section title="HRP" step="hrp" editable={editable && isStepEditable(application, "hrp")}>
         <Item label="Pseudo Discord">@{user.username}</Item>
         <Item label="ID Discord">{user.id}</Item>
         <Item label="Âge">{value(hrp, "age") && `${value(hrp, "age")} ans`}</Item>
@@ -73,7 +73,7 @@ export function ApplicationRecap({ application, user, editable }: { application:
         </Item>
       </Section>
 
-      <Section title="Personnage" step="rp" editable={editable}>
+      <Section title="Personnage" step="rp" editable={editable && isStepEditable(application, "rp")}>
         <Item label="Prénom et nom">{[value(rp, "firstName"), value(rp, "lastName")].filter(Boolean).join(" ")}</Item>
         <Item label="Âge">{value(rp, "age") && `${value(rp, "age")} ans`}</Item>
         <Item label="Affinité">{affinity ? `${affinity.name} (${affinity.god})` : "Aucune"}</Item>
@@ -83,14 +83,14 @@ export function ApplicationRecap({ application, user, editable }: { application:
         </Item>
       </Section>
 
-      <Section title="Background" step="background" editable={editable}>
+      <Section title="Background" step="background" editable={editable && isStepEditable(application, "background")}>
         <Item label="Document" wide>
           <DocLink href={value(background, "url")} />
         </Item>
       </Section>
 
       {wantsDossier(application) && (
-        <Section title="Dossier de reprise" step="dossier" editable={editable}>
+        <Section title="Dossier de reprise" step="dossier" editable={editable && isStepEditable(application, "dossier")}>
           <Item label="Reprise">{dossierTargetLabel(dossier)}</Item>
           <Item label="Document">
             <DocLink href={value(dossier, "url")} />

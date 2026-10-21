@@ -12,7 +12,7 @@ interface RpFormProps {
   initial: StepValues;
   affinities: Choice[];
   creatures: Choice[];
-  backHref: string;
+  backHref?: string;
 }
 
 export function RpForm({ initial, affinities, creatures, backHref }: RpFormProps) {

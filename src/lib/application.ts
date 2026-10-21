@@ -121,7 +121,7 @@ export function fieldErrors(error: z.ZodError): FieldErrors {
   return errors;
 }
 
-type StepSource = Pick<Application, DataStepId>;
+type StepSource = Pick<Application, DataStepId> & Partial<Pick<Application, "status" | "changesSteps">>;
 
 export function wantsDossier(application: StepSource | null) {
   return application?.hrp?.wantsDossier === true;
@@ -136,26 +136,57 @@ export function isStepComplete(application: StepSource | null, step: DataStepId)
   return !!application && parseStep(step, application[step]).success;
 }
 
+function isChangeRequest(application: StepSource | null) {
+  return application?.status === "a_modifier";
+}
+
+/**
+ * Étapes modifiables. Après une demande de modification, seules les parties rouvertes par l'équipe le sont,
+ * plus le dossier s'il vient d'être ajouté et n'est pas encore rempli.
+ */
+export function isStepEditable(application: StepSource | null, step: StepId) {
+  if (!isChangeRequest(application) || step === "recapitulatif") return true;
+  if (application?.changesSteps?.includes(step)) return true;
+  return step === "dossier" && wantsDossier(application) && !isStepComplete(application, "dossier");
+}
+
+function editableSteps(application: StepSource | null) {
+  return visibleSteps(application).filter(step => step.id !== "recapitulatif" && isStepEditable(application, step.id));
+}
+
 /** Première étape à remplir, ou le récapitulatif si tout est complet. */
 export function currentStep(application: StepSource | null): StepId {
+  if (isChangeRequest(application)) {
+    const editable = editableSteps(application);
+    const incomplete = editable.find(step => step.id !== "recapitulatif" && !isStepComplete(application, step.id));
+    return (incomplete ?? editable[0])?.id ?? "recapitulatif";
+  }
   for (const step of visibleSteps(application)) {
     if (step.id === "recapitulatif" || !isStepComplete(application, step.id)) return step.id;
   }
   return "recapitulatif";
 }
 
-/** Une étape n'est accessible que si toutes les précédentes sont complètes. */
+/** Une étape n'est accessible que si toutes les précédentes sont complètes (et, après une demande de modification, si elle est rouverte). */
 export function canAccessStep(application: StepSource | null, step: StepId) {
   const steps = visibleSteps(application);
   const index = steps.findIndex(item => item.id === step);
   if (index === -1) return false;
+  if (isChangeRequest(application) && step !== "recapitulatif" && !isStepEditable(application, step)) return false;
   return steps.slice(0, index).every(item => item.id === "recapitulatif" || isStepComplete(application, item.id));
 }
 
 export function nextStep(application: StepSource | null, step: StepId): StepId {
-  const steps = visibleSteps(application);
+  const steps = isChangeRequest(application) ? [...editableSteps(application), STEPS[STEPS.length - 1]] : visibleSteps(application);
   const index = steps.findIndex(item => item.id === step);
   return steps[Math.min(index + 1, steps.length - 1)].id;
+}
+
+/** Étape précédente modifiable, pour le bouton « Précédent ». */
+export function previousStep(application: StepSource | null, step: StepId): StepId | null {
+  const steps = isChangeRequest(application) ? [...editableSteps(application), STEPS[STEPS.length - 1]] : visibleSteps(application);
+  const index = steps.findIndex(item => item.id === step);
+  return index > 0 ? steps[index - 1].id : null;
 }
 
 export function stepHref(step: StepId) {

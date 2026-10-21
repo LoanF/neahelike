@@ -16,7 +16,8 @@ export function Stepper({ application, current }: { application: Application; cu
           const active = step.id === current;
           const reachable = canAccessStep(application, step.id);
           // Une étape remplie mais derrière une étape incomplète reste affichée verrouillée.
-          const done = reachable && step.id !== "recapitulatif" && isStepComplete(application, step.id);
+          // Après une demande de modification, les parties non rouvertes restent cochées mais non cliquables.
+          const done = (reachable || application.status === "a_modifier") && step.id !== "recapitulatif" && isStepComplete(application, step.id);
           const content = (
             <>
               <span className={styles.stepNumber} aria-hidden="true">
@@ -26,7 +27,7 @@ export function Stepper({ application, current }: { application: Application; cu
             </>
           );
           return (
-            <li key={step.id} className={cx(styles.step, active && styles.stepActive, done && styles.stepDone, !reachable && styles.stepLocked)}>
+            <li key={step.id} className={cx(styles.step, active && styles.stepActive, done && styles.stepDone, !reachable && !done && styles.stepLocked)}>
               {reachable && !active ? (
                 <Link href={stepHref(step.id)} className={styles.stepLink}>{content}</Link>
               ) : (

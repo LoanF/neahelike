@@ -8,7 +8,7 @@ import { db, schema } from "@/db";
 import type { Application, ApplicationStatus, StepValues } from "@/db/schema";
 import { logEvent } from "./events";
 import type { DataStepId, FieldErrors } from "./application";
-import { DATA_STEPS, draftSchema, fieldErrors, isStepComplete, parseStep, STEP_FIELDS, visibleSteps } from "./application";
+import { DATA_STEPS, draftSchema, fieldErrors, isStepComplete, isStepEditable, parseStep, STEP_FIELDS, visibleSteps } from "./application";
 
 const CLOSED_STATUSES: ApplicationStatus[] = ["whitelistee", "refusee"];
 
@@ -79,7 +79,7 @@ function cleanDraft(step: DataStepId, values: unknown): StepValues | null {
 }
 
 export async function saveDraft(application: Application, step: DataStepId, values: unknown) {
-  if (!isEditable(application)) return { error: "Ta candidature n'est plus modifiable." };
+  if (!isEditable(application) || !isStepEditable(application, step)) return { error: "Cette partie n'est plus modifiable." };
   const draft = cleanDraft(step, values);
   if (!draft) return { error: "Brouillon invalide." };
   await db().update(schema.applications).set({ [step]: draft }).where(eq(schema.applications.id, application.id));
@@ -100,7 +100,7 @@ function availabilityErrors(step: DataStepId, values: StepValues): FieldErrors {
 
 /** Valide l'étape et l'enregistre. Les valeurs sont gardées même invalides, pour ne rien perdre. */
 export async function saveStep(application: Application, step: DataStepId, values: unknown): Promise<{ errors: FieldErrors } | { ok: true; values: StepValues }> {
-  if (!isEditable(application)) return { errors: { form: "Ta candidature n'est plus modifiable." } };
+  if (!isEditable(application) || !isStepEditable(application, step)) return { errors: { form: "Cette partie n'est plus modifiable." } };
   const draft = cleanDraft(step, values);
   if (!draft) return { errors: { form: "Formulaire invalide." } };
 
@@ -129,6 +129,8 @@ export async function submitApplication(application: Application): Promise<{ err
     .set({
       status: "envoyee",
       submittedAt: new Date(),
+      // Nouvel envoi : l'équipe repart de « En attente de lecture ».
+      viewedAt: null,
       // Dossier décoché après coup : on n'envoie pas un dossier que le joueur ne voit plus.
       ...(!steps.includes("dossier") && { dossier: null }),
     })
