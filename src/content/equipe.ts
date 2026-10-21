@@ -1,26 +1,7 @@
 /*
- * Textes de l'espace équipe : critères de refus et messages privés envoyés par le bot.
- * Les critères seront gérables depuis l'administration ; en attendant, les modifier ici.
+ * Textes de l'espace équipe : messages privés envoyés par le bot.
+ * Les critères de refus se gèrent depuis l'administration (table refusal_criteria).
  */
-
-export const REFUSAL_CRITERIA = [
-  { id: "background", label: "Background trop court ou peu travaillé" },
-  { id: "coherence", label: "Personnage incohérent" },
-  { id: "lore", label: "Non-respect du lore" },
-  { id: "redaction", label: "Orthographe et rédaction" },
-  { id: "experience", label: "Expérience RP insuffisante" },
-  { id: "hrp", label: "Informations HRP incomplètes ou incohérentes" },
-  { id: "document", label: "Document inaccessible" },
-  { id: "dossier", label: "Dossier de reprise insuffisant" },
-  { id: "entretien", label: "Entretien vocal non concluant" },
-  { id: "autre", label: "Autre (voir le commentaire)" },
-] as const;
-
-export type RefusalCriterion = (typeof REFUSAL_CRITERIA)[number]["id"];
-
-export function criterionLabel(id: string) {
-  return REFUSAL_CRITERIA.find(item => item.id === id)?.label ?? id;
-}
 
 /** Couleur des embeds Discord (or du site). */
 const EMBED_COLOR = 0xd1a64a;

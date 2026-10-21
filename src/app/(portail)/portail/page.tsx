@@ -5,12 +5,12 @@ import { Badge, Button, ButtonLink, cx, DotsRow, Pin, Plaque } from "@/component
 import { formatDate, journeyIndex, STATUS_LABEL, STATUS_TONE } from "@/components/portal/application-status";
 import { PortalHeader } from "@/components/portal/shell";
 import { JOURNEY } from "@/content/candidature";
-import { criterionLabel } from "@/content/equipe";
 import { SITE } from "@/content/site";
 import type { Application } from "@/db/schema";
 import { currentStep, isStepComplete, stepHref, visibleSteps } from "@/lib/application";
 import type { StartBlock } from "@/lib/applications";
 import { getLatestApplication, getOpenApplication, getStartBlock } from "@/lib/applications";
+import { criteriaLabels } from "@/lib/criteria";
 import { displayName } from "@/lib/discord-cdn";
 import { requireUser } from "@/lib/session";
 import { startCandidature } from "./candidature/actions";
@@ -44,7 +44,7 @@ export default async function PortailPage() {
             <h2 className={styles.cardTitle}>Ma candidature</h2>
             {application && !block?.reason && <Badge tone={STATUS_TONE[application.status]} size="lg">{STATUS_LABEL[application.status]}</Badge>}
           </div>
-          <ApplicationState application={open} latest={latest} block={block} />
+          <ApplicationState application={open} latest={latest} block={block} criteria={await criteriaLabels()} />
         </Plaque>
 
         <Plaque unveil className={styles.journey}>
@@ -109,7 +109,7 @@ function Progress({ application }: { application: Application }) {
   );
 }
 
-function ApplicationState({ application, latest, block }: { application: Application | null; latest: Application | null; block: StartBlock }) {
+function ApplicationState({ application, latest, block, criteria }: { application: Application | null; latest: Application | null; block: StartBlock; criteria: Record<string, string> }) {
   if (block?.reason === "whitelistee") {
     return <p className={styles.stateText}>Ta whitelist est validée. Bienvenue parmi les citoyens de Néa Hélikè.</p>;
   }
@@ -123,7 +123,7 @@ function ApplicationState({ application, latest, block }: { application: Applica
             {!!refused.refusalCriteria?.length && (
               <ul>
                 {refused.refusalCriteria.map(id => (
-                  <li key={id}>{criterionLabel(id)}</li>
+                  <li key={id}>{criteria[id] ?? id}</li>
                 ))}
               </ul>
             )}

@@ -226,6 +226,17 @@ export const businesses = pgTable("businesses", {
 
 export type Business = typeof businesses.$inferSelect;
 
+/** Critères de refus proposés à l'équipe ; un critère désactivé reste lisible dans les anciens refus. */
+export const refusalCriteria = pgTable("refusal_criteria", {
+  id: text().primaryKey(),
+  label: text().notNull(),
+  sortOrder: integer().notNull().default(0),
+  active: boolean().notNull().default(true),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export type RefusalCriterion = typeof refusalCriteria.$inferSelect;
+
 // ─── Bot Discord (dépôt bot-neahelike) ──────────────────────────────────────
 // Tables écrites uniquement par le bot. Le site ne fait que les lire, s'il en a besoin.
 

@@ -1,13 +1,14 @@
 import "server-only";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { NOTIFICATIONS } from "@/content/notifications";
-import { DIRECT_MESSAGES, criterionLabel, REFUSAL_CRITERIA } from "@/content/equipe";
+import { DIRECT_MESSAGES } from "@/content/equipe";
 import { db, schema } from "@/db";
 import type { Application, ApplicationStatus, NoteVisibility, User } from "@/db/schema";
 import { formatDate } from "@/components/portal/application-status";
 import type { DataStepId } from "./application";
 import { DATA_STEPS, STEPS, visibleSteps } from "./application";
 import { getLatestApplication, reapplyDate } from "./applications";
+import { criteriaLabels, getCriteria, OTHER_CRITERION } from "./criteria";
 import { addRole, removeRole, sendDirectMessage } from "./discord";
 import { env } from "./env";
 import { logEvent } from "./events";
@@ -105,10 +106,10 @@ export async function requestChanges(application: Application, reviewer: Reviewe
 }
 
 export async function refuse(application: Application, reviewer: Reviewer, criteria: string[], comment: string): Promise<ReviewResult> {
-  const known = REFUSAL_CRITERIA.map(item => item.id as string);
+  const known = (await getCriteria()).map(item => item.id);
   const chosen = criteria.filter(id => known.includes(id));
   if (chosen.length === 0) return { error: "Coche au moins un critère de refus." };
-  if (chosen.includes("autre") && comment.trim().length < 5) return { error: "Précise le critère « Autre » dans le commentaire." };
+  if (chosen.includes(OTHER_CRITERION) && comment.trim().length < 5) return { error: "Précise le critère « Autre » dans le commentaire." };
 
   const from: ApplicationStatus[] = hasRank(reviewer, "admin") ? [...OPEN_FOR_ADMIN, "entretien"] : ["envoyee", "entretien"];
   if (!from.includes(application.status)) return { error: "Cette candidature ne peut pas être refusée dans son état actuel." };
@@ -130,9 +131,10 @@ export async function refuse(application: Application, reviewer: Reviewer, crite
     await discord("Retrait du rôle « attente de wl »", warnings, () => removeRole(application.userId, role, reason(reviewer, "Candidature refusée")));
   }
   const until = formatDate(reapplyDate({ decidedAt })!);
+  const labels = await criteriaLabels();
   await notify(application.userId, NOTIFICATIONS.refusee(until));
   await discord("Message privé", warnings, () =>
-    sendDirectMessage(application.userId, { embeds: [DIRECT_MESSAGES.refusee({ criteria: chosen.map(criterionLabel), comment: comment.trim(), until })] }),
+    sendDirectMessage(application.userId, { embeds: [DIRECT_MESSAGES.refusee({ criteria: chosen.map(id => labels[id] ?? id), comment: comment.trim(), until })] }),
   );
   return { ok: true, warnings };
 }

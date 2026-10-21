@@ -3,7 +3,6 @@
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button, PinCheckbox, TextAreaField } from "@/components/plaque";
-import { REFUSAL_CRITERIA } from "@/content/equipe";
 import type { ApplicationStatus } from "@/db/schema";
 import type { DecisionState } from "../../actions";
 import { decide } from "../../actions";
@@ -18,6 +17,8 @@ interface DecisionPanelProps {
   isAdmin: boolean;
   /** Étapes que le joueur a remplies, pour « Demander une modification ». */
   steps: { id: string; label: string }[];
+  /** Critères de refus actifs (administration). */
+  criteria: { id: string; label: string }[];
 }
 
 const CONFIRM: Record<Mode, { label: string; text: string; variant: "primary" | "danger" }> = {
@@ -38,7 +39,7 @@ function Submit({ mode }: { mode: Mode }) {
 }
 
 /** Actions de l'équipe sur une candidature, chacune avec une étape de confirmation. */
-export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps }: DecisionPanelProps) {
+export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps, criteria }: DecisionPanelProps) {
   const [state, action] = useActionState<DecisionState, FormData>(decide, null);
   const [mode, setMode] = useState<Mode | null>(null);
 
@@ -116,7 +117,7 @@ export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps
           {mode === "refuser" && (
             <fieldset className={styles.fieldset}>
               <legend>Critères de refus</legend>
-              {REFUSAL_CRITERIA.map(criterion => (
+              {criteria.map(criterion => (
                 <CheckItem key={criterion.id} name="criteria" value={criterion.id} label={criterion.label} />
               ))}
             </fieldset>

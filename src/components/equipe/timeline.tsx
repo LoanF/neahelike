@@ -2,7 +2,6 @@ import { Ban, BadgeCheck, Check, Eye, FilePen, FileText, Link2, LogIn, MessageSq
 import type { LucideIcon } from "lucide-react";
 import Image from "next/image";
 import { cx } from "@/components/plaque";
-import { criterionLabel } from "@/content/equipe";
 import { STEPS } from "@/lib/application";
 import { avatarUrl } from "@/lib/discord-cdn";
 import type { TimelineEntry } from "@/lib/team";
@@ -14,7 +13,7 @@ const RANK: Record<string, string> = { joueur: "Joueur", recruteur: "Recruteur",
 const stepLabel = (id: unknown) => STEPS.find(step => step.id === id)?.label ?? String(id);
 const list = (value: unknown) => (Array.isArray(value) ? value.map(String) : []);
 
-function describe(entry: TimelineEntry): { icon: LucideIcon; tone: Tone; text: string; detail?: string } {
+function describe(entry: TimelineEntry, criteria: Record<string, string>): { icon: LucideIcon; tone: Tone; text: string; detail?: string } {
   const data = entry.data as Record<string, unknown>;
   const who = entry.actorName ?? "Un membre de l'équipe";
   switch (entry.type) {
@@ -54,7 +53,7 @@ function describe(entry: TimelineEntry): { icon: LucideIcon; tone: Tone; text: s
         icon: Ban,
         tone: "danger",
         text: `${who} a refusé la candidature`,
-        detail: [list(data.criteres).map(criterionLabel).join(" · "), typeof data.commentaire === "string" ? data.commentaire : ""].filter(Boolean).join("\n"),
+        detail: [list(data.criteres).map(id => criteria[id] ?? id).join(" · "), typeof data.commentaire === "string" ? data.commentaire : ""].filter(Boolean).join("\n"),
       };
     case "entretien.valide":
       return { icon: BadgeCheck, tone: "success", text: `${who} a validé l'entretien : joueur whitelisté` };
@@ -73,12 +72,13 @@ const when = (date: Date) =>
   date.toLocaleString("fr-FR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
 
 /** Chronologie d'un joueur : ses étapes et chaque action de l'équipe, avec qui et quand. */
-export function Timeline({ entries }: { entries: TimelineEntry[] }) {
+/** `criteria` : libellés des critères de refus (lib/criteria.ts). */
+export function Timeline({ entries, criteria }: { entries: TimelineEntry[]; criteria: Record<string, string> }) {
   if (entries.length === 0) return <p className={styles.empty}>Aucun événement.</p>;
   return (
     <ol className={styles.timeline}>
       {entries.map(entry => {
-        const { icon: Icon, tone, text, detail } = describe(entry);
+        const { icon: Icon, tone, text, detail } = describe(entry, criteria);
         const team = TEAM_EVENTS.has(entry.type);
         return (
           <li key={entry.id} className={cx(styles.item, styles[tone])}>

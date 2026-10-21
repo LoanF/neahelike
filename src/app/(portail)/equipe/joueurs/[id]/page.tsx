@@ -10,11 +10,11 @@ import { RANK_LABEL } from "@/components/portal/profile-card";
 import { BADGE_LABEL, BADGE_TONE } from "@/components/equipe/badges";
 import { ProfilePresence } from "@/components/equipe/live-presence";
 import { Timeline } from "@/components/equipe/timeline";
-import { criterionLabel } from "@/content/equipe";
 import { db, schema } from "@/db";
 import { dossierTargetLabel, isStepComplete, visibleSteps, wantsDossier } from "@/lib/application";
 import { getLatestApplication } from "@/lib/applications";
 import { takeoverNames } from "@/lib/businesses";
+import { criteriaLabels, getCriteria } from "@/lib/criteria";
 import { avatarUrl, bannerUrl, displayName } from "@/lib/discord-cdn";
 import { markViewed } from "@/lib/review";
 import { hasRank, requireUser } from "@/lib/session";
@@ -41,7 +41,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
   if (application) await markViewed(application, viewer);
   const isAdmin = hasRank(viewer, "admin");
 
-  const [events, notes, names] = await Promise.all([timeline(player.id), notesFor(player.id, viewer), takeoverNames()]);
+  const [events, notes, names, criteria, activeCriteria] = await Promise.all([timeline(player.id), notesFor(player.id, viewer), takeoverNames(), criteriaLabels(), getCriteria()]);
   // Un recruteur ne doit pas deviner l'existence d'une note réservée aux admins.
   const visibleEvents = isAdmin ? events : events.filter(event => !(event.type === "note.ajoutee" && (event.data as { visibilite?: string }).visibilite === "admin"));
   const noteViews: NoteView[] = notes.map(note => ({
@@ -112,7 +112,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
                 {application.status === "refusee" && (
                   <div className={styles.refusal}>
                     <strong>Refusée le {formatDate(application.decidedAt ?? application.updatedAt)}</strong>
-                    {!!application.refusalCriteria?.length && <span>{application.refusalCriteria.map(criterionLabel).join(" · ")}</span>}
+                    {!!application.refusalCriteria?.length && <span>{application.refusalCriteria.map(id => criteria[id] ?? id).join(" · ")}</span>}
                     {application.refusalComment && <em>« {application.refusalComment} »</em>}
                   </div>
                 )}
@@ -128,7 +128,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
           {application && (
             <Plaque className={styles.panel}>
               <h2 className={styles.panelTitle}>Décision</h2>
-              <DecisionPanel subjectId={player.id} applicationId={application.id} status={application.status} isAdmin={isAdmin} steps={filledSteps} />
+              <DecisionPanel subjectId={player.id} applicationId={application.id} status={application.status} isAdmin={isAdmin} steps={filledSteps} criteria={activeCriteria.map(({ id, label }) => ({ id, label }))} />
             </Plaque>
           )}
           <Plaque className={styles.panel}>
@@ -137,7 +137,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
           </Plaque>
           <Plaque className={styles.panel}>
             <h2 className={styles.panelTitle}>Chronologie</h2>
-            <Timeline entries={visibleEvents} />
+            <Timeline entries={visibleEvents} criteria={criteria} />
           </Plaque>
           {isAdmin && player.id !== viewer.id && (
             <Plaque className={`${styles.panel} ${styles.dangerPanel}`} rivets="none">

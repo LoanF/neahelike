@@ -99,6 +99,13 @@
       "when": 1792625122326,
       "tag": "0013_entreprises",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792625514007,
+      "tag": "0014_criteres_de_refus",
+      "breakpoints": true
     }
   ]
 }
