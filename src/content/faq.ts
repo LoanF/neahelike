@@ -20,7 +20,7 @@ export const FAQ: FaqGroup[] = [
       },
       {
         title: "Quel âge faut-il avoir ?",
-        content: "16 ans minimum.",
+        content: "18 ans minimum.",
       },
       {
         title: "Ma candidature a été refusée, que faire ?",
