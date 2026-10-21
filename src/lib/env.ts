@@ -18,7 +18,6 @@ const schema = z.object({
   DISCORD_GUILD_ID: snowflake,
   DISCORD_ROLE_RECRUTEUR: roleList,
   DISCORD_ROLE_STAFF: roleList,
-  DISCORD_ROLE_INITIE: snowflake,
   DISCORD_ROLE_ASPIRANT: snowflake.optional(),
   DISCORD_ROLE_HELIKEEN: snowflake.optional(),
 });

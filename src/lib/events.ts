@@ -12,8 +12,7 @@ export type EventType =
   | "compte.supprime"
   | "discord.rejoint"
   | "discord.quitte"
-  | "rang.change"
-  | "role.initie";
+  | "rang.change";
 
 export async function logEvent(event: { type: EventType; subjectId: string | null; actorId?: string | null; data?: Record<string, unknown> }) {
   await db().insert(schema.events).values({
