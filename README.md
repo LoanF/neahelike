@@ -31,10 +31,10 @@ pnpm build
 
 1. Créer une application sur https://discord.com/developers/applications.
 2. **OAuth2** : copier le Client ID et le Client Secret dans `AUTH_DISCORD_ID` / `AUTH_DISCORD_SECRET`, et ajouter la redirection `https://<domaine>/api/auth/callback/discord` (et `http://localhost:3000/api/auth/callback/discord` en local).
-3. **Bot** : générer le token (`DISCORD_BOT_TOKEN`), activer l'intent « Server Members », puis inviter le bot sur le serveur avec la permission « Gérer les rôles ». Son rôle doit être placé **au-dessus** des rôles Initié, Aspirant et Hélikéen.
+3. **Bot** : générer le token (`DISCORD_BOT_TOKEN`), activer l'intent « Server Members », puis inviter le bot sur le serveur avec la permission « Gérer les rôles ». Son rôle doit être placé **au-dessus** des rôles « attente de wl » et whitelist.
 4. Copier l'ID du serveur et des rôles (mode développeur Discord → clic droit → Copier l'identifiant).
 
-Les permissions du site suivent les rôles Discord : rôle Staff → staff, rôle Recruteur → recruteur, sinon joueur. Elles sont relues à chaque connexion puis toutes les 5 minutes ; quitter le serveur ou perdre un rôle retire aussitôt les droits.
+Les permissions du site suivent les rôles Discord : un des rôles de `DISCORD_ROLE_STAFF` → staff, un des rôles de `DISCORD_ROLE_RECRUTEUR` → recruteur, sinon joueur (plusieurs rôles possibles par rang, séparés par des virgules). Aucun rôle n'est donné à la liaison du compte : « attente de wl » à la validation de la candidature, puis le rôle whitelist après le vocal. Elles sont relues à chaque connexion puis toutes les 5 minutes ; quitter le serveur ou perdre un rôle retire aussitôt les droits.
 
 ## Design
 
