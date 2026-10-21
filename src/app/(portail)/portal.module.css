@@ -69,3 +69,12 @@
   background: var(--nh-bronze-deep);
   box-shadow: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px var(--nh-terracotta);
 }
+
+.notice {
+  margin-top: 18px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #b9d08a;
+  background: var(--nh-bronze-deep);
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px #6f8a43;
+}
