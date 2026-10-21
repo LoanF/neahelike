@@ -189,6 +189,29 @@ export const roleRanks = pgTable(
   table => [check("role_ranks_pas_owner", sql`${table.rank} in ('recruteur', 'admin')`)],
 );
 
+export const factionKind = pgEnum("faction_kind", ["affinite", "creature"]);
+export type FactionKind = (typeof factionKind.enumValues)[number];
+
+/**
+ * Affinités et créatures. Celles d'origine gardent leur lore dans content/lore.ts (`lore` vide) ;
+ * celles ajoutées depuis l'administration portent leur lore ici.
+ * Deux disponibilités distinctes : rejoindre (`joinOpen`) et reprendre le lead (`leadOpen`).
+ */
+export const factions = pgTable("factions", {
+  id: text().primaryKey(),
+  kind: factionKind().notNull(),
+  sortOrder: integer().notNull().default(0),
+  joinOpen: boolean().notNull().default(true),
+  leadOpen: boolean().notNull().default(true),
+  /** Archivée : masquée partout, mais toujours lisible dans les anciennes candidatures. */
+  archived: boolean().notNull().default(false),
+  lore: jsonb().$type<Record<string, string | boolean>>(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+export type Faction = typeof factions.$inferSelect;
+
 // ─── Bot Discord (dépôt bot-neahelike) ──────────────────────────────────────
 // Tables écrites uniquement par le bot. Le site ne fait que les lire, s'il en a besoin.
 
