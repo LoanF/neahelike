@@ -155,6 +155,13 @@ const PATHS = {
 
 export type EmblemName = keyof typeof PATHS;
 
+/** Tous les emblèmes dessinés, pour les choisir dans l'administration. */
+export const EMBLEM_NAMES = Object.keys(PATHS) as EmblemName[];
+
+export function isEmblemName(value: string): value is EmblemName {
+  return value in PATHS;
+}
+
 export function Emblem({ name, size = 24, strokeWidth = 1.5, className }: { name: EmblemName; size?: number; strokeWidth?: number; className?: string }) {
   return (
     <svg
