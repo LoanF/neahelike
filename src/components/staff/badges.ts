@@ -1,6 +1,4 @@
 import type { BadgeTone } from "@/components/plaque";
-import type { Application } from "@/db/schema";
-import { isStepComplete, wantsDossier } from "@/lib/application";
 
 /** Badges vus par l'équipe. « En cours de lecture » est à part : c'est l'œil de présence, calculé en direct. */
 export type StaffBadge = "aucune" | "brouillon" | "dossier" | "a_lire" | "vue" | "a_modifier" | "entretien" | "whitelistee" | "refusee";
@@ -28,18 +26,6 @@ export const BADGE_TONE: Record<StaffBadge, BadgeTone> = {
   whitelistee: "success",
   refusee: "danger",
 };
-
-export function staffBadge(application: Application | null): StaffBadge {
-  if (!application) return "aucune";
-  switch (application.status) {
-    case "brouillon":
-      return wantsDossier(application) && !isStepComplete(application, "dossier") ? "dossier" : "brouillon";
-    case "envoyee":
-      return application.viewedAt ? "vue" : "a_lire";
-    default:
-      return application.status;
-  }
-}
 
 export const TABS = [
   { id: "a-traiter", label: "À traiter", badges: ["a_lire", "vue"] },

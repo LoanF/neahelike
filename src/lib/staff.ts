@@ -2,13 +2,27 @@ import "server-only";
 import { and, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { StaffBadge, TabId } from "@/components/staff/badges";
-import { staffBadge, TABS } from "@/components/staff/badges";
+import { TABS } from "@/components/staff/badges";
 import { db, schema } from "@/db";
 import type { Application, NoteVisibility, User } from "@/db/schema";
+import { isStepComplete, wantsDossier } from "./application";
 import { hasRank } from "./session";
 
 /** Une fiche est « en cours de lecture » si son lecteur a donné signe de vie il y a moins de 30 s. */
 const PRESENCE_WINDOW_SECONDS = 30;
+
+/** Badge de la liste et de la fiche (hors œil de présence, calculé en direct). */
+export function staffBadge(application: Application | null): StaffBadge {
+  if (!application) return "aucune";
+  switch (application.status) {
+    case "brouillon":
+      return wantsDossier(application) && !isStepComplete(application, "dossier") ? "dossier" : "brouillon";
+    case "envoyee":
+      return application.viewedAt ? "vue" : "a_lire";
+    default:
+      return application.status;
+  }
+}
 
 export interface PlayerRow {
   user: User;
