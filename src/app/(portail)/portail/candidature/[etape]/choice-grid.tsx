@@ -44,7 +44,7 @@ export function ChoiceGrid({ name, legend, hint, choices, value, onChange, noneL
               {choice.emblem && <Emblem name={choice.emblem} size={28} className={styles.choiceEmblem} />}
               <span className={styles.choiceName}>{choice.name}</span>
               {choice.meta && <span className={styles.choiceMeta}>{choice.meta}</span>}
-              {choice.closed && <Badge tone="danger">{CLOSED_LABEL}</Badge>}
+              {choice.closed && <Badge tone="danger" className={styles.closedBadge}>{CLOSED_LABEL}</Badge>}
             </label>
           );
         })}

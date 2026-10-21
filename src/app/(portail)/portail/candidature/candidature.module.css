@@ -266,6 +266,13 @@ a.stepLink:hover {
   cursor: not-allowed;
 }
 
+.closedBadge {
+  height: auto;
+  padding: 4px 7px;
+  line-height: 1.3;
+  white-space: normal;
+}
+
 .choiceClosed:not(.choiceSelected) {
   opacity: .55;
 }
