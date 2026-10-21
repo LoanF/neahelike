@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
+    "vercel-build": "node scripts/migrate.mjs && next build --turbopack",
     "start": "next start",
     "lint": "eslint . --ignore-pattern \"bot/**\"",
     "db:generate": "drizzle-kit generate",
