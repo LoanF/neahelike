@@ -10,7 +10,7 @@ import { SITE } from "@/content/site";
 import type { Application } from "@/db/schema";
 import { currentStep, isStepComplete, stepHref, visibleSteps } from "@/lib/application";
 import type { StartBlock } from "@/lib/applications";
-import { getLatestApplication, getOpenApplication, startBlock } from "@/lib/applications";
+import { getLatestApplication, getOpenApplication, getStartBlock } from "@/lib/applications";
 import { displayName } from "@/lib/discord-cdn";
 import { requireUser } from "@/lib/session";
 import { startCandidature } from "./candidature/actions";
@@ -28,7 +28,7 @@ export default async function PortailPage() {
   const user = await requireUser();
   const [open, latest] = await Promise.all([getOpenApplication(user.id), getLatestApplication(user.id)]);
   const application = open ?? latest;
-  const block = open ? null : startBlock(latest);
+  const block = open ? null : await getStartBlock(user.id);
   const journey = journeyIndex(application?.status ?? null);
 
   return (

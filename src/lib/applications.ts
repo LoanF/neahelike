@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, notInArray } from "drizzle-orm";
+import { and, desc, eq, gt, lte, notInArray } from "drizzle-orm";
 import { cache } from "react";
 import { REAPPLY_DELAY_MONTHS } from "@/content/candidature";
 import { AFFINITY_AVAILABILITY, CREATURE_AVAILABILITY } from "@/content/availability";
@@ -57,10 +57,25 @@ export function startBlock(latest: Application | null): StartBlock {
   return null;
 }
 
+/**
+ * Comme `startBlock`, en tenant compte d'un délai conservé après la suppression d'un ancien compte
+ * (voir `reapplyLocks`). Les délais échus sont purgés au passage.
+ */
+export const getStartBlock = cache(async (userId: string): Promise<StartBlock> => {
+  const block = startBlock(await getLatestApplication(userId));
+  if (block) return block;
+  await db().delete(schema.reapplyLocks).where(lte(schema.reapplyLocks.until, new Date()));
+  const [lock] = await db()
+    .select()
+    .from(schema.reapplyLocks)
+    .where(and(eq(schema.reapplyLocks.discordId, userId), gt(schema.reapplyLocks.until, new Date())));
+  return lock ? { reason: "delai", until: lock.until } : null;
+});
+
 export async function startApplication(userId: string): Promise<Application | { error: string }> {
   const open = await getOpenApplication(userId);
   if (open) return open;
-  const block = startBlock(await getLatestApplication(userId));
+  const block = await getStartBlock(userId);
   if (block?.reason === "whitelistee") return { error: "Tu es déjà whitelisté." };
   if (block?.reason === "delai") return { error: `Tu pourras recandidater à partir du ${block.until.toLocaleDateString("fr-FR")}.` };
 
