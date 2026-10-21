@@ -20,6 +20,7 @@ const schema = z.object({
   DISCORD_ROLE_STAFF: roleList,
   DISCORD_ROLE_ASPIRANT: snowflake.optional(),
   DISCORD_ROLE_HELIKEEN: snowflake.optional(),
+  DISCORD_ROLE_NOVICE: snowflake.optional(),
 });
 
 export type Env = z.infer<typeof schema>;
