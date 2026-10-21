@@ -5,7 +5,6 @@
  */
 import { z } from "zod";
 import { DOSSIER_KINDS, MIN_AGE_IRL } from "@/content/candidature";
-import { AFFINITIES, CREATURES } from "@/content/lore";
 import type { Application, StepValues } from "@/db/schema";
 
 export const STEPS = [
@@ -49,12 +48,16 @@ const link = filled()
 
 const shared = z.literal(true, { error: "Confirme que le document est partagé en lecture." });
 
-const AFFINITY_IDS = AFFINITIES.map(affinity => affinity.id) as [string, ...string[]];
-const CREATURE_IDS = CREATURES.map(creature => creature.id) as [string, ...string[]];
 const DOSSIER_KIND_IDS = DOSSIER_KINDS.map(kind => kind.id) as [string, ...string[]];
 
-/** « Aucune » est enregistré comme chaîne vide. */
-const optionalChoice = (ids: [string, ...string[]]) => z.union([z.literal(""), z.enum(ids)], { error: "Choisis une option dans la liste." });
+/** Identifiant d'une affinité, d'une créature ou d'une entreprise : son existence est vérifiée côté serveur. */
+const SLUG = /^[a-z0-9-]{1,60}$/;
+
+/** Choix facultatif dans une liste gérée par l'administration ; « Aucune » est enregistré comme chaîne vide. */
+const optionalChoice = z.union([z.literal(""), z.string().regex(SLUG)], { error: "Choisis une option dans la liste." });
+
+/** Entreprise qui n'est pas encore dans la liste : le joueur la nomme lui-même. */
+export const NEW_BUSINESS = "nouvelle";
 
 export const STEP_SCHEMAS = {
   hrp: z.object({
@@ -69,8 +72,8 @@ export const STEP_SCHEMAS = {
     lastName: text(2, 40, "Le nom"),
     age: integer(18, 120, "L'âge du personnage"),
     origin: text(10, 1000, "L'origine"),
-    affinity: optionalChoice(AFFINITY_IDS),
-    creature: optionalChoice(CREATURE_IDS),
+    affinity: optionalChoice,
+    creature: optionalChoice,
   }),
   background: z.object({
     url: link,
@@ -79,13 +82,15 @@ export const STEP_SCHEMAS = {
   dossier: z
     .object({
       kind: z.enum(DOSSIER_KIND_IDS, { error: "Choisis ce que tu veux reprendre." }),
-      target: z.string({ error: "Précise ce que tu veux reprendre." }).trim().min(1, "Précise ce que tu veux reprendre.").max(80, "80 caractères maximum."),
+      target: z.string({ error: "Choisis ce que tu veux reprendre." }).trim().regex(SLUG, "Choisis ce que tu veux reprendre."),
+      targetName: z.string().trim().max(80, "80 caractères maximum.").nullish(),
       url: link,
       shared,
     })
     .superRefine((value, ctx) => {
-      const ids = value.kind === "affinite" ? AFFINITY_IDS : value.kind === "creature" ? CREATURE_IDS : null;
-      if (ids && !ids.includes(value.target)) ctx.addIssue({ code: "custom", path: ["target"], message: "Choisis dans la liste." });
+      if (value.target !== NEW_BUSINESS) return;
+      if (value.kind !== "entreprise") ctx.addIssue({ code: "custom", path: ["target"], message: "Choisis dans la liste." });
+      else if (!value.targetName || value.targetName.length < 2) ctx.addIssue({ code: "custom", path: ["targetName"], message: "Donne le nom de l'entreprise que tu veux créer." });
     }),
 } satisfies Record<DataStepId, z.ZodType>;
 
@@ -96,7 +101,7 @@ export const STEP_FIELDS: Record<DataStepId, string[]> = {
   hrp: ["age", "rpHours", "experience", "goodMic", "wantsDossier"],
   rp: ["firstName", "lastName", "age", "origin", "affinity", "creature"],
   background: ["url", "shared"],
-  dossier: ["kind", "target", "url", "shared"],
+  dossier: ["kind", "target", "targetName", "url", "shared"],
 };
 
 /** Brouillon : seulement les champs connus, sans validation de contenu. */
@@ -193,11 +198,12 @@ export function stepHref(step: StepId) {
   return `/portail/candidature/${step}`;
 }
 
-/** Libellé de la cible d'un dossier de reprise (« Lead des Minotaures »). */
-export function dossierTargetLabel(values: StepValues | null | undefined) {
+/** Libellé de la cible d'un dossier de reprise (« Lead des Minotaures »). `names` : voir lib/businesses.ts (takeoverNames). */
+export function dossierTargetLabel(values: StepValues | null | undefined, names: Record<string, string> = {}) {
   if (!values) return null;
   const target = typeof values.target === "string" ? values.target : "";
-  if (values.kind === "affinite") return `Lead des ${AFFINITIES.find(item => item.id === target)?.name ?? target}`;
-  if (values.kind === "creature") return `Lead des ${CREATURES.find(item => item.id === target)?.name ?? target}`;
-  return target ? `Entreprise : ${target}` : null;
+  if (!target) return null;
+  if (values.kind === "affinite" || values.kind === "creature") return `Lead des ${names[target] ?? target}`;
+  if (target === NEW_BUSINESS) return typeof values.targetName === "string" && values.targetName.trim() ? `Nouvelle entreprise : ${values.targetName.trim()}` : null;
+  return `Entreprise : ${names[target] ?? target}`;
 }

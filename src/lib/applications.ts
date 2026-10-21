@@ -2,13 +2,13 @@ import "server-only";
 import { and, desc, eq, gt, lte, notInArray } from "drizzle-orm";
 import { cache } from "react";
 import { REAPPLY_DELAY_MONTHS } from "@/content/candidature";
-import { AFFINITY_AVAILABILITY, CREATURE_AVAILABILITY } from "@/content/availability";
-import type { AffinityId, CreatureId } from "@/content/lore";
 import { db, schema } from "@/db";
 import type { Application, ApplicationStatus, StepValues } from "@/db/schema";
 import { logEvent } from "./events";
 import type { DataStepId, FieldErrors } from "./application";
-import { DATA_STEPS, draftSchema, fieldErrors, isStepComplete, isStepEditable, parseStep, STEP_FIELDS, visibleSteps } from "./application";
+import { DATA_STEPS, draftSchema, fieldErrors, isStepComplete, isStepEditable, NEW_BUSINESS, parseStep, STEP_FIELDS, visibleSteps } from "./application";
+import { getBusinesses } from "./businesses";
+import { getFactions } from "./factions";
 
 const CLOSED_STATUSES: ApplicationStatus[] = ["whitelistee", "refusee"];
 
@@ -101,14 +101,35 @@ export async function saveDraft(application: Application, step: DataStepId, valu
   return { ok: true as const };
 }
 
-/** Places closes : une affinité ou une créature fermée ne peut pas être choisie. */
-function availabilityErrors(step: DataStepId, values: StepValues): FieldErrors {
+/**
+ * Disponibilités gérées par l'administration : une affinité ou une créature fermée ne peut pas être rejointe,
+ * un lead déjà repris ou une entreprise reprise ne peut pas être demandé.
+ */
+async function availabilityErrors(step: DataStepId, values: StepValues): Promise<FieldErrors> {
   const errors: FieldErrors = {};
   if (step === "rp") {
-    const affinity = values.affinity as AffinityId | "";
-    const creature = values.creature as CreatureId | "";
-    if (affinity && AFFINITY_AVAILABILITY[affinity] === false) errors.affinity = "Cette affinité n'accepte plus de nouveaux membres pour le moment.";
-    if (creature && CREATURE_AVAILABILITY[creature] === false) errors.creature = "Cette créature n'accepte plus de nouveaux membres pour le moment.";
+    const { affinities, creatures } = await getFactions();
+    const affinity = typeof values.affinity === "string" ? values.affinity : "";
+    const creature = typeof values.creature === "string" ? values.creature : "";
+    const chosenAffinity = affinities.find(item => item.id === affinity);
+    const chosenCreature = creatures.find(item => item.id === creature);
+    if (affinity && !chosenAffinity) errors.affinity = "Cette affinité n'existe plus : choisis-en une autre.";
+    else if (chosenAffinity && !chosenAffinity.joinOpen) errors.affinity = "Cette affinité n'accepte plus de nouveaux membres pour le moment.";
+    if (creature && !chosenCreature) errors.creature = "Cette créature n'existe plus : choisis-en une autre.";
+    else if (chosenCreature && !chosenCreature.joinOpen) errors.creature = "Cette créature n'accepte plus de nouveaux membres pour le moment.";
+  }
+  if (step === "dossier") {
+    const target = typeof values.target === "string" ? values.target : "";
+    if (values.kind === "affinite" || values.kind === "creature") {
+      const { affinities, creatures } = await getFactions();
+      const chosen = (values.kind === "affinite" ? affinities : creatures).find(item => item.id === target);
+      if (target && !chosen) errors.target = "Choisis dans la liste.";
+      else if (chosen && !chosen.leadOpen) errors.target = "Ce lead est déjà repris.";
+    } else if (values.kind === "entreprise" && target && target !== NEW_BUSINESS) {
+      const chosen = (await getBusinesses()).find(item => item.id === target);
+      if (!chosen) errors.target = "Choisis dans la liste.";
+      else if (!chosen.open) errors.target = "Cette entreprise est déjà reprise.";
+    }
   }
   return errors;
 }
@@ -122,7 +143,7 @@ export async function saveStep(application: Application, step: DataStepId, value
   await db().update(schema.applications).set({ [step]: draft }).where(eq(schema.applications.id, application.id));
 
   const parsed = parseStep(step, draft);
-  const errors = { ...(parsed.success ? {} : fieldErrors(parsed.error)), ...availabilityErrors(step, draft) };
+  const errors = { ...(parsed.success ? {} : fieldErrors(parsed.error)), ...(await availabilityErrors(step, draft)) };
   if (Object.keys(errors).length > 0) return { errors };
 
   await logEvent({ type: "candidature.etape", subjectId: application.userId, data: { etape: step } });
@@ -135,7 +156,10 @@ export async function submitApplication(application: Application): Promise<{ err
   const steps = visibleSteps(application).map(step => step.id);
   const incomplete = DATA_STEPS.filter(step => steps.includes(step) && !isStepComplete(application, step));
   if (incomplete.length > 0) return { error: "Certaines étapes sont incomplètes." };
-  const closed = availabilityErrors("rp", application.rp ?? {});
+  const closed = {
+    ...(await availabilityErrors("rp", application.rp ?? {})),
+    ...(steps.includes("dossier") ? await availabilityErrors("dossier", application.dossier ?? {}) : {}),
+  };
   if (Object.keys(closed).length > 0) return { error: Object.values(closed)[0] };
 
   const resubmission = application.status === "a_modifier";
