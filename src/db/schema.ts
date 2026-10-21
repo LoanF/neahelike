@@ -1,4 +1,5 @@
-import { boolean, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { boolean, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 export const rank = pgEnum("rank", ["joueur", "recruteur", "staff"]);
 export type Rank = (typeof rank.enumValues)[number];
@@ -44,6 +45,48 @@ export const events = pgTable(
 );
 
 export type EventRow = typeof events.$inferSelect;
+
+/**
+ * Statuts d'une candidature :
+ * brouillon → envoyee → (a_modifier → envoyee) → entretien (écrit validé, rôle « attente de wl ») → whitelistee,
+ * ou refusee à tout moment après l'envoi.
+ */
+export const applicationStatus = pgEnum("application_status", ["brouillon", "envoyee", "a_modifier", "entretien", "whitelistee", "refusee"]);
+export type ApplicationStatus = (typeof applicationStatus.enumValues)[number];
+
+/** Valeurs brutes d'une étape du formulaire, telles que saisies (voir lib/application.ts). */
+export type StepValues = Record<string, string | boolean | null>;
+
+/**
+ * Candidatures whitelist. Un joueur n'a qu'une candidature ouverte à la fois ;
+ * les candidatures refusées ou abouties restent pour l'historique.
+ */
+export const applications = pgTable(
+  "applications",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: applicationStatus().notNull().default("brouillon"),
+    hrp: jsonb().$type<StepValues>(),
+    rp: jsonb().$type<StepValues>(),
+    background: jsonb().$type<StepValues>(),
+    dossier: jsonb().$type<StepValues>(),
+    submittedAt: timestamp({ withTimezone: true }),
+    decidedAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+  },
+  table => [
+    index("applications_user_idx").on(table.userId, table.createdAt),
+    uniqueIndex("applications_user_open_idx")
+      .on(table.userId)
+      .where(sql`${table.status} not in ('whitelistee', 'refusee')`),
+  ],
+);
+
+export type Application = typeof applications.$inferSelect;
 
 // ─── Bot Discord (dépôt bot-neahelike) ──────────────────────────────────────
 // Tables écrites uniquement par le bot. Le site ne fait que les lire, s'il en a besoin.

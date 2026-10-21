@@ -1,0 +1,206 @@
+.grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--nh-grid-gap);
+  align-items: start;
+}
+
+.main,
+.journey {
+  padding: 30px 30px 32px;
+}
+
+.dots {
+  margin: 0 auto 20px;
+  width: 50%;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cardTitle {
+  margin: 0;
+  font-family: var(--nh-font-title);
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: .08em;
+  color: var(--nh-gold-lit);
+  text-shadow: 0 1px 0 #000;
+}
+
+.stateText {
+  margin: 16px 0 0;
+  color: var(--nh-parchment-dim);
+  line-height: 1.55;
+}
+
+.cta {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.progress {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progressBar {
+  height: 10px;
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket);
+  border-radius: var(--nh-radius);
+  overflow: hidden;
+}
+
+.progressBar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, var(--nh-gold-lit), var(--nh-gold-deep));
+  transition: width var(--nh-dur-unveil) var(--nh-ease-band);
+}
+
+.progressText {
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+}
+
+/* ---------- Parcours ---------- */
+
+.journeyList {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.journeyStep {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  padding: 0 0 18px;
+}
+
+/* Fil vertical entre les pins. */
+.journeyStep:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 18px;
+  bottom: 2px;
+  width: 2px;
+  background: var(--nh-gold-deep);
+  opacity: .45;
+}
+
+.journeyStep > :first-child {
+  margin-top: 3px;
+}
+
+.journeyTitle {
+  font-weight: 700;
+  color: var(--nh-parchment-dim);
+}
+
+.journeyText {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--nh-placeholder);
+  line-height: 1.5;
+}
+
+.journeyCurrent .journeyTitle {
+  color: var(--nh-gold-lit);
+}
+
+.journeyCurrent .journeyText {
+  color: var(--nh-parchment-dim);
+}
+
+.journeyDone .journeyTitle {
+  color: var(--nh-parchment);
+}
+
+/* ---------- Ressources ---------- */
+
+.resources {
+  max-width: 1100px;
+  margin: 40px auto 0;
+}
+
+.sectionTitle {
+  margin: 0 0 16px;
+  font-family: var(--nh-font-title);
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: .08em;
+  color: var(--nh-parchment);
+}
+
+.resourceGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--nh-grid-gap);
+}
+
+.resource {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px 20px;
+  color: var(--nh-parchment);
+}
+
+.resourceIcon {
+  color: var(--nh-gold);
+}
+
+.resourceLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--nh-font-title);
+  font-size: 18px;
+  letter-spacing: .06em;
+  color: var(--nh-gold-lit);
+}
+
+.resourceText {
+  font-size: 14px;
+  color: var(--nh-parchment-dim);
+  line-height: 1.5;
+}
+
+@media (max-width: 1100px) {
+  .resourceGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .main,
+  .journey {
+    padding: 24px 20px 26px;
+  }
+}
+
+@media (max-width: 520px) {
+  .resourceGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
