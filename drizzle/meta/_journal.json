@@ -50,6 +50,13 @@
       "when": 1792607768782,
       "tag": "0006_sudden_loki",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792607775954,
+      "tag": "0007_activer_rls_tickets",
+      "breakpoints": true
     }
   ]
 }
