@@ -34,21 +34,21 @@ pnpm build
 3. **Bot** : générer le token (`DISCORD_BOT_TOKEN`), activer l'intent « Server Members », puis inviter le bot sur le serveur avec la permission « Gérer les rôles ». Son rôle doit être placé **au-dessus** des rôles « attente de wl » et whitelist.
 4. Copier l'ID du serveur et des rôles (mode développeur Discord → clic droit → Copier l'identifiant).
 
-Les permissions du site suivent les rôles Discord : un des rôles de `DISCORD_ROLE_STAFF` → staff, un des rôles de `DISCORD_ROLE_RECRUTEUR` → recruteur, sinon joueur (plusieurs rôles possibles par rang, séparés par des virgules). Aucun rôle n'est donné à la liaison du compte : « attente de wl » à la validation de la candidature, puis le rôle whitelist après le vocal. Elles sont relues à chaque connexion puis toutes les 5 minutes ; quitter le serveur ou perdre un rôle retire aussitôt les droits.
+Les permissions du site suivent les rôles Discord : un des rôles de `DISCORD_ROLE_ADMIN` → admin, un des rôles de `DISCORD_ROLE_RECRUTEUR` → recruteur, sinon joueur (plusieurs rôles possibles par rang, séparés par des virgules). Aucun rôle n'est donné à la liaison du compte : « attente de wl » à la validation de la candidature, puis le rôle whitelist après le vocal. Elles sont relues à chaque connexion puis toutes les 5 minutes ; quitter le serveur ou perdre un rôle retire aussitôt les droits.
 
 ## Espace équipe
 
-Recruteurs et staff (rangs lus depuis Discord) ont une section « Équipe » dans le portail :
+Recruteurs, admins et owners (rangs lus depuis Discord) ont une section « Équipe » dans le portail :
 
 - **Joueurs** (`/equipe`) : onglets À traiter, Entretiens, Modifications, Brouillons, Whitelistés, Refusées, Tous ; recherche par ID Discord, pseudo, prénom ou nom RP.
 - **Fiche joueur** : candidature complète, dossier de reprise mis en avant, chronologie de toutes les actions, œil animé quand un autre membre consulte la fiche.
-- **Décisions** : valider l'écrit (rôle « attente de wl »), demander une modification (seules les parties choisies se rouvrent), refuser avec critères (délai de 3 mois), valider l'entretien (rôle whitelist). Chaque décision envoie un MP ; un échec Discord n'annule jamais la décision. Le staff peut valider avant l'envoi et effacer une candidature.
-- **Notes internes** : jamais visibles par le joueur. Un recruteur écrit pour toute l'équipe ; le staff peut réserver une note au staff.
-- **Suppression d'un compte** (staff) : sur demande du joueur par ticket Discord, depuis sa fiche. Le joueur perd « attente de wl » et « Magistrat (wl) », retrouve le rôle de base (`DISCORD_ROLE_NOVICE`) et reçoit un MP. Après un refus de moins de 3 mois, seuls l'ID Discord et la fin du délai sont gardés (`reapply_locks`) pour faire respecter le délai.
+- **Décisions** : valider l'écrit (rôle « attente de wl »), demander une modification (seules les parties choisies se rouvrent), refuser avec critères (délai de 3 mois), valider l'entretien (rôle whitelist). Chaque décision envoie un MP ; un échec Discord n'annule jamais la décision. Un admin peut valider avant l'envoi et effacer une candidature.
+- **Notes internes** : jamais visibles par le joueur. Un recruteur écrit pour toute l'équipe ; un admin peut réserver une note aux admins.
+- **Suppression d'un compte** (admin) : sur demande du joueur par ticket Discord, depuis sa fiche. Le joueur perd « attente de wl » et « Magistrat (wl) », retrouve le rôle de base (`DISCORD_ROLE_NOVICE`) et reçoit un MP. Après un refus de moins de 3 mois, seuls l'ID Discord et la fin du délai sont gardés (`reapply_locks`) pour faire respecter le délai.
 
 Le joueur est prévenu de chaque décision par la cloche du portail (en plus du MP Discord) : textes dans `src/content/notifications.ts`.
 
-Critères de refus et textes des MP : `src/content/staff.ts`.
+Critères de refus et textes des MP : `src/content/equipe.ts`.
 
 ## Design
 
