@@ -1,7 +1,6 @@
 import { ExternalLink, PencilLine } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AFFINITIES, CREATURES } from "@/content/lore";
 import type { Application, StepValues, User } from "@/db/schema";
 import type { DataStepId } from "@/lib/application";
 import { dossierTargetLabel, isStepEditable, stepHref, wantsDossier } from "@/lib/application";
@@ -48,16 +47,27 @@ function DocLink({ href }: { href: string }) {
 }
 
 /** Relecture de la candidature : récapitulatif avant envoi, ou lecture seule une fois envoyée. */
-export function ApplicationRecap({ application, user, editable }: { application: Application; user: Pick<User, "id" | "username">; editable: boolean }) {
+export function ApplicationRecap({
+  application,
+  user,
+  names,
+  editable,
+}: {
+  application: Application;
+  user: Pick<User, "id" | "username">;
+  /** Noms des affinités, créatures et entreprises (lib/businesses.ts, takeoverNames). */
+  names: Record<string, string>;
+  editable: boolean;
+}) {
   const { hrp, rp, background, dossier } = application;
-  const affinity = AFFINITIES.find(item => item.id === value(rp, "affinity"));
-  const creature = CREATURES.find(item => item.id === value(rp, "creature"));
+  const affinity = value(rp, "affinity");
+  const creature = value(rp, "creature");
 
   return (
     <div className={styles.recap}>
       {wantsDossier(application) && (
         <p className={styles.recapBanner}>
-          Dossier de reprise : <strong>{dossierTargetLabel(dossier) ?? "à compléter"}</strong>
+          Dossier de reprise : <strong>{dossierTargetLabel(dossier, names) ?? "à compléter"}</strong>
         </p>
       )}
 
@@ -76,8 +86,8 @@ export function ApplicationRecap({ application, user, editable }: { application:
       <Section title="Personnage" step="rp" editable={editable && isStepEditable(application, "rp")}>
         <Item label="Prénom et nom">{[value(rp, "firstName"), value(rp, "lastName")].filter(Boolean).join(" ")}</Item>
         <Item label="Âge">{value(rp, "age") && `${value(rp, "age")} ans`}</Item>
-        <Item label="Affinité">{affinity ? `${affinity.name} (${affinity.god})` : "Aucune"}</Item>
-        <Item label="Créature">{creature ? creature.name : "Humain"}</Item>
+        <Item label="Affinité">{affinity ? (names[affinity] ?? affinity) : "Aucune"}</Item>
+        <Item label="Créature">{creature ? (names[creature] ?? creature) : "Humain"}</Item>
         <Item label="Origine" wide>
           <span className={styles.recapText}>{value(rp, "origin")}</span>
         </Item>
@@ -91,7 +101,7 @@ export function ApplicationRecap({ application, user, editable }: { application:
 
       {wantsDossier(application) && (
         <Section title="Dossier de reprise" step="dossier" editable={editable && isStepEditable(application, "dossier")}>
-          <Item label="Reprise">{dossierTargetLabel(dossier)}</Item>
+          <Item label="Reprise">{dossierTargetLabel(dossier, names)}</Item>
           <Item label="Document">
             <DocLink href={value(dossier, "url")} />
           </Item>

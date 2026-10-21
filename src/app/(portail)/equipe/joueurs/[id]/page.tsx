@@ -14,6 +14,7 @@ import { criterionLabel } from "@/content/equipe";
 import { db, schema } from "@/db";
 import { dossierTargetLabel, isStepComplete, visibleSteps, wantsDossier } from "@/lib/application";
 import { getLatestApplication } from "@/lib/applications";
+import { takeoverNames } from "@/lib/businesses";
 import { avatarUrl, bannerUrl, displayName } from "@/lib/discord-cdn";
 import { markViewed } from "@/lib/review";
 import { hasRank, requireUser } from "@/lib/session";
@@ -40,7 +41,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
   if (application) await markViewed(application, viewer);
   const isAdmin = hasRank(viewer, "admin");
 
-  const [events, notes] = await Promise.all([timeline(player.id), notesFor(player.id, viewer)]);
+  const [events, notes, names] = await Promise.all([timeline(player.id), notesFor(player.id, viewer), takeoverNames()]);
   // Un recruteur ne doit pas deviner l'existence d'une note réservée aux admins.
   const visibleEvents = isAdmin ? events : events.filter(event => !(event.type === "note.ajoutee" && (event.data as { visibilite?: string }).visibilite === "admin"));
   const noteViews: NoteView[] = notes.map(note => ({
@@ -96,7 +97,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
             <p className={styles.dossier}>
               <FileStack size={18} aria-hidden="true" />
               <span>
-                Reprend : <strong>{dossierTargetLabel(application.dossier) ?? "dossier pas encore rempli"}</strong>
+                Reprend : <strong>{dossierTargetLabel(application.dossier, names) ?? "dossier pas encore rempli"}</strong>
               </span>
             </p>
           )}
@@ -115,7 +116,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
                     {application.refusalComment && <em>« {application.refusalComment} »</em>}
                   </div>
                 )}
-                <ApplicationRecap application={application} user={player} editable={false} />
+                <ApplicationRecap application={application} user={player} names={names} editable={false} />
               </>
             ) : (
               <p className={styles.waiting}>Ce joueur n&apos;a pas encore commencé de candidature.</p>

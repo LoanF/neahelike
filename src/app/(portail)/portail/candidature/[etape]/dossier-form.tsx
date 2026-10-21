@@ -3,6 +3,7 @@
 import { TextField } from "@/components/plaque";
 import { DOSSIER_GUIDE, DOSSIER_KINDS } from "@/content/candidature";
 import type { StepValues } from "@/db/schema";
+import { NEW_BUSINESS } from "@/lib/application";
 import styles from "../candidature.module.css";
 import type { Choice } from "./choice-grid";
 import { ChoiceGrid } from "./choice-grid";
@@ -13,13 +14,15 @@ import { text, useStepForm } from "./use-step-form";
 
 interface DossierFormProps {
   initial: StepValues;
-  affinities: Choice[];
-  creatures: Choice[];
+  /** Ce qui peut être repris, avec sa disponibilité, par type de dossier. */
+  leads: { affinite: Choice[]; creature: Choice[]; entreprise: Choice[] };
   backHref?: string;
 }
 
-export function DossierForm({ initial, affinities, creatures, backHref }: DossierFormProps) {
-  const form = useStepForm("dossier", { kind: "", target: "", shared: false, ...initial });
+const NEW_BUSINESS_CHOICE: Choice = { id: NEW_BUSINESS, name: "Une nouvelle entreprise", meta: "Elle n'existe pas encore : tu la proposes." };
+
+export function DossierForm({ initial, leads, backHref }: DossierFormProps) {
+  const form = useStepForm("dossier", { kind: "", target: "", targetName: "", shared: false, ...initial });
   const { values, set, errors } = form;
   const kind = text(values, "kind");
 
@@ -42,30 +45,32 @@ export function DossierForm({ initial, affinities, creatures, backHref }: Dossie
         onChange={value => {
           set("kind", value);
           set("target", "");
+          set("targetName", "");
         }}
         error={errors.kind}
       />
 
-      {kind === "entreprise" && (
+      {kind && (
+        <ChoiceGrid
+          name="target"
+          legend={kind === "entreprise" ? "Quelle entreprise ?" : kind === "affinite" ? "Le lead de quelle affinité ?" : "Le lead de quelle créature ?"}
+          choices={kind === "entreprise" ? [...leads.entreprise, NEW_BUSINESS_CHOICE] : kind === "affinite" ? leads.affinite : leads.creature}
+          value={text(values, "target")}
+          onChange={value => set("target", value)}
+          closedLabel="Déjà repris"
+          error={errors.target}
+        />
+      )}
+      {kind === "entreprise" && text(values, "target") === NEW_BUSINESS && (
         <TextField
-          label="Nom de l'entreprise"
+          label="Nom de la nouvelle entreprise"
           required
           autoComplete="off"
           maxLength={80}
           placeholder="La forge du port, la taverne de l'Agora…"
-          value={text(values, "target")}
-          onChange={event => set("target", event.target.value)}
-          error={errors.target}
-        />
-      )}
-      {(kind === "affinite" || kind === "creature") && (
-        <ChoiceGrid
-          name="target"
-          legend={kind === "affinite" ? "Quelle affinité ?" : "Quelle créature ?"}
-          choices={kind === "affinite" ? affinities : creatures}
-          value={text(values, "target")}
-          onChange={value => set("target", value)}
-          error={errors.target}
+          value={text(values, "targetName")}
+          onChange={event => set("targetName", event.target.value)}
+          error={errors.targetName}
         />
       )}
 

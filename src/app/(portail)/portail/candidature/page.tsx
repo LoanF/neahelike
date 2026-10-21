@@ -6,6 +6,7 @@ import { PortalHeader } from "@/components/portal/shell";
 import { CANDIDATURE_INTRO } from "@/content/candidature";
 import { currentStep, STEPS, stepHref } from "@/lib/application";
 import { getOpenApplication, getStartBlock, isEditable } from "@/lib/applications";
+import { takeoverNames } from "@/lib/businesses";
 import { requireUser } from "@/lib/session";
 import { startCandidature } from "./actions";
 import styles from "./candidature.module.css";
@@ -39,7 +40,7 @@ export default async function CandidaturePage({ searchParams }: { searchParams: 
           )}
           <Plaque className={styles.panel}>
             <DotsRow className={styles.dots} />
-            <ApplicationRecap application={open} user={user} editable={false} />
+            <ApplicationRecap application={open} user={user} names={await takeoverNames()} editable={false} />
           </Plaque>
         </div>
       </>

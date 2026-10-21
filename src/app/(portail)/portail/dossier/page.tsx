@@ -4,6 +4,7 @@ import { PortalHeader } from "@/components/portal/shell";
 import { DOSSIER_GUIDE, DOSSIER_KINDS } from "@/content/candidature";
 import { canAccessStep, dossierTargetLabel, isStepComplete, stepHref, wantsDossier } from "@/lib/application";
 import { getOpenApplication, isEditable } from "@/lib/applications";
+import { takeoverNames } from "@/lib/businesses";
 import { requireUser } from "@/lib/session";
 import styles from "../candidature/candidature.module.css";
 import { Guide } from "../candidature/[etape]/guide";
@@ -33,7 +34,7 @@ export default async function DossierPage() {
             <>
               <p className={styles.intro}>
                 {complete ? (
-                  <>Ton dossier porte sur : <strong>{dossierTargetLabel(application?.dossier)}</strong>.</>
+                  <>Ton dossier porte sur : <strong>{dossierTargetLabel(application?.dossier, await takeoverNames())}</strong>.</>
                 ) : (
                   "Tu as demandé à déposer un dossier : il se remplit après le background, juste avant le récapitulatif."
                 )}

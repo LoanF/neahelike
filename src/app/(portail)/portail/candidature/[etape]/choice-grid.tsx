@@ -23,11 +23,13 @@ interface ChoiceGridProps {
   onChange: (value: string) => void;
   /** Ajoute une option « Aucune » (valeur vide). */
   noneLabel?: string;
+  /** Badge des options indisponibles (« Places closes » par défaut). */
+  closedLabel?: string;
   error?: string;
 }
 
 /** Cartes radio : une seule option, les places closes sont grisées et non sélectionnables. */
-export function ChoiceGrid({ name, legend, hint, choices, value, onChange, noneLabel, error }: ChoiceGridProps) {
+export function ChoiceGrid({ name, legend, hint, choices, value, onChange, noneLabel, closedLabel = CLOSED_LABEL, error }: ChoiceGridProps) {
   const options: Choice[] = noneLabel ? [{ id: "", name: noneLabel }, ...choices] : choices;
   return (
     <fieldset className={styles.choices} data-invalid={error ? "true" : undefined} tabIndex={error ? -1 : undefined}>
@@ -44,7 +46,7 @@ export function ChoiceGrid({ name, legend, hint, choices, value, onChange, noneL
               {choice.emblem && <Emblem name={choice.emblem} size={28} className={styles.choiceEmblem} />}
               <span className={styles.choiceName}>{choice.name}</span>
               {choice.meta && <span className={styles.choiceMeta}>{choice.meta}</span>}
-              {choice.closed && <Badge tone="danger" className={styles.closedBadge}>{CLOSED_LABEL}</Badge>}
+              {choice.closed && <Badge tone="danger" className={styles.closedBadge}>{closedLabel}</Badge>}
             </label>
           );
         })}

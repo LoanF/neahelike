@@ -10,6 +10,7 @@ import { dossierTargetLabel, wantsDossier } from "@/lib/application";
 import { displayName } from "@/lib/discord-cdn";
 import { requireUser } from "@/lib/session";
 import { listPlayers, presenceFor } from "@/lib/team";
+import { takeoverNames } from "@/lib/businesses";
 import styles from "./equipe.module.css";
 import type { PlayerListRow } from "./player-list";
 import { PlayerList } from "./player-list";
@@ -24,7 +25,7 @@ export default async function EquipePage({ searchParams }: { searchParams: Promi
   const tab = (TABS.find(item => item.id === onglet)?.id ?? "a-traiter") as TabId;
   const query = q?.trim().slice(0, 80) ?? "";
   const { rows, counts } = await listPlayers({ tab, query });
-  const presence = await presenceFor(rows.map(row => row.user.id), viewer.id);
+  const [presence, names] = await Promise.all([presenceFor(rows.map(row => row.user.id), viewer.id), takeoverNames()]);
 
   const list: PlayerListRow[] = rows.map(({ user, application, badge }) => {
     const rp = application?.rp;
@@ -38,7 +39,7 @@ export default async function EquipePage({ searchParams }: { searchParams: Promi
       rankLabel: user.rank === "joueur" ? null : RANK_LABEL[user.rank],
       rpName: rpName || null,
       badge,
-      dossier: application && wantsDossier(application) ? (dossierTargetLabel(application.dossier) ?? "Dossier en cours") : null,
+      dossier: application && wantsDossier(application) ? (dossierTargetLabel(application.dossier, names) ?? "Dossier en cours") : null,
       date: date ? shortDate(date) : null,
       inGuild: user.inGuild,
     };
