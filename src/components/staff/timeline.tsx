@@ -41,7 +41,7 @@ function describe(entry: TimelineEntry): { icon: LucideIcon; tone: Tone; text: s
     case "candidature.vue":
       return { icon: Eye, tone: "default", text: `${who} a ouvert la candidature` };
     case "candidature.validee":
-      return { icon: BadgeCheck, tone: "success", text: `${who} a validé la candidature écrite`, detail: "Rôle « attente de wl » donné, entretien vocal à passer." };
+      return { icon: BadgeCheck, tone: "success", text: `${who} a validé la candidature écrite`, detail: "Entretien vocal à passer." };
     case "candidature.modification":
       return {
         icon: FilePen,
