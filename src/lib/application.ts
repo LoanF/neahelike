@@ -26,25 +26,23 @@ export function isStepId(value: string): value is StepId {
   return STEPS.some(step => step.id === value);
 }
 
+const REQUIRED = "Ce champ est obligatoire.";
+
+/** Champ texte : un champ jamais touché (absent ou null) est signalé comme obligatoire. */
+const filled = () => z.string({ error: REQUIRED }).trim().min(1, REQUIRED);
+
 const text = (min: number, max: number, label: string) =>
-  z
-    .string()
-    .trim()
-    .min(min, min <= 1 ? `${label} est obligatoire.` : `${label} : ${min} caractères minimum.`)
+  filled()
+    .min(min, `${label} : ${min} caractères minimum.`)
     .max(max, `${label} : ${max} caractères maximum.`);
 
 const integer = (min: number, max: number, label: string) =>
-  z
-    .string()
-    .trim()
+  filled()
     .regex(/^\d+$/, `${label} : indique un nombre.`)
     .transform(Number)
     .pipe(z.number().min(min, `${label} : ${min} minimum.`).max(max, `${label} : ${max} maximum.`));
 
-const link = z
-  .string()
-  .trim()
-  .min(1, "Le lien est obligatoire.")
+const link = filled()
   .max(500, "Lien trop long.")
   .url("Ce lien n'est pas valide.")
   .refine(value => value.startsWith("https://"), "Le lien doit commencer par https://.");
@@ -56,15 +54,15 @@ const CREATURE_IDS = CREATURES.map(creature => creature.id) as [string, ...strin
 const DOSSIER_KIND_IDS = DOSSIER_KINDS.map(kind => kind.id) as [string, ...string[]];
 
 /** « Aucune » est enregistré comme chaîne vide. */
-const optionalChoice = (ids: [string, ...string[]]) => z.union([z.literal(""), z.enum(ids)]);
+const optionalChoice = (ids: [string, ...string[]]) => z.union([z.literal(""), z.enum(ids)], { error: "Choisis une option dans la liste." });
 
 export const STEP_SCHEMAS = {
   hrp: z.object({
     age: integer(MIN_AGE_IRL, 99, "L'âge"),
     rpHours: integer(0, 100000, "Les heures de RP"),
     experience: text(10, 2000, "L'expérience"),
-    goodMic: z.boolean(),
-    wantsDossier: z.boolean(),
+    goodMic: z.boolean({ error: REQUIRED }),
+    wantsDossier: z.boolean({ error: REQUIRED }),
   }),
   rp: z.object({
     firstName: text(2, 40, "Le prénom"),
@@ -81,7 +79,7 @@ export const STEP_SCHEMAS = {
   dossier: z
     .object({
       kind: z.enum(DOSSIER_KIND_IDS, { error: "Choisis ce que tu veux reprendre." }),
-      target: z.string().trim().min(1, "Précise ce que tu veux reprendre.").max(80, "80 caractères maximum."),
+      target: z.string({ error: "Précise ce que tu veux reprendre." }).trim().min(1, "Précise ce que tu veux reprendre.").max(80, "80 caractères maximum."),
       url: link,
       shared,
     })
