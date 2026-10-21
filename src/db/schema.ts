@@ -212,6 +212,20 @@ export const factions = pgTable("factions", {
 
 export type Faction = typeof factions.$inferSelect;
 
+/** Entreprises de la cité qu'un joueur peut reprendre avec un dossier ; `open` = encore disponible. */
+export const businesses = pgTable("businesses", {
+  id: text().primaryKey(),
+  name: text().notNull(),
+  description: text().notNull().default(""),
+  open: boolean().notNull().default(true),
+  sortOrder: integer().notNull().default(0),
+  archived: boolean().notNull().default(false),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+export type Business = typeof businesses.$inferSelect;
+
 // ─── Bot Discord (dépôt bot-neahelike) ──────────────────────────────────────
 // Tables écrites uniquement par le bot. Le site ne fait que les lire, s'il en a besoin.
 
