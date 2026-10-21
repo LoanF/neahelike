@@ -160,3 +160,50 @@ export async function moveBusiness(id: string, direction: -1 | 1, adminId: strin
   await logEvent({ type: "entreprise.modifiee", subjectId: null, actorId: adminId, data: { id, nom: list[target].name, ordre: target + 1 } });
   return { ok: true };
 }
+
+/* ---------- Critères de refus ---------- */
+
+function readLabel(form: FormData) {
+  const label = String(form.get("label") ?? "").trim();
+  if (label.length < 3 || label.length > 80) return { error: "Le libellé doit faire entre 3 et 80 caractères." };
+  return { label };
+}
+
+export async function createCriterion(form: FormData, adminId: string): Promise<AdminResult> {
+  const fields = readLabel(form);
+  if ("error" in fields) return { error: fields.error as string };
+  const id = slugify(fields.label);
+  const existing = await db().select({ id: schema.refusalCriteria.id }).from(schema.refusalCriteria);
+  if (!id || existing.some(row => row.id === id)) return { error: "Un critère proche existe déjà (même désactivé)." };
+  await db().insert(schema.refusalCriteria).values({ id, label: fields.label, sortOrder: existing.length + 1 });
+  await logEvent({ type: "critere.ajoute", subjectId: null, actorId: adminId, data: { id, libelle: fields.label } });
+  return { ok: true };
+}
+
+export async function updateCriterion(id: string, form: FormData, adminId: string): Promise<AdminResult> {
+  const fields = readLabel(form);
+  if ("error" in fields) return { error: fields.error as string };
+  await db().update(schema.refusalCriteria).set(fields).where(eq(schema.refusalCriteria.id, id));
+  await logEvent({ type: "critere.modifie", subjectId: null, actorId: adminId, data: { id, libelle: fields.label } });
+  return { ok: true };
+}
+
+export async function setCriterionActive(id: string, active: boolean, adminId: string): Promise<AdminResult> {
+  const [row] = await db().update(schema.refusalCriteria).set({ active }).where(eq(schema.refusalCriteria.id, id)).returning();
+  if (!row) return { error: "Introuvable." };
+  await logEvent({ type: "critere.modifie", subjectId: null, actorId: adminId, data: { id, libelle: row.label, actif: active } });
+  return { ok: true };
+}
+
+export async function moveCriterion(id: string, direction: -1 | 1, adminId: string): Promise<AdminResult> {
+  const list = await db().select().from(schema.refusalCriteria).orderBy(asc(schema.refusalCriteria.sortOrder));
+  const index = list.findIndex(item => item.id === id);
+  const target = index + direction;
+  if (index === -1 || target < 0 || target >= list.length) return { ok: true };
+  [list[index], list[target]] = [list[target], list[index]];
+  await db().transaction(async tx => {
+    for (const [position, item] of list.entries()) await tx.update(schema.refusalCriteria).set({ sortOrder: position + 1 }).where(eq(schema.refusalCriteria.id, item.id));
+  });
+  await logEvent({ type: "critere.modifie", subjectId: null, actorId: adminId, data: { id, libelle: list[target].label, ordre: target + 1 } });
+  return { ok: true };
+}
