@@ -1,0 +1,80 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket);
+  text-align: left;
+}
+
+.banner {
+  position: relative;
+  height: 64px;
+  background: linear-gradient(110deg, #3a2e1c, var(--nh-bronze-lit) 45%, #14202a);
+}
+
+.bannerImage {
+  object-fit: cover;
+}
+
+.identity {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  padding: 0 16px 16px;
+  margin-top: -30px;
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  background: linear-gradient(180deg, #5b4a30, #2a2116);
+  box-shadow: 0 0 0 2px var(--nh-bronze-deep), 0 0 0 3px var(--nh-gold-deep);
+}
+
+.names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-bottom: 2px;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.name {
+  font-size: 17px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.username {
+  font-size: 14px;
+  color: var(--nh-parchment-dim);
+}
+
+.idRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  font-size: 14px;
+  box-shadow: inset 0 1px 0 rgba(143, 111, 44, .4);
+}
+
+.idRow > span:first-child {
+  color: var(--nh-parchment-dim);
+}
+
+.id {
+  font-variant-numeric: tabular-nums;
+}

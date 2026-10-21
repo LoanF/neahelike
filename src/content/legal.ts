@@ -47,3 +47,6 @@ export const LEGAL: Record<"cgu" | "confidentialite" | "mentions-legales", Legal
     ],
   },
 };
+
+/** Version des CGU acceptée par les joueurs : changer la date oblige à les accepter de nouveau. */
+export const CGU_VERSION = LEGAL.cgu.updatedAt;

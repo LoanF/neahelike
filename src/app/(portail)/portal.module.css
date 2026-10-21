@@ -1,0 +1,71 @@
+.text {
+  margin-top: 20px;
+  color: var(--nh-parchment-dim);
+}
+
+.profile {
+  margin-top: 22px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.check {
+  margin-top: 20px;
+}
+
+.check a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.submit {
+  margin-top: 22px;
+  width: 100%;
+  min-height: 50px;
+  font-size: 16px;
+}
+
+.actions {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.actions > * {
+  width: 100%;
+}
+
+.back {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--nh-parchment-dim);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  color: var(--nh-gold-lit);
+}
+
+.error {
+  margin-top: 18px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #e98a6f;
+  background: var(--nh-bronze-deep);
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / .85), inset 0 0 0 1px var(--nh-terracotta);
+}

@@ -26,8 +26,8 @@ export const FOOTER_COLUMNS = [
     title: "Le portail",
     links: [
       { href: "/connexion", label: "Se connecter" },
-      { href: "/connexion", label: "Ma candidature" },
-      { href: "/connexion", label: "Dossiers" },
+      { href: "/portail", label: "Ma candidature" },
+      { href: "/portail", label: "Dossiers" },
     ],
   },
 ] as const;
