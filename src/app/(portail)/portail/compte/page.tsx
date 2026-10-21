@@ -7,12 +7,10 @@ import { PortalHeader } from "@/components/portal/shell";
 import { requireUser } from "@/lib/session";
 import { logout } from "../../actions";
 import styles from "./compte.module.css";
-import { DeleteForm } from "./delete-form";
 
 export const metadata: Metadata = { title: "Mon compte" };
 
-export default async function ComptePage({ searchParams }: { searchParams: Promise<{ erreur?: string }> }) {
-  const { erreur } = await searchParams;
+export default async function ComptePage() {
   const user = await requireUser();
 
   return (
@@ -41,20 +39,6 @@ export default async function ComptePage({ searchParams }: { searchParams: Promi
           <form action={logout}>
             <Button type="submit" variant="secondary">Se déconnecter</Button>
           </form>
-        </Plaque>
-
-        <Plaque className={`${styles.panel} ${styles.danger}`} rivets="none">
-          <h2 className={styles.title}>Supprimer mon compte</h2>
-          <p className={styles.text}>
-            Ta candidature, ton dossier de reprise et tes notifications sont effacés. L&apos;équipe garde seulement la trace anonyme de ses propres actions.
-            Si tu passais ton entretien, le rôle « attente de wl » t&apos;est retiré. Tu pourras recréer un compte à tout moment en te reconnectant avec Discord.
-          </p>
-          {erreur === "confirmation" && (
-            <p className={styles.error} role="alert">
-              Coche la case et recopie SUPPRIMER pour confirmer.
-            </p>
-          )}
-          <DeleteForm />
         </Plaque>
       </div>
     </>

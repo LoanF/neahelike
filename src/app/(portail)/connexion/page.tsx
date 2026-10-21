@@ -14,10 +14,10 @@ const ERRORS: Record<string, string> = {
   Configuration: "Le portail est mal configuré. Préviens l'équipe sur Discord.",
 };
 
-export default async function ConnexionPage({ searchParams }: { searchParams: Promise<{ error?: string; supprime?: string }> }) {
+export default async function ConnexionPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const user = await getCurrentUser();
   if (user) redirect(user.inGuild && hasAcceptedCgu(user) ? "/portail" : "/liaison");
-  const { error, supprime } = await searchParams;
+  const { error } = await searchParams;
 
   return (
     <AuthScreen
@@ -28,7 +28,6 @@ export default async function ConnexionPage({ searchParams }: { searchParams: Pr
       <p className={styles.text}>
         Le portail whitelist passe par ton compte Discord. Tu y déposeras ta candidature et suivras chaque étape jusqu&apos;à ton entrée dans la cité.
       </p>
-      {supprime && <p className={styles.notice} role="status">Ton compte a bien été supprimé, avec ta candidature. Tu peux en recréer un à tout moment.</p>}
       {error && <p className={styles.error} role="alert">{ERRORS[error] ?? "La connexion a échoué. Réessaie dans un instant."}</p>}
       <form action={loginWithDiscord} className={styles.form}>
         <Button type="submit" size="lg" className={styles.submit}>Se connecter avec Discord</Button>
