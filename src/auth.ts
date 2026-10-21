@@ -15,7 +15,8 @@ interface DiscordProfile {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // Seul `identify` est demandé : l'appartenance au serveur et les rôles sont lus par le bot.
-  providers: [Discord({ authorization: { params: { scope: "identify" } } })],
+  // Discord renvoie le paramètre `iss` au retour de connexion : il doit correspondre à l'émetteur déclaré.
+  providers: [Discord({ issuer: "https://discord.com", authorization: { params: { scope: "identify" } } })],
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   pages: { signIn: "/connexion", error: "/connexion" },
   trustHost: true,
