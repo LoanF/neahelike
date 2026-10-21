@@ -20,6 +20,7 @@ import { hasRank, requireUser } from "@/lib/session";
 import { canDeleteNote, notesFor, staffBadge, timeline } from "@/lib/staff";
 import { ApplicationRecap } from "../../../portail/candidature/recap";
 import { DecisionPanel } from "./decision-panel";
+import { DeleteAccount } from "./delete-account";
 import styles from "./fiche.module.css";
 import type { NoteView } from "./notes";
 import { Notes } from "./notes";
@@ -137,6 +138,12 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
             <h2 className={styles.panelTitle}>Chronologie</h2>
             <Timeline entries={visibleEvents} />
           </Plaque>
+          {isStaff && player.id !== viewer.id && (
+            <Plaque className={`${styles.panel} ${styles.dangerPanel}`} rivets="none">
+              <h2 className={`${styles.panelTitle} ${styles.dangerTitle}`}>Compte</h2>
+              <DeleteAccount subjectId={player.id} />
+            </Plaque>
+          )}
         </aside>
       </div>
     </div>
