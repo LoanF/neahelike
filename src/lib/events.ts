@@ -15,7 +15,14 @@ export type EventType =
   | "rang.change"
   | "candidature.commencee"
   | "candidature.etape"
-  | "candidature.envoyee";
+  | "candidature.envoyee"
+  | "candidature.vue"
+  | "candidature.validee"
+  | "candidature.modification"
+  | "candidature.refusee"
+  | "candidature.supprimee"
+  | "entretien.valide"
+  | "note.ajoutee";
 
 export async function logEvent(event: { type: EventType; subjectId: string | null; actorId?: string | null; data?: Record<string, unknown> }) {
   await db().insert(schema.events).values({
