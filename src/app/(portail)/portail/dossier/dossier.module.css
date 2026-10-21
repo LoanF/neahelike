@@ -1,0 +1,268 @@
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ---------- Trois grandes plaques ---------- */
+
+.explorer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.categories {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--nh-grid-gap);
+}
+
+.category {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 26px 18px 22px;
+  border: 0;
+  font: inherit;
+  color: var(--nh-parchment);
+  background: var(--nh-plaque-bg);
+  box-shadow: var(--nh-rim), var(--nh-lift);
+  border-radius: var(--nh-radius);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform var(--nh-dur-band) var(--nh-ease-band);
+}
+
+.category:hover {
+  transform: translateY(-2px);
+}
+
+.category:focus-visible {
+  outline: 2px solid var(--nh-gold);
+  outline-offset: 3px;
+}
+
+.categoryBand {
+  position: absolute;
+  inset: 0;
+  animation: nh-unveil var(--nh-dur-unveil) ease-out both;
+}
+
+.categorySocket {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  color: var(--nh-gold);
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket);
+  border-radius: 50%;
+  transition: color var(--nh-dur-band) ease-out, box-shadow var(--nh-dur-band) ease-out;
+}
+
+.categoryOn .categorySocket {
+  color: var(--nh-gold-lit);
+  box-shadow: var(--nh-socket), 0 0 0 3px rgba(209, 166, 74, .25), 0 0 24px rgba(232, 196, 115, .25);
+}
+
+.categoryLabel {
+  position: relative;
+  font-family: var(--nh-font-title);
+  font-size: 20px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 #000;
+}
+
+.categoryOn .categoryLabel {
+  color: var(--nh-gold-lit);
+}
+
+.categoryCount {
+  position: relative;
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+}
+
+/* ---------- Grille de la catégorie ---------- */
+
+.panel {
+  padding: 26px 28px 30px;
+  animation: nh-unveil var(--nh-dur-unveil) ease-out both;
+}
+
+.dots {
+  margin: 0 auto 18px;
+  width: 40%;
+}
+
+.intro {
+  margin: 0 0 20px;
+  color: var(--nh-parchment-dim);
+  line-height: 1.55;
+}
+
+.empty {
+  margin: 0;
+  padding: 26px;
+  text-align: center;
+  color: var(--nh-parchment-dim);
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket-locked);
+  border-radius: var(--nh-radius);
+}
+
+.grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 150px;
+  padding: 18px 16px 16px;
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket);
+  border-radius: var(--nh-radius);
+  overflow: hidden;
+  animation: nh-card-in .38s var(--nh-ease-band) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+@keyframes nh-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .panel,
+  .categoryBand {
+    animation: none;
+  }
+}
+
+.cardSocket {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: var(--nh-gold);
+  background: var(--nh-bronze);
+  box-shadow: var(--nh-rim);
+  border-radius: 50%;
+}
+
+.cardName {
+  font-family: var(--nh-font-title);
+  font-size: 17px;
+  letter-spacing: .04em;
+  color: var(--nh-parchment);
+}
+
+.cardMeta {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--nh-parchment-dim);
+}
+
+.available {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--nh-gold-lit);
+  background: var(--nh-sel-bg);
+  box-shadow: var(--nh-sel-ring);
+  border-radius: var(--nh-radius);
+}
+
+/* Déjà repris : carte éteinte et sceau de cire en biais. */
+.cardTaken .cardSocket,
+.cardTaken .cardName,
+.cardTaken .cardMeta {
+  opacity: .45;
+  filter: grayscale(.6);
+}
+
+.seal {
+  position: absolute;
+  top: 16px;
+  right: -30px;
+  width: 120px;
+  padding: 4px 0;
+  text-align: center;
+  font-family: var(--nh-font-title);
+  font-size: 12px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #f3d3c6;
+  background: linear-gradient(180deg, #a8452c, #7d2f1b);
+  box-shadow: 0 2px 6px rgb(0 0 0 / .6), inset 0 0 0 1px rgb(0 0 0 / .35);
+  transform: rotate(32deg);
+}
+
+/* ---------- Bas de page ---------- */
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 26px;
+}
+
+.ctaText {
+  margin: 0;
+  max-width: 620px;
+  color: var(--nh-parchment-dim);
+  line-height: 1.55;
+}
+
+.ctaText strong {
+  color: var(--nh-gold-lit);
+}
+
+@media (max-width: 760px) {
+  .categories {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .category {
+    flex-direction: row;
+    padding: 14px 16px;
+  }
+
+  .categorySocket {
+    width: 52px;
+    height: 52px;
+  }
+
+  .categoryCount {
+    margin-left: auto;
+  }
+
+  .panel {
+    padding: 22px 16px 24px;
+  }
+}
