@@ -13,9 +13,10 @@ export function Stepper({ application, current }: { application: Application; cu
     <nav aria-label="Étapes de la candidature">
       <ol className={styles.stepper}>
         {steps.map((step, index) => {
-          const done = step.id !== "recapitulatif" && isStepComplete(application, step.id);
           const active = step.id === current;
           const reachable = canAccessStep(application, step.id);
+          // Une étape remplie mais derrière une étape incomplète reste affichée verrouillée.
+          const done = reachable && step.id !== "recapitulatif" && isStepComplete(application, step.id);
           const content = (
             <>
               <span className={styles.stepNumber} aria-hidden="true">
