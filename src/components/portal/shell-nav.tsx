@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, FileStack, HelpCircle, LayoutDashboard, Menu, Scale, ScrollText, X } from "lucide-react";
+import { BookOpen, FileStack, HelpCircle, LayoutDashboard, Menu, Scale, ScrollText, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -21,7 +21,7 @@ const CITY_LINKS = [
 ];
 
 /** Navigation latérale du portail ; tiroir sous 900 px. `footer` = carte du joueur et déconnexion. */
-export function ShellNav({ footer }: { footer: ReactNode }) {
+export function ShellNav({ footer, team }: { footer: ReactNode; team: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -53,6 +53,15 @@ export function ShellNav({ footer }: { footer: ReactNode }) {
               </Link>
             );
           })}
+          {team && (
+            <>
+              <span className={styles.navTitle}>Équipe</span>
+              <Link href="/equipe" className={cx(styles.navLink, pathname.startsWith("/equipe") && styles.navCurrent)} aria-current={pathname === "/equipe" ? "page" : undefined}>
+                <Users size={18} aria-hidden="true" />
+                Joueurs
+              </Link>
+            </>
+          )}
           <span className={styles.navTitle}>La cité</span>
           {CITY_LINKS.map(link => {
             const Icon = link.icon;

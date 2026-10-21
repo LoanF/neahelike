@@ -1,0 +1,242 @@
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ---------- Onglets et recherche ---------- */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--nh-parchment-dim);
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket-locked);
+  border-radius: var(--nh-radius);
+  transition: color var(--nh-dur-band) ease-out;
+}
+
+.tab:hover {
+  color: var(--nh-gold-lit);
+}
+
+.tabActive {
+  color: var(--nh-gold-lit);
+  font-weight: 700;
+  background: var(--nh-sel-bg);
+  box-shadow: var(--nh-sel-ring);
+}
+
+.count {
+  min-width: 22px;
+  padding: 1px 6px;
+  font-size: 12px;
+  text-align: center;
+  color: var(--nh-parchment);
+  background: var(--nh-bronze);
+  border-radius: 10px;
+}
+
+.search {
+  position: relative;
+  flex: 1;
+  max-width: 340px;
+  min-width: 220px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--nh-placeholder);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px 0 36px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--nh-parchment);
+  background: var(--nh-bronze-deep);
+  border: 0;
+  border-radius: var(--nh-radius);
+  box-shadow: var(--nh-socket);
+  outline: none;
+}
+
+.searchInput:focus {
+  box-shadow: var(--nh-socket-focus);
+}
+
+/* ---------- Liste ---------- */
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.3fr) 70px 44px;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  color: var(--nh-parchment);
+  background: var(--nh-plaque-bg);
+  box-shadow: var(--nh-rim), 0 8px 16px -12px rgb(0 0 0 / .8);
+  border-radius: var(--nh-radius);
+  transition: box-shadow var(--nh-dur-band) ease-out;
+}
+
+.row:hover {
+  box-shadow: var(--nh-sel-ring), 0 8px 16px -12px rgb(0 0 0 / .8);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--nh-gold);
+  outline-offset: 2px;
+}
+
+.avatar {
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--nh-gold-deep);
+}
+
+.identity {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--nh-placeholder);
+}
+
+.rp {
+  font-family: var(--nh-font-title);
+  letter-spacing: .03em;
+  color: var(--nh-gold-lit);
+}
+
+.muted {
+  font-family: var(--nh-font-body);
+  letter-spacing: 0;
+  font-size: 13px;
+  color: var(--nh-disabled-text);
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.dossier {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--nh-gold);
+}
+
+.date {
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+  text-align: right;
+}
+
+.eyeSlot {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.empty {
+  margin: 0;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--nh-parchment-dim);
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket-locked);
+  border-radius: var(--nh-radius);
+}
+
+@media (max-width: 900px) {
+  .row {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "avatar identity eye"
+      "avatar rp rp"
+      "avatar status date";
+    row-gap: 8px;
+  }
+
+  .avatar {
+    grid-area: avatar;
+    align-self: start;
+  }
+
+  .identity {
+    grid-area: identity;
+  }
+
+  .rp {
+    grid-area: rp;
+  }
+
+  .status {
+    grid-area: status;
+  }
+
+  .date {
+    grid-area: date;
+  }
+
+  .eyeSlot {
+    grid-area: eye;
+  }
+
+  .search {
+    max-width: none;
+  }
+}
