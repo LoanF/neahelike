@@ -91,3 +91,11 @@
   margin: 0;
   color: var(--nh-parchment-dim);
 }
+
+.subject {
+  width: fit-content;
+  font-size: 13px;
+  color: var(--nh-gold-lit);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

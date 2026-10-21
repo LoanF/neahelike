@@ -115,23 +115,71 @@ export async function leavePresence(subjectId: string, viewerId: string) {
 
 const actor = alias(schema.users, "actor");
 
+const subject = alias(schema.users, "subject");
+
+const eventColumns = {
+  id: schema.events.id,
+  type: schema.events.type,
+  data: schema.events.data,
+  createdAt: schema.events.createdAt,
+  actorId: schema.events.actorId,
+  actorName: sql<string | null>`coalesce(${actor.globalName}, ${actor.username})`,
+  actorAvatar: actor.avatar,
+  subjectId: schema.events.subjectId,
+  subjectName: sql<string | null>`coalesce(${subject.globalName}, ${subject.username})`,
+};
+
 /** Chronologie du joueur : ses étapes et les actions de l'équipe, de la plus récente à la plus ancienne. */
 export async function timeline(subjectId: string) {
   return db()
-    .select({
-      id: schema.events.id,
-      type: schema.events.type,
-      data: schema.events.data,
-      createdAt: schema.events.createdAt,
-      actorId: schema.events.actorId,
-      actorName: sql<string | null>`coalesce(${actor.globalName}, ${actor.username})`,
-      actorAvatar: actor.avatar,
-    })
+    .select(eventColumns)
     .from(schema.events)
     .leftJoin(actor, eq(actor.id, schema.events.actorId))
+    .leftJoin(subject, eq(subject.id, schema.events.subjectId))
     .where(eq(schema.events.subjectId, subjectId))
     .orderBy(desc(schema.events.createdAt))
     .limit(200);
+}
+
+/** Familles d'événements du journal global. */
+export const JOURNAL_FILTERS = {
+  candidatures: ["candidature.commencee", "candidature.etape", "candidature.envoyee"],
+  decisions: ["candidature.vue", "candidature.validee", "candidature.modification", "candidature.refusee", "entretien.valide", "candidature.supprimee"],
+  comptes: ["compte.cree", "compte.cgu", "compte.supprime", "discord.rejoint", "discord.quitte", "rang.change"],
+  notes: ["note.ajoutee"],
+  administration: ["role.rang", "owner.ajoute", "owner.retire", "faction.ajoutee", "faction.modifiee", "entreprise.ajoutee", "entreprise.modifiee", "critere.ajoute", "critere.modifie"],
+} as const;
+
+export type JournalFilter = keyof typeof JOURNAL_FILTERS;
+
+export const JOURNAL_PAGE_SIZE = 50;
+
+/** Journal global (admins) : tous les événements, filtrés par famille, membre de l'équipe et période. */
+export async function journal({ filter, actorId, days, page }: { filter?: JournalFilter; actorId?: string; days?: number; page: number }) {
+  const conditions = [
+    filter ? inArray(schema.events.type, [...JOURNAL_FILTERS[filter]]) : undefined,
+    actorId ? eq(schema.events.actorId, actorId) : undefined,
+    days ? gt(schema.events.createdAt, sql`now() - make_interval(days => ${days})`) : undefined,
+  ];
+  const rows = await db()
+    .select(eventColumns)
+    .from(schema.events)
+    .leftJoin(actor, eq(actor.id, schema.events.actorId))
+    .leftJoin(subject, eq(subject.id, schema.events.subjectId))
+    .where(and(...conditions))
+    .orderBy(desc(schema.events.createdAt))
+    .limit(JOURNAL_PAGE_SIZE + 1)
+    .offset(page * JOURNAL_PAGE_SIZE);
+  return { entries: rows.slice(0, JOURNAL_PAGE_SIZE), hasMore: rows.length > JOURNAL_PAGE_SIZE };
+}
+
+/** Membres de l'équipe qui ont déjà agi, pour le filtre du journal. */
+export async function journalActors() {
+  return db()
+    .selectDistinct({ id: actor.id, name: sql<string>`coalesce(${actor.globalName}, ${actor.username})` })
+    .from(schema.events)
+    .innerJoin(actor, eq(actor.id, schema.events.actorId))
+    .where(inArray(actor.rank, ["recruteur", "admin", "owner"]));
 }
 
 export type TimelineEntry = Awaited<ReturnType<typeof timeline>>[number];

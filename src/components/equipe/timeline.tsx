@@ -1,4 +1,5 @@
-import { Ban, BadgeCheck, Check, Eye, FilePen, FileText, Link2, LogIn, MessageSquare, ScrollText, Shield, Trash2, UserMinus, UserPlus } from "lucide-react";
+import { Ban, BadgeCheck, Briefcase, Check, Crown, Eye, FilePen, FileText, KeyRound, Link2, ListX, LogIn, MessageSquare, ScrollText, Shield, Sparkles, Trash2, UserMinus, UserPlus } from "lucide-react";
+import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import Image from "next/image";
 import { cx } from "@/components/plaque";
@@ -61,19 +62,70 @@ function describe(entry: TimelineEntry, criteria: Record<string, string>): { ico
       return { icon: Trash2, tone: "danger", text: `${who} a effacé la candidature` };
     case "note.ajoutee":
       return { icon: MessageSquare, tone: "default", text: `${who} a ajouté une note${data.visibilite === "admin" ? " (admins uniquement)" : ""}` };
+    case "role.rang":
+      return { icon: KeyRound, tone: "gold", text: `${who} : le rôle « ${data.nom} » donne maintenant le rang ${RANK[String(data.apres)] ?? data.apres}` };
+    case "owner.ajoute":
+      return { icon: Crown, tone: "gold", text: `${who} a ajouté un owner (${data.owner})` };
+    case "owner.retire":
+      return { icon: Crown, tone: "danger", text: `${who} a retiré un owner (${data.owner})` };
+    case "faction.ajoutee":
+      return { icon: Sparkles, tone: "gold", text: `${who} a ajouté ${data.type === "creature" ? "la créature" : "l'affinité"} « ${data.nom} »` };
+    case "faction.modifiee":
+      return { icon: Sparkles, tone: "default", text: `${who} a modifié « ${data.nom} »`, detail: changeDetail(data) };
+    case "entreprise.ajoutee":
+      return { icon: Briefcase, tone: "gold", text: `${who} a ajouté l'entreprise « ${data.nom} »` };
+    case "entreprise.modifiee":
+      return { icon: Briefcase, tone: "default", text: `${who} a modifié l'entreprise « ${data.nom} »`, detail: changeDetail(data) };
+    case "critere.ajoute":
+      return { icon: ListX, tone: "gold", text: `${who} a ajouté le critère de refus « ${data.libelle} »` };
+    case "critere.modifie":
+      return { icon: ListX, tone: "default", text: `${who} a modifié le critère « ${data.libelle} »`, detail: changeDetail(data) };
     default:
       return { icon: Check, tone: "default", text: entry.type };
   }
 }
 
-const TEAM_EVENTS = new Set(["candidature.vue", "candidature.validee", "candidature.modification", "candidature.refusee", "entretien.valide", "candidature.supprimee", "note.ajoutee"]);
+/** Détail lisible d'une modification d'administration (ouverture, lead, archivage, ordre). */
+function changeDetail(data: Record<string, unknown>) {
+  const parts: string[] = [];
+  if (typeof data.joinOpen === "boolean") parts.push(data.joinOpen ? "Places ouvertes" : "Places closes");
+  if (typeof data.leadOpen === "boolean") parts.push(data.leadOpen ? "Lead disponible" : "Lead repris");
+  if (typeof data.open === "boolean") parts.push(data.open ? "Disponible" : "Déjà reprise");
+  if (typeof data.archived === "boolean") parts.push(data.archived ? "Archivée" : "Restaurée");
+  if (typeof data.actif === "boolean") parts.push(data.actif ? "Proposé" : "Désactivé");
+  if (typeof data.ordre === "number") parts.push(`Position ${data.ordre}`);
+  if (data.lore) parts.push("Lore modifié");
+  return parts.join(" · ") || undefined;
+}
+
+const TEAM_EVENTS = new Set([
+  "candidature.vue",
+  "candidature.validee",
+  "candidature.modification",
+  "candidature.refusee",
+  "entretien.valide",
+  "candidature.supprimee",
+  "note.ajoutee",
+  "role.rang",
+  "owner.ajoute",
+  "owner.retire",
+  "faction.ajoutee",
+  "faction.modifiee",
+  "entreprise.ajoutee",
+  "entreprise.modifiee",
+  "critere.ajoute",
+  "critere.modifie",
+]);
 
 const when = (date: Date) =>
   date.toLocaleString("fr-FR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
 
 /** Chronologie d'un joueur : ses étapes et chaque action de l'équipe, avec qui et quand. */
-/** `criteria` : libellés des critères de refus (lib/criteria.ts). */
-export function Timeline({ entries, criteria }: { entries: TimelineEntry[]; criteria: Record<string, string> }) {
+/**
+ * `criteria` : libellés des critères de refus (lib/criteria.ts).
+ * `showSubject` : journal global, chaque ligne indique le joueur concerné avec un lien vers sa fiche.
+ */
+export function Timeline({ entries, criteria, showSubject = false }: { entries: TimelineEntry[]; criteria: Record<string, string>; showSubject?: boolean }) {
   if (entries.length === 0) return <p className={styles.empty}>Aucun événement.</p>;
   return (
     <ol className={styles.timeline}>
@@ -90,6 +142,11 @@ export function Timeline({ entries, criteria }: { entries: TimelineEntry[]; crit
                 {team && entry.actorId && <Image src={avatarUrl({ id: entry.actorId, avatar: entry.actorAvatar }, 32)} alt="" width={18} height={18} className={styles.actor} />}
                 {text}
               </span>
+              {showSubject && entry.subjectId && (
+                <Link href={`/equipe/joueurs/${entry.subjectId}`} className={styles.subject}>
+                  {entry.subjectName ?? entry.subjectId}
+                </Link>
+              )}
               {detail && <p className={styles.detail}>{detail}</p>}
               <time className={styles.time} dateTime={entry.createdAt.toISOString()}>
                 {when(entry.createdAt)}
