@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ButtonLink, DotsRow, Logo, Plaque, Rivet, Scene, Socket, Spiral } from "@/components/plaque";
 import { Section, SectionHead } from "@/components/site/section";
-import { AFFINITIES } from "@/content/lore";
+import { getFactions } from "@/lib/factions";
 import { SITE } from "@/content/site";
 import { CreaturesShowcase } from "./creatures-showcase";
 import styles from "./home.module.css";
@@ -20,7 +20,11 @@ const STEPS = [
   { n: "IV", t: "Citoyen", d: "Tu es whitelisté. Ton personnage entre dans la cité." },
 ];
 
-export default function HomePage() {
+/** Voir lore/page.tsx : régénérée au plus tard toutes les 5 minutes. */
+export const revalidate = 300;
+
+export default async function HomePage() {
+  const { affinities, creatures } = await getFactions();
   return (
     <>
       <section className={styles.hero}>
@@ -71,7 +75,7 @@ export default function HomePage() {
           link={{ href: "/lore#affinites", label: "Toutes les fiches dans le lore" }}
         />
         <div className={styles.affinities}>
-          {AFFINITIES.map(affinity => (
+          {affinities.map(affinity => (
             <Link key={affinity.id} href={`/lore#affinites-${affinity.id}`} className={styles.affinityLink}>
               <Plaque rivets="none" interactive className={styles.affinity}>
                 <Socket className={styles.affinityArt}>
@@ -91,7 +95,7 @@ export default function HomePage() {
 
       <Section>
         <SectionHead title="Les Créatures" sub="Places limitées, candidature dédiée. Choisis une créature pour voir sa fiche." />
-        <CreaturesShowcase />
+        <CreaturesShowcase creatures={creatures} />
       </Section>
 
       <Section>

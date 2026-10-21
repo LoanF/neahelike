@@ -2,16 +2,13 @@ import type { Metadata } from "next";
 import { Badge, ButtonLink, DotsRow, Pin, Plaque, Rivet, Scene, Socket } from "@/components/plaque";
 import { Emblem } from "@/components/site/emblem";
 import { EmblemSocket, PageIntro } from "@/components/site/section";
-import { AFFINITY_AVAILABILITY, CREATURE_AVAILABILITY } from "@/content/availability";
 import {
-  AFFINITIES,
   AFFINITY_INTRO,
   AFFINITY_RULES,
   ASSEMBLY_INTRO,
   CITY_GOD,
   CREATURE_INTRO,
   CREATURE_RULES,
-  CREATURES,
   GODS,
   JUDGEMENT,
   LAW_STEPS,
@@ -25,6 +22,8 @@ import {
   TIMELINE,
 } from "@/content/lore";
 import { SITE } from "@/content/site";
+import type { AffinityView, CreatureView } from "@/lib/factions";
+import { getFactions } from "@/lib/factions";
 import { LoreTabs } from "./lore-tabs";
 import styles from "./lore.module.css";
 
@@ -237,13 +236,13 @@ function AssemblyPanel() {
 }
 
 /* ---------- Affinités ---------- */
-function AffinitiesPanel() {
+function AffinitiesPanel({ affinities }: { affinities: AffinityView[] }) {
   return (
     <>
       <ChapterHead title="Les affinités divines" lead={AFFINITY_INTRO} />
       <div className={styles.affinities}>
-        {AFFINITIES.map(affinity => {
-          const open = AFFINITY_AVAILABILITY[affinity.id];
+        {affinities.map(affinity => {
+          const open = affinity.joinOpen;
           return (
             <Plaque key={affinity.id} id={`affinites-${affinity.id}`} className={styles.affinity}>
               <Scene className={styles.affinityArt} caption={`Illustration : ${affinity.art}`} />
@@ -283,13 +282,13 @@ function AffinitiesPanel() {
 }
 
 /* ---------- Créatures ---------- */
-function CreaturesPanel() {
+function CreaturesPanel({ creatures }: { creatures: CreatureView[] }) {
   return (
     <>
       <ChapterHead title="Les créatures mystiques" lead={CREATURE_INTRO} />
       <div className={styles.creatures}>
-        {CREATURES.map(creature => {
-          const open = CREATURE_AVAILABILITY[creature.id];
+        {creatures.map(creature => {
+          const open = creature.joinOpen;
           return (
             <Plaque key={creature.id} id={`creatures-${creature.id}`} rivets="none" className={styles.creature}>
               <Scene className={styles.creatureArt} caption={`Illustration : ${creature.art}`} />
@@ -340,7 +339,11 @@ function LegendsPanel() {
   );
 }
 
-export default function LorePage() {
+/** Les disponibilités changent depuis l'administration : la page est régénérée au plus tard toutes les 5 minutes. */
+export const revalidate = 300;
+
+export default async function LorePage() {
+  const { affinities, creatures } = await getFactions();
   return (
     <>
       <PageIntro title="Le Lore" lead="Hélikè a sombré en une nuit. Ses survivants ont juré de ne plus jamais offenser les dieux. Voici la cité qu'ils ont bâtie." />
@@ -350,8 +353,8 @@ export default function LorePage() {
             { id: "cite", label: "La cité", content: <CityPanel /> },
             { id: "dieux", label: "Les dieux", content: <GodsPanel /> },
             { id: "assemblee", label: "L'Assemblée", content: <AssemblyPanel /> },
-            { id: "affinites", label: "Affinités", content: <AffinitiesPanel /> },
-            { id: "creatures", label: "Créatures", content: <CreaturesPanel /> },
+            { id: "affinites", label: "Affinités", content: <AffinitiesPanel affinities={affinities} /> },
+            { id: "creatures", label: "Créatures", content: <CreaturesPanel creatures={creatures} /> },
             { id: "legendes", label: "Légendes", content: <LegendsPanel /> },
           ]}
         />

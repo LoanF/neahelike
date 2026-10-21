@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { useState } from "react";
 import { cx, DotsRow, Pin, Plaque, Rivet, Scene, Selection } from "@/components/plaque";
-import { CREATURE_AVAILABILITY } from "@/content/availability";
-import { CREATURES } from "@/content/lore";
+import type { CreatureView } from "@/lib/factions";
 import styles from "./home.module.css";
 
 const ROW = 58; // 46 px de bouton + 12 px d'écart
 
 /** Bestiaire de l'accueil : une lamelle dorée glisse vers la créature choisie, la fiche change en fondu. */
-export function CreaturesShowcase() {
+export function CreaturesShowcase({ creatures }: { creatures: CreatureView[] }) {
   const [index, setIndex] = useState(0);
-  const current = CREATURES[index];
-  const open = CREATURE_AVAILABILITY[current.id];
+  const current = creatures[Math.min(index, creatures.length - 1)];
+  const open = current?.joinOpen ?? false;
+  if (!current) return null;
 
   return (
     <div className={styles.creatures}>
@@ -21,8 +21,8 @@ export function CreaturesShowcase() {
         <DotsRow className={styles.creatureDots} />
         <div className={styles.creatureButtons} role="tablist" aria-label="Créatures">
           <Selection className={styles.band} style={{ transform: `translateY(${index * ROW}px)` }} />
-          {CREATURES.map((creature, i) => {
-            const available = CREATURE_AVAILABILITY[creature.id];
+          {creatures.map((creature, i) => {
+            const available = creature.joinOpen;
             const selected = i === index;
             return (
               <button
