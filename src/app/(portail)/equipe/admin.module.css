@@ -488,3 +488,48 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---------- Journal ---------- */
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket-locked);
+  border-radius: var(--nh-radius);
+}
+
+.chip:hover {
+  color: var(--nh-gold-lit);
+}
+
+.chipOn {
+  font-weight: 700;
+  color: var(--nh-gold-lit);
+  background: var(--nh-sel-bg);
+  box-shadow: var(--nh-sel-ring);
+}
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.pager a {
+  color: var(--nh-gold-lit);
+}
