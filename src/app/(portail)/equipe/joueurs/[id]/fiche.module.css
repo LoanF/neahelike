@@ -37,7 +37,9 @@
   object-fit: cover;
 }
 
+/* Positionné pour passer au-dessus de la bannière qu'il chevauche. */
 .heroBody {
+  position: relative;
   display: flex;
   align-items: flex-end;
   gap: 18px;
@@ -58,6 +60,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  /* Le texte commence sous la bannière ; seul l'avatar la chevauche. */
+  padding-top: 44px;
   padding-bottom: 2px;
 }
 
