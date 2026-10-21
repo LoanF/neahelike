@@ -34,7 +34,7 @@ pnpm build
 3. **Bot** : générer le token (`DISCORD_BOT_TOKEN`), activer l'intent « Server Members », puis inviter le bot sur le serveur avec la permission « Gérer les rôles ». Son rôle doit être placé **au-dessus** des rôles « attente de wl » et whitelist.
 4. Copier l'ID du serveur et des rôles (mode développeur Discord → clic droit → Copier l'identifiant).
 
-Les permissions du site suivent les rôles Discord : un des rôles de `DISCORD_ROLE_ADMIN` → admin, un des rôles de `DISCORD_ROLE_RECRUTEUR` → recruteur, sinon joueur (plusieurs rôles possibles par rang, séparés par des virgules). Aucun rôle n'est donné à la liaison du compte : « attente de wl » à la validation de la candidature, puis le rôle whitelist après le vocal. Elles sont relues à chaque connexion puis toutes les 5 minutes ; quitter le serveur ou perdre un rôle retire aussitôt les droits.
+Les permissions du site suivent les rôles Discord, réglés par les owners dans **Administration › Rôles et permissions** : chaque rôle donne joueur, recruteur ou admin (un membre avec plusieurs rôles prend le plus élevé). Tant que rien n'y est enregistré, les variables `DISCORD_ROLE_ADMIN` / `DISCORD_ROLE_RECRUTEUR` servent de secours. Les **owners** ont tous les droits : les owners permanents sont dans `src/content/owners.ts` (ils le restent même avec une base neuve), les autres s'ajoutent par ID Discord sur la même page. Aucun rôle n'est donné à la liaison du compte : « attente de wl » à la validation de la candidature, puis le rôle whitelist après le vocal. Les rangs sont relus à chaque connexion puis toutes les 5 minutes (aussitôt après un changement de réglage) ; quitter le serveur ou perdre un rôle retire aussitôt les droits.
 
 ## Espace équipe
 
@@ -48,7 +48,15 @@ Recruteurs, admins et owners (rangs lus depuis Discord) ont une section « Équi
 
 Le joueur est prévenu de chaque décision par la cloche du portail (en plus du MP Discord) : textes dans `src/content/notifications.ts`.
 
-Critères de refus et textes des MP : `src/content/equipe.ts`.
+Textes des MP : `src/content/equipe.ts`.
+
+## Administration (admins et owners)
+
+- **Affinités et créatures** : places ouvertes ou closes, lead disponible ou repris, ordre, archivage, ajout avec leur lore (affiché sur le site public). Le lore des affinités et créatures d'origine reste dans `src/content/lore.ts`.
+- **Entreprises** : celles qu'un joueur peut demander à reprendre avec un dossier (disponible ou déjà reprise). Le joueur peut aussi proposer une nouvelle entreprise.
+- **Critères de refus** : ajout, renommage, désactivation, ordre.
+- **Journal** : toutes les actions du site, filtrables. **Statistiques** : candidatures, délais, répartition des personnages, décisions par membre.
+- **Rôles et permissions** (owners) : voir plus haut.
 
 ## Design
 
