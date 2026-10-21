@@ -9,11 +9,11 @@ import { logEvent } from "./events";
 /** Délai après lequel les rôles Discord sont relus. */
 export const ROLES_TTL_MS = 5 * 60 * 1000;
 
-/** Le rang découle uniquement des rôles Discord : staff > recruteur > joueur. */
+/** Le rang découle uniquement des rôles Discord : staff > recruteur > joueur. Un seul rôle de la liste suffit. */
 export function rankFromRoles(roles: string[]): Rank {
   const { DISCORD_ROLE_STAFF, DISCORD_ROLE_RECRUTEUR } = env();
-  if (roles.includes(DISCORD_ROLE_STAFF)) return "staff";
-  if (roles.includes(DISCORD_ROLE_RECRUTEUR)) return "recruteur";
+  if (DISCORD_ROLE_STAFF.some(role => roles.includes(role))) return "staff";
+  if (DISCORD_ROLE_RECRUTEUR.some(role => roles.includes(role))) return "recruteur";
   return "joueur";
 }
 
