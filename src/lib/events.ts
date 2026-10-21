@@ -25,7 +25,13 @@ export type EventType =
   | "note.ajoutee"
   | "role.rang"
   | "owner.ajoute"
-  | "owner.retire";
+  | "owner.retire"
+  | "faction.ajoutee"
+  | "faction.modifiee"
+  | "entreprise.ajoutee"
+  | "entreprise.modifiee"
+  | "critere.ajoute"
+  | "critere.modifie";
 
 export async function logEvent(event: { type: EventType; subjectId: string | null; actorId?: string | null; data?: Record<string, unknown> }) {
   await db().insert(schema.events).values({
