@@ -25,7 +25,7 @@ export async function PortalShell({ user, children }: { user: ShellUser; childre
           <span>Néa Hélikè</span>
         </Link>
         <ShellNav
-          team={user.rank !== "joueur"}
+          rank={user.rank}
           footer={
             <div className={styles.player}>
               <Image src={avatarUrl(user, 64)} alt="" width={40} height={40} className={styles.avatar} />
