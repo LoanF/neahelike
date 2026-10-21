@@ -78,6 +78,13 @@
       "when": 1792624778005,
       "tag": "0010_rangs_admin_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792624835188,
+      "tag": "0011_owners_et_roles",
+      "breakpoints": true
     }
   ]
 }

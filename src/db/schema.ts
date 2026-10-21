@@ -167,6 +167,28 @@ export const reapplyLocks = pgTable("reapply_locks", {
   until: timestamp({ withTimezone: true }).notNull(),
 });
 
+/** Owners ajoutés depuis le site, en plus des owners permanents (content/owners.ts). */
+export const siteOwners = pgTable("site_owners", {
+  discordId: text().primaryKey(),
+  addedById: text(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Rang donné par un rôle Discord, réglé par les owners. Un rôle absent de la table ne donne que le rang joueur ;
+ * le rang owner ne se donne jamais par un rôle.
+ */
+export const roleRanks = pgTable(
+  "role_ranks",
+  {
+    roleId: text().primaryKey(),
+    rank: rank().notNull(),
+    updatedById: text(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  table => [check("role_ranks_pas_owner", sql`${table.rank} in ('recruteur', 'admin')`)],
+);
+
 // ─── Bot Discord (dépôt bot-neahelike) ──────────────────────────────────────
 // Tables écrites uniquement par le bot. Le site ne fait que les lire, s'il en a besoin.
 
