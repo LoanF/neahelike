@@ -19,6 +19,7 @@ export async function PortalShell({ user, children }: { user: ShellUser; childre
   const notifications = await latestNotifications(user.id);
   return (
     <div className={styles.shell}>
+      <a href="#contenu" className="skip-link">Aller au contenu</a>
       <aside className={styles.sidebar} aria-label="Menu du portail">
         <Link href="/" className={styles.brand}>
           <Logo size={40} alt="" />
@@ -46,7 +47,7 @@ export async function PortalShell({ user, children }: { user: ShellUser; childre
         <div className={styles.topbar}>
           <NotificationBell initial={notifications} />
         </div>
-        {children}
+        <div id="contenu" tabIndex={-1}>{children}</div>
       </div>
     </div>
   );
