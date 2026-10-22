@@ -4,7 +4,7 @@ import { PortalHeader } from "@/components/portal/shell";
 import { DOSSIER_GUIDE } from "@/content/candidature";
 import { canAccessStep, dossierTargetLabel, isStepComplete, stepHref, wantsDossier } from "@/lib/application";
 import { getOpenApplication, getStartBlock, isEditable } from "@/lib/applications";
-import { getBusinesses, takeoverNames } from "@/lib/businesses";
+import { getBusinesses } from "@/lib/businesses";
 import { getFactions } from "@/lib/factions";
 import { requireUser } from "@/lib/session";
 import { Guide } from "../candidature/[etape]/guide";
@@ -16,13 +16,13 @@ export const metadata: Metadata = { title: "Dossier de reprise" };
 
 export default async function DossierPage() {
   const user = await requireUser();
-  const [application, block, { affinities, creatures }, businesses, names] = await Promise.all([
-    getOpenApplication(user.id),
-    getStartBlock(user.id),
-    getFactions(),
-    getBusinesses(),
-    takeoverNames(),
-  ]);
+  // Une seule lecture par table : les noms des archivées servent au libellé d'un ancien dossier.
+  const [application, factions, allBusinesses] = await Promise.all([getOpenApplication(user.id), getFactions(true), getBusinesses(true)]);
+  const block = application ? null : await getStartBlock(user.id);
+  const names = Object.fromEntries([...factions.affinities, ...factions.creatures, ...allBusinesses].map(item => [item.id, item.name]));
+  const affinities = factions.affinities.filter(item => !item.archived);
+  const creatures = factions.creatures.filter(item => !item.archived);
+  const businesses = allBusinesses.filter(item => !item.archived);
   const wanted = wantsDossier(application);
   const complete = wanted && isStepComplete(application, "dossier");
   const editable = !!application && isEditable(application);
