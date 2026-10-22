@@ -401,12 +401,18 @@ Ce sont **deux programmes distincts** qui partagent **la même base PostgreSQL**
 | Ce que c'est | Application web Next.js | Processus Discord connecté en permanence |
 | Rôle | Vitrine, candidatures whitelist, espace équipe, administration du contenu du site | Commandes, modules et tickets sur le serveur Discord |
 | Discord | Appels REST ponctuels avec le token du bot : lire un membre et ses rôles, donner ou retirer un rôle, envoyer un MP | Connecté à la gateway Discord, réagit aux événements du serveur |
-| Base de données | Tables du site ; **possède le schéma et toutes les migrations** | Tables `bot_*`, qu'il lit et écrit |
+| Base de données | Tables du site ; **possède le schéma et toutes les migrations** | Tables `bot_*` ; écrit aussi la présence dans `users` et lit `events` (voir ci-dessous) |
 
 Règles de cohabitation :
 
 - **Toute modification de structure de la base, y compris pour le bot, se fait dans ce dépôt** (`src/db/schema.ts` + migration). Le bot ne fait qu'utiliser les tables.
 - Le site ne lit pas les tables du bot pour fonctionner. Elles sont décrites dans le schéma pour que les migrations les créent.
+- **Partage de la table `users`** :
+  - **Le site seul calcule le rang** (`users.rank`, à partir des owners et de `role_ranks`) et écrit l'événement `rang.change`.
+  - **Le bot met à jour la présence en temps réel** : arrivée et départ du serveur (`in_guild`, événements `discord.rejoint` / `discord.quitte`), pseudo et avatar. Quand les rôles d'un membre changent sur Discord, ou qu'il quitte le serveur, le bot remet `roles_synced_at` à `null` : le site relit le rang à la page suivante.
+  - Le bot n'écrit jamais `rank`, ni les CGU, et ne supprime jamais de compte.
+  - Le site garde sa propre synchronisation (à la connexion et toutes les 5 minutes) : il fonctionne même si le bot est éteint, seulement avec un peu plus de délai.
+- Le bot **lit** `events` pour relayer certains événements (dont les changements de rang) dans son salon de logs.
 - Les rôles « attente de wl » et whitelist sont donnés **par le site** au moment des décisions, pas par le bot.
 - Les demandes des joueurs (par exemple la suppression de compte prévue par les CGU) passent par les **tickets du bot**. Un admin agit ensuite depuis la fiche du joueur sur le site.
 
