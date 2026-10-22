@@ -96,6 +96,23 @@ export async function removeRole(userId: string, roleId: string, reason: string)
   });
 }
 
+/** Bannit du serveur (blacklist). Le bot doit avoir la permission « Bannir des membres ». */
+export async function banMember(userId: string, reason: string) {
+  await call(`/guilds/${env().DISCORD_GUILD_ID}/bans/${userId}`, {
+    method: "PUT",
+    headers: { "X-Audit-Log-Reason": encodeURIComponent(reason) },
+    body: JSON.stringify({ delete_message_seconds: 0 }),
+  });
+}
+
+/** Lève le bannissement (blacklist levée). Sans effet si le membre n'était pas banni. */
+export async function unbanMember(userId: string, reason: string) {
+  await call(`/guilds/${env().DISCORD_GUILD_ID}/bans/${userId}`, {
+    method: "DELETE",
+    headers: { "X-Audit-Log-Reason": encodeURIComponent(reason) },
+  });
+}
+
 /** Envoie un message privé. Renvoie `false` si les MP du joueur sont fermés. */
 export async function sendDirectMessage(userId: string, payload: { content?: string; embeds?: unknown[] }) {
   const channel = await call<{ id: string }>("/users/@me/channels", {

@@ -35,6 +35,12 @@ export const NOTIFICATIONS = {
     body: "Ton entretien est validé : tu es whitelist. La cité t'attend.",
     href: "/portail",
   }),
+  whitelistRetiree: (reason: string | null): NotificationText => ({
+    type: "whitelist.retiree",
+    title: "Whitelist retirée",
+    body: `L'équipe t'a retiré ta whitelist${reason ? ` : « ${reason} »` : ""}. Tu peux déposer une nouvelle candidature dès maintenant.`,
+    href: "/portail",
+  }),
   supprimee: (): NotificationText => ({
     type: "candidature.supprimee",
     title: "Candidature effacée",

@@ -49,7 +49,8 @@ export type StartBlock = { reason: "whitelistee" } | { reason: "delai"; until: D
 /** Raison pour laquelle le joueur ne peut pas commencer une nouvelle candidature. */
 export function startBlock(latest: Application | null): StartBlock {
   if (!latest) return null;
-  if (latest.status === "whitelistee") return { reason: "whitelistee" };
+  // Whitelist retirée par un admin : le joueur recommence de zéro, sans délai.
+  if (latest.status === "whitelistee") return latest.whitelistRevokedAt ? null : { reason: "whitelistee" };
   if (latest.status === "refusee") {
     const until = reapplyDate(latest);
     if (until && until > new Date()) return { reason: "delai", until };

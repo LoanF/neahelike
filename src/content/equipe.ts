@@ -46,6 +46,20 @@ export const DIRECT_MESSAGES = {
     color: EMBED_COLOR,
     footer,
   }),
+  whitelistRetiree: ({ reason, url }: { reason: string | null; url: string }): Embed => ({
+    title: "Whitelist retirée",
+    description: `L'équipe de Néa Hélikè t'a retiré ta whitelist : tu retrouves le rôle **Novice**.\n\nTu peux déposer une nouvelle candidature dès maintenant sur le portail : ${url}`,
+    color: EMBED_DANGER,
+    fields: reason ? [{ name: "Raison", value: reason.slice(0, 1000) }] : [],
+    footer,
+  }),
+  blacklist: ({ reason }: { reason: string | null }): Embed => ({
+    title: "Blacklist",
+    description: "Tu es blacklist de Néa Hélikè : tu es banni du Discord et tu n'as plus accès au portail.",
+    color: EMBED_DANGER,
+    fields: reason ? [{ name: "Raison", value: reason.slice(0, 1000) }] : [],
+    footer,
+  }),
   whitelistee: (): Embed => ({
     title: "Bienvenue à Néa Hélikè",
     description: "Ton entretien est validé : tu es whitelist et tu as reçu le rôle **Magistrat**. La cité t'attend.",

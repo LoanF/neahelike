@@ -9,7 +9,7 @@ import type { DataStepId } from "./application";
 import { DATA_STEPS, STEPS, visibleSteps } from "./application";
 import { getLatestApplication, reapplyDate } from "./applications";
 import { criteriaLabels, getCriteria, OTHER_CRITERION } from "./criteria";
-import { addRole, removeRole, sendDirectMessage } from "./discord";
+import { addRole, banMember, removeRole, sendDirectMessage, unbanMember } from "./discord";
 import { env } from "./env";
 import { logEvent } from "./events";
 import { notify } from "./notifications";
@@ -226,5 +226,92 @@ export async function deletePlayerAccount(subjectId: string, reviewer: Reviewer)
 
   await db().delete(schema.users).where(eq(schema.users.id, subjectId));
   await logEvent({ type: "compte.supprime", subjectId: null, actorId: reviewer.id, data: keepDelay ? { delaiConserve: true } : {} });
+  return { ok: true, warnings };
+}
+
+const REASON_MAX_LENGTH = 500;
+
+function cleanReason(value: string) {
+  const text = value.trim().slice(0, REASON_MAX_LENGTH);
+  return text || null;
+}
+
+/**
+ * Admin : retire la whitelist d'un joueur. La candidature reste dans l'historique mais ne bloque plus :
+ * le joueur peut en recommencer une de zéro tout de suite. Sur Discord, il repasse au rôle de base.
+ */
+export async function revokeWhitelist(subjectId: string, reviewer: Reviewer, reasonText: string): Promise<ReviewResult> {
+  if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
+  const latest = await getLatestApplication(subjectId);
+  if (!latest || latest.status !== "whitelistee" || latest.whitelistRevokedAt) return { error: "Ce joueur n'est pas whitelist : recharge la fiche." };
+
+  const revokeReason = cleanReason(reasonText);
+  const [updated] = await db()
+    .update(schema.applications)
+    .set({ whitelistRevokedAt: new Date(), whitelistRevokedById: reviewer.id, whitelistRevokeReason: revokeReason })
+    .where(and(eq(schema.applications.id, latest.id), eq(schema.applications.status, "whitelistee"), isNull(schema.applications.whitelistRevokedAt)))
+    .returning();
+  if (!updated) return CHANGED;
+  await logEvent({ type: "whitelist.retiree", subjectId, actorId: reviewer.id, data: revokeReason ? { raison: revokeReason } : {} });
+  await notify(subjectId, NOTIFICATIONS.whitelistRetiree(revokeReason));
+
+  const warnings: string[] = [];
+  const { DISCORD_ROLE_ATTENTE_WL: waiting, DISCORD_ROLE_WL: whitelisted, DISCORD_ROLE_NON_WL: novice } = env();
+  const why = reason(reviewer, "Whitelist retirée");
+  if (whitelisted) await discord("Retrait du rôle « Magistrat (wl) »", warnings, () => removeRole(subjectId, whitelisted, why));
+  if (waiting) await discord("Retrait du rôle « attente de wl »", warnings, () => removeRole(subjectId, waiting, why));
+  if (novice) await discord("Rôle « Novice »", warnings, () => addRole(subjectId, novice, why));
+  else warnings.push("Rôle de base non configuré (DISCORD_ROLE_NON_WL).");
+  await discord("Message privé", warnings, () =>
+    sendDirectMessage(subjectId, { embeds: [DIRECT_MESSAGES.whitelistRetiree({ reason: revokeReason, url: `${SITE_URL}/portail` })] }),
+  );
+  return { ok: true, warnings };
+}
+
+/**
+ * Admin : blacklist. Le joueur n'a plus accès au portail (page de blocage) et il est banni du Discord.
+ * Sa whitelist éventuelle est retirée : si la blacklist est levée un jour, il devra recandidater.
+ */
+export async function blacklistPlayer(subjectId: string, reviewer: Reviewer, reasonText: string): Promise<ReviewResult> {
+  if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
+  if (subjectId === reviewer.id) return { error: "Tu ne peux pas te blacklister toi-même." };
+  const [player] = await db().select({ rank: schema.users.rank }).from(schema.users).where(eq(schema.users.id, subjectId));
+  if (!player) return { error: "Ce compte n'existe plus." };
+  if (player.rank === "owner") return { error: "Un owner ne peut pas être blacklisté." };
+
+  const blacklistReason = cleanReason(reasonText);
+  const [created] = await db()
+    .insert(schema.blacklist)
+    .values({ discordId: subjectId, reason: blacklistReason, createdById: reviewer.id, source: "site" })
+    .onConflictDoNothing()
+    .returning();
+  if (!created) return { error: "Ce joueur est déjà blacklisté." };
+
+  const latest = await getLatestApplication(subjectId);
+  if (latest?.status === "whitelistee" && !latest.whitelistRevokedAt) {
+    await db()
+      .update(schema.applications)
+      .set({ whitelistRevokedAt: new Date(), whitelistRevokedById: reviewer.id, whitelistRevokeReason: "Blacklist" })
+      .where(eq(schema.applications.id, latest.id));
+  }
+  await logEvent({ type: "compte.blacklist", subjectId, actorId: reviewer.id, data: blacklistReason ? { raison: blacklistReason } : {} });
+
+  // Le MP part avant le bannissement : après, le bot ne partage plus de serveur avec lui.
+  const warnings: string[] = [];
+  await discord("Message privé", warnings, () => sendDirectMessage(subjectId, { embeds: [DIRECT_MESSAGES.blacklist({ reason: blacklistReason })] }));
+  await discord("Bannissement du Discord", warnings, () => banMember(subjectId, reason(reviewer, `Blacklist${blacklistReason ? ` : ${blacklistReason}` : ""}`).slice(0, 500)));
+  await db().update(schema.users).set({ inGuild: false }).where(eq(schema.users.id, subjectId));
+  return { ok: true, warnings };
+}
+
+/** Admin : lève la blacklist et le bannissement Discord. Le joueur devra rejoindre le serveur et, s'il n'est plus whitelist, recandidater. */
+export async function liftBlacklist(subjectId: string, reviewer: Reviewer): Promise<ReviewResult> {
+  if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
+  const [removed] = await db().delete(schema.blacklist).where(eq(schema.blacklist.discordId, subjectId)).returning();
+  if (!removed) return { error: "Ce joueur n'est pas blacklisté : recharge la fiche." };
+  await logEvent({ type: "compte.blacklist_levee", subjectId, actorId: reviewer.id });
+
+  const warnings: string[] = [];
+  await discord("Levée du bannissement Discord", warnings, () => unbanMember(subjectId, reason(reviewer, "Blacklist levée")));
   return { ok: true, warnings };
 }

@@ -17,6 +17,7 @@ export const LIMITS = {
   note: { max: 10, window: 60 },
   noteDelete: { max: 20, window: 60 },
   accountDelete: { max: 5, window: 60 },
+  sanction: { max: 10, window: 60 },
   admin: { max: 60, window: 60 },
 } as const;
 
