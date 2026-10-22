@@ -120,6 +120,13 @@
       "when": 1792683707534,
       "tag": "0016_giveaways_et_sanctions",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792711104555,
+      "tag": "0017_retrait_whitelist_et_blacklist",
+      "breakpoints": true
     }
   ]
 }

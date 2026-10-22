@@ -86,6 +86,13 @@ export const applications = pgTable(
     refusalCriteria: text().array(),
     refusalComment: text(),
     decidedAt: timestamp({ withTimezone: true }),
+    /**
+     * Whitelist retirée par un admin : la candidature reste « whitelistee » pour l'historique, mais ne bloque plus
+     * une nouvelle candidature. Raison facultative, montrée au joueur.
+     */
+    whitelistRevokedAt: timestamp({ withTimezone: true }),
+    whitelistRevokedById: text().references(() => users.id, { onDelete: "set null" }),
+    whitelistRevokeReason: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
@@ -176,6 +183,25 @@ export const rateLimits = pgTable("rate_limits", {
   count: integer().notNull(),
   resetAt: timestamp({ withTimezone: true }).notNull(),
 });
+
+/**
+ * Blacklist, partagée par le site et le bot : un ID Discord présent ici n'a plus accès au portail
+ * (page de blocage dès la connexion, même sans compte sur le site) et est banni du Discord.
+ * Pas de clé étrangère vers `users` : le bot peut blacklister quelqu'un qui ne s'est jamais connecté.
+ * Lever la blacklist supprime la ligne ; l'historique reste dans `events`.
+ */
+export const blacklist = pgTable("blacklist", {
+  discordId: text().primaryKey(),
+  /** Raison facultative, affichée au joueur sur sa page de blocage. */
+  reason: text(),
+  /** ID Discord de l'admin ou du modérateur qui a blacklisté. */
+  createdById: text().notNull(),
+  /** Origine : depuis le site ou depuis la commande /blacklist du bot. */
+  source: text().notNull().default("site"),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export type BlacklistEntry = typeof blacklist.$inferSelect;
 
 /** Owners ajoutés depuis le site, en plus des owners permanents (content/owners.ts). */
 export const siteOwners = pgTable("site_owners", {
