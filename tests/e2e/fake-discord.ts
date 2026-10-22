@@ -3,8 +3,9 @@ import type { Server } from "node:http";
 
 /**
  * Faux Discord pour les tests de bout en bout : le site lui parle à la place de discord.com
- * (DISCORD_API_URL). Il connaît les membres de test, accepte les changements de rôle et garde
- * les messages privés envoyés, que les tests relisent sur GET /__messages.
+ * (DISCORD_API_URL). Il connaît les membres de test, accepte les changements de rôle et les
+ * bannissements, et garde les messages privés et les bannis, que les tests relisent sur
+ * GET /__messages et GET /__bans.
  */
 export const FAKE_DISCORD_PORT = 3199;
 
@@ -22,6 +23,7 @@ export interface SentMessage {
 
 export function startFakeDiscord(members: FakeMember[]): Promise<Server> {
   const byId = new Map(members.map(member => [member.id, member]));
+  const banned = new Set<string>();
   const channels = new Map<string, string>();
   const messages: SentMessage[] = [];
 
@@ -37,11 +39,23 @@ export function startFakeDiscord(members: FakeMember[]): Promise<Server> {
       const json = body ? JSON.parse(body) : {};
 
       if (request.method === "GET" && path === "/__messages") return send(200, messages);
+      if (request.method === "GET" && path === "/__bans") return send(200, [...banned]);
+
+      const ban = path.match(/^\/guilds\/\d+\/bans\/(\d+)$/);
+      if (ban && request.method === "PUT") {
+        banned.add(ban[1]);
+        return send(204);
+      }
+      if (ban && request.method === "DELETE") {
+        if (!banned.delete(ban[1])) return send(404, { message: "Unknown Ban" });
+        return send(204);
+      }
 
       const member = path.match(/^\/guilds\/\d+\/members\/(\d+)$/);
       if (request.method === "GET" && member) {
         const found = byId.get(member[1]);
-        if (!found) return send(404, { message: "Unknown Member" });
+        // Un membre banni n'est plus sur le serveur.
+        if (!found || banned.has(found.id)) return send(404, { message: "Unknown Member" });
         return send(200, { user: { id: found.id, username: found.username, global_name: found.username, avatar: null }, roles: found.roles, nick: null });
       }
 

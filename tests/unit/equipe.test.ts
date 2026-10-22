@@ -22,6 +22,9 @@ function application(overrides: Partial<Application> = {}): Application {
     viewedAt: null,
     submittedAt: null,
     decidedAt: null,
+    whitelistRevokedAt: null,
+    whitelistRevokedById: null,
+    whitelistRevokeReason: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -60,6 +63,12 @@ describe("badge de la liste des joueurs", () => {
     expect(teamBadge(application({ status: "refusee" }))).toBe("refusee");
   });
 
+  it("signale une whitelist retirée et une blacklist, prioritaire sur tout le reste", () => {
+    expect(teamBadge(application({ status: "whitelistee", whitelistRevokedAt: new Date() }))).toBe("retiree");
+    expect(teamBadge(application({ status: "whitelistee" }), true)).toBe("blacklist");
+    expect(teamBadge(null, true)).toBe("blacklist");
+  });
+
   it("signale un brouillon dont le dossier de reprise manque", () => {
     const hrp = { age: "24", rpHours: "10", experience: "Dix heures de RP.", goodMic: true, wantsDossier: true };
     expect(teamBadge(application({ hrp }))).toBe("dossier");
@@ -79,6 +88,10 @@ describe("délai de recandidature", () => {
     const decidedAt = new Date();
     decidedAt.setMonth(decidedAt.getMonth() - 4);
     expect(startBlock(application({ status: "refusee", decidedAt }))).toBeNull();
+  });
+
+  it("laisse recandidater tout de suite après un retrait de whitelist", () => {
+    expect(startBlock(application({ status: "whitelistee", whitelistRevokedAt: new Date() }))).toBeNull();
   });
 
   it("empêche un joueur whitelist de recommencer", () => {

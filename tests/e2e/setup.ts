@@ -3,7 +3,7 @@ import { encode } from "next-auth/jwt";
 import postgres from "postgres";
 import { CGU_VERSION } from "../../src/content/legal";
 import { startFakeDiscord } from "./fake-discord";
-import { BASE_URL, PLAYER, RECRUITER, RECRUITER_ROLE, stateFile } from "./users";
+import { ADMIN, ADMIN_ROLE, BASE_URL, BOT_BLACKLISTED, PLAYER, RECRUITER, RECRUITER_ROLE, stateFile, USERS, WHITELISTED } from "./users";
 
 /**
  * Prépare les tests de bout en bout : comptes de test dans la base de test, faux Discord,
@@ -17,26 +17,38 @@ export default async function globalSetup() {
   if (!secret) throw new Error("AUTH_SECRET manque.");
 
   const sql = postgres(url, { max: 1 });
-  const ids = [PLAYER.id, RECRUITER.id];
+  const ids = USERS.map(user => user.id);
   await sql`delete from users where id in ${sql(ids)}`;
   await sql`delete from reapply_locks where discord_id in ${sql(ids)}`;
+  await sql`delete from blacklist where discord_id in ${sql(ids)}`;
   await sql`delete from rate_limits where key like ${"%:9000000000000000%"}`;
-  for (const user of [PLAYER, RECRUITER]) {
+  for (const user of USERS) {
     await sql`
       insert into users (id, username, global_name, rank, in_guild, cgu_accepted_at, cgu_version)
       values (${user.id}, ${user.username}, ${user.username}, ${user.rank}, true, now(), ${CGU_VERSION})`;
   }
   await sql`insert into role_ranks (role_id, rank) values (${RECRUITER_ROLE}, 'recruteur') on conflict (role_id) do update set rank = 'recruteur'`;
+  await sql`insert into role_ranks (role_id, rank) values (${ADMIN_ROLE}, 'admin') on conflict (role_id) do update set rank = 'admin'`;
+  // Un joueur déjà whitelist (candidature validée) et un joueur blacklisté par le bot.
+  await sql`
+    insert into applications (user_id, status, hrp, rp, background, submitted_at, decided_at)
+    values (${WHITELISTED.id}, 'whitelistee', ${sql.json({ age: "25", rpHours: "500", experience: "Joueur de test whitelist.", goodMic: true, wantsDossier: false })},
+            ${sql.json({ firstName: "Ilios", lastName: "Phaedra", age: "28", origin: "Né au port de la cité.", affinity: "", creature: "" })},
+            ${sql.json({ url: "https://docs.google.com/document/d/e2e-wl", shared: true })}, now(), now())`;
+  await sql`insert into blacklist (discord_id, reason, created_by_id, source) values (${BOT_BLACKLISTED.id}, 'Triche en jeu (test)', ${ADMIN.id}, 'bot')`;
   await sql.end();
 
   const discord = await startFakeDiscord([
     { id: PLAYER.id, username: PLAYER.username, roles: [] },
     { id: RECRUITER.id, username: RECRUITER.username, roles: [RECRUITER_ROLE] },
+    { id: ADMIN.id, username: ADMIN.username, roles: [ADMIN_ROLE] },
+    { id: WHITELISTED.id, username: WHITELISTED.username, roles: [] },
+    { id: BOT_BLACKLISTED.id, username: BOT_BLACKLISTED.username, roles: [] },
   ]);
 
   await mkdir("tests/e2e/.auth", { recursive: true });
   const { hostname } = new URL(BASE_URL);
-  for (const user of [PLAYER, RECRUITER]) {
+  for (const user of USERS) {
     const token = await encode({ token: { sub: user.id, discordId: user.id, name: user.username }, secret, salt: "authjs.session-token" });
     const state = { cookies: [{ name: "authjs.session-token", value: token, domain: hostname, path: "/", expires: -1, httpOnly: true, secure: false, sameSite: "Lax" }], origins: [] };
     await writeFile(stateFile(user), JSON.stringify(state));
@@ -45,7 +57,7 @@ export default async function globalSetup() {
   return async () => {
     discord.close();
     const cleanup = postgres(url, { max: 1 });
-    await cleanup`delete from role_ranks where role_id = ${RECRUITER_ROLE}`;
+    await cleanup`delete from role_ranks where role_id in ${cleanup([RECRUITER_ROLE, ADMIN_ROLE])}`;
     await cleanup.end();
   };
 }
