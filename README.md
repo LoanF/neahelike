@@ -41,7 +41,7 @@ Le **bot Discord** est un projet séparé (dépôt `bot-neahelike`). Il partage 
 | Base de données | **PostgreSQL** (n'importe quel hébergeur), **Drizzle ORM** + pilote `postgres` (postgres-js) |
 | Validation | **Zod** |
 | Tests | **Vitest** (règles), **Playwright** (parcours dans le navigateur) |
-| Gestionnaire de paquets | **pnpm** (Node 20 ou plus) |
+| Gestionnaire de paquets | **pnpm 10** (Node.js 22.12 ou plus) |
 
 Le site ne dépend d'aucun service propriétaire : il lui faut seulement **Node.js**, une **base PostgreSQL** et une **application Discord**. Il a été hébergé sur Vercel avec une base Supabase, mais rien dans le code ne l'impose (voir [Mettre en production](#mettre-en-production)).
 
@@ -49,7 +49,16 @@ Le site ne dépend d'aucun service propriétaire : il lui faut seulement **Node.
 
 ## Installation en local
 
-Prérequis : Node.js 20+, pnpm (`corepack enable`), une base PostgreSQL 15+ et une application Discord de test.
+Prérequis : Node.js 22.12+, pnpm 10 (`corepack enable`, la version est fixée par `packageManager` dans `package.json`), une base PostgreSQL 15+ et une application Discord de test.
+
+Utilisez **pnpm** plutôt que npm : seul `pnpm-lock.yaml` fixe les versions exactes testées. npm fonctionne aussi, mais il recalcule les versions à chaque installation.
+
+**Avertissements connus à l'installation** (sans effet sur le site, à revoir quand une mise à jour existera) :
+- `eslint@9 … no longer supported` : ESLint 10 existe, mais les extensions utilisées par `eslint-config-next` (React, import, accessibilité) ne l'acceptent pas encore.
+- `@esbuild-kit/… deprecated` : dépendances internes de `drizzle-kit` 0.31, la dernière version stable. Elles disparaissent avec Drizzle 1.0.
+- Audit : une alerte sur `braces` (déni de service sur des motifs de fichiers très imbriqués), sans correctif publié. Elle ne concerne que l'outil de vérification du code (ESLint), jamais le site ; elle est marquée comme connue pour pnpm dans `package.json` (`pnpm.auditConfig`).
+
+Les autres correctifs de sécurité sont imposés dans `package.json` (`pnpm.overrides` et `overrides` pour npm) : `postcss` récent pour Next.js, `esbuild` récent pour `drizzle-kit`. Les scripts d'installation autorisés (esbuild, unrs-resolver) sont listés dans `pnpm.onlyBuiltDependencies` et `allowScripts`.
 
 ```bash
 pnpm install
