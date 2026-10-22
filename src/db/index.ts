@@ -12,6 +12,9 @@ function connect(): Database {
   const client = postgres(env().DATABASE_URL, {
     // Pooler Supabase en mode transaction : pas de requêtes préparées.
     prepare: false,
+    // Pas de requête de découverte des types à chaque nouvelle connexion : le schéma n'a que des tableaux de texte,
+    // connus d'avance. Derrière le pooler, les requêtes mises en file derrière celle-ci pouvaient rester bloquées.
+    fetch_types: false,
     max: 5,
     // Sur Vercel, une fonction peut dormir entre deux visites : une connexion restée ouverte peut
     // mourir sans prévenir et bloquer la requête suivante. On les ferme vite et on ne les garde pas longtemps.
