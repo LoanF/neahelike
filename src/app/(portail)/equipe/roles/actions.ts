@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/discord";
 import type { RoleRank } from "@/lib/permissions";
 import { addOwner, removeOwner, saveRoleRanks } from "@/lib/permissions";
+import { RATE_LIMIT_MESSAGE, rateLimit } from "@/lib/rate-limit";
 import { requireFreshRank } from "@/lib/session";
 
 export type FormState = { error?: string; ok?: string; at: number } | null;
@@ -23,6 +24,7 @@ async function owner() {
 export async function saveRolesAction(_previous: FormState, formData: FormData): Promise<FormState> {
   const user = await owner();
   if (!user) return { error: "Réservé aux owners.", at: Date.now() };
+  if (!(await rateLimit("admin", user.id))) return { error: RATE_LIMIT_MESSAGE, at: Date.now() };
 
   const ranks: Record<string, RoleRank> = {};
   const names: Record<string, string> = {};
@@ -40,6 +42,7 @@ export async function saveRolesAction(_previous: FormState, formData: FormData):
 export async function addOwnerAction(_previous: FormState, formData: FormData): Promise<FormState> {
   const user = await owner();
   if (!user) return { error: "Réservé aux owners.", at: Date.now() };
+  if (!(await rateLimit("admin", user.id))) return { error: RATE_LIMIT_MESSAGE, at: Date.now() };
   const id = String(formData.get("discordId") ?? "").trim();
   if (!SNOWFLAKE.test(id)) return { error: "Indique un ID Discord valide (mode développeur → clic droit → Copier l'identifiant).", at: Date.now() };
   // Vérifie que le compte existe, pour éviter une faute de frappe.
@@ -52,7 +55,7 @@ export async function addOwnerAction(_previous: FormState, formData: FormData): 
 
 export async function removeOwnerAction(formData: FormData) {
   const user = await owner();
-  if (!user) return;
+  if (!user || !(await rateLimit("admin", user.id))) return;
   await removeOwner(String(formData.get("discordId")), user.id);
   revalidatePath("/equipe/roles");
 }

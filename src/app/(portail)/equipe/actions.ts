@@ -7,6 +7,7 @@ import { db, schema } from "@/db";
 import type { NoteVisibility } from "@/db/schema";
 import type { ReviewResult } from "@/lib/review";
 import { addNote, deleteNote, deletePlayerAccount, refuse, requestChanges, validateInterview, validateWritten, wipeApplication } from "@/lib/review";
+import { RATE_LIMIT_MESSAGE, rateLimit } from "@/lib/rate-limit";
 import { requireFreshRank, requireUser } from "@/lib/session";
 import type { Viewer } from "@/lib/team";
 import { leavePresence, presenceFor, touchPresence } from "@/lib/team";
@@ -40,6 +41,7 @@ export async function decide(_previous: DecisionState, formData: FormData): Prom
   } catch {
     return { error: "Tes permissions ont changé : recharge la page.", at: Date.now() };
   }
+  if (!(await rateLimit("decision", reviewer.id))) return { error: RATE_LIMIT_MESSAGE, at: Date.now() };
 
   const [application] = await db().select().from(schema.applications).where(eq(schema.applications.id, applicationId)).orderBy(desc(schema.applications.createdAt));
   if (!application || application.userId !== subjectId) return { error: "Candidature introuvable : recharge la fiche.", at: Date.now() };
@@ -81,6 +83,7 @@ export async function addNoteAction(_previous: NoteState, formData: FormData): P
   } catch {
     return { error: "Tes permissions ont changé : recharge la page.", at: Date.now() };
   }
+  if (!(await rateLimit("note", author.id))) return { error: RATE_LIMIT_MESSAGE, at: Date.now() };
   const subjectId = String(formData.get("subjectId"));
   const visibility: NoteVisibility = formData.get("visibility") === "admin" ? "admin" : "equipe";
   const result = await addNote(subjectId, author, String(formData.get("content") ?? ""), visibility);
@@ -91,7 +94,7 @@ export async function addNoteAction(_previous: NoteState, formData: FormData): P
 
 export async function deleteNoteAction(formData: FormData) {
   const viewer = await requireFreshRank("recruteur").catch(() => null);
-  if (!viewer) return;
+  if (!viewer || !(await rateLimit("noteDelete", viewer.id))) return;
   const result = await deleteNote(String(formData.get("noteId")), viewer);
   if ("subjectId" in result && result.subjectId) revalidatePath(`/equipe/joueurs/${result.subjectId}`);
 }
@@ -106,6 +109,7 @@ export async function deleteAccountAction(_previous: DeleteAccountState, formDat
   } catch {
     return { error: "Réservé aux admins.", at: Date.now() };
   }
+  if (!(await rateLimit("accountDelete", reviewer.id))) return { error: RATE_LIMIT_MESSAGE, at: Date.now() };
   if (String(formData.get("confirmation") ?? "").trim().toUpperCase() !== "SUPPRIMER") return { error: "Recopie SUPPRIMER pour confirmer.", at: Date.now() };
 
   const result = await deletePlayerAccount(String(formData.get("subjectId")), reviewer);
