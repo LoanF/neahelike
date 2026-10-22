@@ -98,13 +98,13 @@ Toutes sont décrites dans `.env.example`. Elles sont validées au premier accè
 | `DISCORD_BOT_TOKEN` | oui | Token du bot de la même application (lecture des membres, rôles, MP) |
 | `DISCORD_GUILD_ID` | oui | ID du serveur Discord Néa Hélikè |
 | `DISCORD_ROLE_ADMIN` / `DISCORD_ROLE_RECRUTEUR` | non | Rôles qui donnent ces rangs, **en secours** tant que rien n'est réglé dans l'administration (plusieurs ID séparés par des virgules) |
-| `DISCORD_ROLE_ASPIRANT` | non | Rôle « attente de wl », donné quand l'écrit est validé |
-| `DISCORD_ROLE_HELIKEEN` | non | Rôle whitelist « Magistrat (wl) », donné après l'entretien vocal |
-| `DISCORD_ROLE_NOVICE` | non | Rôle de base « Novice (Non WL) », rendu quand un compte est supprimé |
+| `DISCORD_ROLE_ATTENTE_WL` | non | Rôle « attente de wl », donné quand l'écrit est validé |
+| `DISCORD_ROLE_WL` | non | Rôle whitelist « Magistrat (wl) », donné après l'entretien vocal |
+| `DISCORD_ROLE_NON_WL` | non | Rôle de base « Novice (Non WL) », rendu quand un compte est supprimé |
 | `NEXT_PUBLIC_SITE_URL` | **oui en production** | Adresse publique du site (liens des MP, aperçus de liens) |
 | `NEXT_PUBLIC_INDEXABLE` | non | `true` pour autoriser l'indexation par les moteurs de recherche |
 
-Sans les rôles `ASPIRANT`, `HELIKEEN` ou `NOVICE`, les décisions fonctionnent quand même : le rôle n'est simplement pas donné, et l'équipe voit un avertissement.
+Sans les rôles `ATTENTE_WL`, `WL` ou `NON_WL`, les décisions fonctionnent quand même : le rôle n'est simplement pas donné, et l'équipe voit un avertissement.
 
 ---
 
