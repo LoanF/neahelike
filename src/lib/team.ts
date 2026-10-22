@@ -6,19 +6,23 @@ import { TABS } from "@/components/equipe/badges";
 import { db, schema } from "@/db";
 import type { Application, NoteVisibility, User } from "@/db/schema";
 import { isStepComplete, wantsDossier } from "./application";
+import { blacklistedIds } from "./blacklist";
 import { hasRank } from "./session";
 
 /** Une fiche est « en cours de lecture » si son lecteur a donné signe de vie il y a moins de 30 s. */
 const PRESENCE_WINDOW_SECONDS = 30;
 
 /** Badge de la liste et de la fiche (hors œil de présence, calculé en direct). */
-export function teamBadge(application: Application | null): TeamBadge {
+export function teamBadge(application: Application | null, blacklisted = false): TeamBadge {
+  if (blacklisted) return "blacklist";
   if (!application) return "aucune";
   switch (application.status) {
     case "brouillon":
       return wantsDossier(application) && !isStepComplete(application, "dossier") ? "dossier" : "brouillon";
     case "envoyee":
       return application.viewedAt ? "vue" : "a_lire";
+    case "whitelistee":
+      return application.whitelistRevokedAt ? "retiree" : "whitelistee";
     default:
       return application.status;
   }
@@ -44,16 +48,17 @@ function matches(row: PlayerRow, query: string) {
 
 /** Joueurs avec leur dernière candidature, filtrés par onglet et recherche (ID Discord, pseudo, prénom ou nom RP). */
 export async function listPlayers({ tab, query }: { tab: TabId; query?: string }) {
-  const [users, applications] = await Promise.all([
+  const [users, applications, blacklisted] = await Promise.all([
     db().select().from(schema.users).orderBy(desc(schema.users.createdAt)),
     db().select().from(schema.applications).orderBy(desc(schema.applications.createdAt)),
+    blacklistedIds(),
   ]);
   const latest = new Map<string, Application>();
   for (const application of applications) if (!latest.has(application.userId)) latest.set(application.userId, application);
 
   const rows: PlayerRow[] = users.map(user => {
     const application = latest.get(user.id) ?? null;
-    return { user, application, badge: teamBadge(application) };
+    return { user, application, badge: teamBadge(application, blacklisted.has(user.id)) };
   });
 
   const counts = Object.fromEntries(TABS.map(item => [item.id, item.badges ? rows.filter(row => (item.badges as readonly TeamBadge[]).includes(row.badge)).length : rows.length])) as Record<TabId, number>;
@@ -144,8 +149,8 @@ export async function timeline(subjectId: string) {
 /** Familles d'événements du journal global. */
 export const JOURNAL_FILTERS = {
   candidatures: ["candidature.commencee", "candidature.etape", "candidature.envoyee"],
-  decisions: ["candidature.vue", "candidature.validee", "candidature.modification", "candidature.refusee", "entretien.valide", "candidature.supprimee"],
-  comptes: ["compte.cree", "compte.cgu", "compte.supprime", "discord.rejoint", "discord.quitte", "rang.change"],
+  decisions: ["candidature.vue", "candidature.validee", "candidature.modification", "candidature.refusee", "entretien.valide", "whitelist.retiree", "candidature.supprimee"],
+  comptes: ["compte.cree", "compte.cgu", "compte.supprime", "compte.blacklist", "compte.blacklist_levee", "discord.rejoint", "discord.quitte", "rang.change"],
   notes: ["note.ajoutee"],
   administration: ["role.rang", "owner.ajoute", "owner.retire", "faction.ajoutee", "faction.modifiee", "entreprise.ajoutee", "entreprise.modifiee", "critere.ajoute", "critere.modifie"],
 } as const;

@@ -1,7 +1,7 @@
 import type { BadgeTone } from "@/components/plaque";
 
 /** Badges vus par l'équipe. « En cours de lecture » est à part : c'est l'œil de présence, calculé en direct. */
-export type TeamBadge = "aucune" | "brouillon" | "dossier" | "a_lire" | "vue" | "a_modifier" | "entretien" | "whitelistee" | "refusee";
+export type TeamBadge = "aucune" | "brouillon" | "dossier" | "a_lire" | "vue" | "a_modifier" | "entretien" | "whitelistee" | "retiree" | "refusee" | "blacklist";
 
 export const BADGE_LABEL: Record<TeamBadge, string> = {
   aucune: "Pas de candidature",
@@ -12,7 +12,9 @@ export const BADGE_LABEL: Record<TeamBadge, string> = {
   a_modifier: "Modification demandée",
   entretien: "Entretien vocal à passer",
   whitelistee: "Whitelist",
+  retiree: "Whitelist retirée",
   refusee: "Refusée",
+  blacklist: "Blacklist",
 };
 
 export const BADGE_TONE: Record<TeamBadge, BadgeTone> = {
@@ -24,7 +26,9 @@ export const BADGE_TONE: Record<TeamBadge, BadgeTone> = {
   a_modifier: "danger",
   entretien: "gold",
   whitelistee: "success",
+  retiree: "danger",
   refusee: "danger",
+  blacklist: "danger",
 };
 
 export const TABS = [
@@ -33,7 +37,8 @@ export const TABS = [
   { id: "modifications", label: "Modifications", badges: ["a_modifier"] },
   { id: "brouillons", label: "Brouillons", badges: ["brouillon", "dossier"] },
   { id: "validees", label: "Whitelist", badges: ["whitelistee"] },
-  { id: "refusees", label: "Refusées", badges: ["refusee"] },
+  { id: "refusees", label: "Refusées", badges: ["refusee", "retiree"] },
+  { id: "blacklist", label: "Blacklist", badges: ["blacklist"] },
   { id: "tous", label: "Tous", badges: null },
 ] as const satisfies readonly { id: string; label: string; badges: readonly TeamBadge[] | null }[];
 

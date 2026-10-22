@@ -13,6 +13,7 @@ import { Timeline } from "@/components/equipe/timeline";
 import { db, schema } from "@/db";
 import { dossierTargetLabel, isStepComplete, visibleSteps, wantsDossier } from "@/lib/application";
 import { getLatestApplication } from "@/lib/applications";
+import { getBlacklistEntry } from "@/lib/blacklist";
 import { takeoverNames } from "@/lib/businesses";
 import { criteriaLabels, getCriteria } from "@/lib/criteria";
 import { avatarUrl, bannerUrl, displayName } from "@/lib/discord-cdn";
@@ -25,6 +26,7 @@ import { DeleteAccount } from "./delete-account";
 import styles from "./fiche.module.css";
 import type { NoteView } from "./notes";
 import { Notes } from "./notes";
+import { Sanctions } from "./sanctions";
 
 export const metadata: Metadata = { title: "Fiche joueur" };
 
@@ -41,7 +43,14 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
   if (application) await markViewed(application, viewer);
   const isAdmin = hasRank(viewer, "admin");
 
-  const [events, notes, names, criteria, activeCriteria] = await Promise.all([timeline(player.id), notesFor(player.id, viewer), takeoverNames(), criteriaLabels(), getCriteria()]);
+  const [events, notes, names, criteria, activeCriteria, blacklisted] = await Promise.all([
+    timeline(player.id),
+    notesFor(player.id, viewer),
+    takeoverNames(),
+    criteriaLabels(),
+    getCriteria(),
+    getBlacklistEntry(player.id),
+  ]);
   // Un recruteur ne doit pas deviner l'existence d'une note réservée aux admins.
   const visibleEvents = isAdmin ? events : events.filter(event => !(event.type === "note.ajoutee" && (event.data as { visibilite?: string }).visibilite === "admin"));
   const noteViews: NoteView[] = notes.map(note => ({
@@ -55,7 +64,8 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
     canDelete: canDeleteNote(note, viewer) && (isAdmin || note.visibility === "equipe"),
   }));
 
-  const badge = teamBadge(application);
+  const badge = teamBadge(application, !!blacklisted);
+  const whitelisted = application?.status === "whitelistee" && !application.whitelistRevokedAt;
   const banner = bannerUrl(player, 960);
   const rp = application?.rp;
   const rpName = [rp?.firstName, rp?.lastName].filter(value => typeof value === "string" && value.trim()).join(" ");
@@ -90,6 +100,22 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
       </Plaque>
+
+      {blacklisted && (
+        <p className={styles.alert}>
+          <strong>
+            Blacklisté le {formatDate(blacklisted.createdAt)}
+            {blacklisted.source === "bot" ? " depuis le bot Discord" : ""}
+          </strong>
+          {blacklisted.reason ? <em>« {blacklisted.reason} »</em> : <span>Aucune raison indiquée.</span>}
+        </p>
+      )}
+      {!blacklisted && application?.whitelistRevokedAt && (
+        <p className={styles.alert}>
+          <strong>Whitelist retirée le {formatDate(application.whitelistRevokedAt)}</strong>
+          {application.whitelistRevokeReason && <em>« {application.whitelistRevokeReason} »</em>}
+        </p>
+      )}
 
       <div className={styles.columns}>
         <div className={styles.mainColumn}>
@@ -142,6 +168,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
           {isAdmin && player.id !== viewer.id && (
             <Plaque className={`${styles.panel} ${styles.dangerPanel}`} rivets="none">
               <h2 className={`${styles.panelTitle} ${styles.dangerTitle}`}>Compte</h2>
+              {player.rank !== "owner" && <Sanctions subjectId={player.id} canRevoke={whitelisted} blacklisted={!!blacklisted} />}
               <DeleteAccount subjectId={player.id} />
             </Plaque>
           )}

@@ -1,4 +1,4 @@
-import { Ban, BadgeCheck, Briefcase, Check, Crown, Eye, FilePen, FileText, KeyRound, Link2, ListX, LogIn, MessageSquare, ScrollText, Shield, Sparkles, Trash2, UserMinus, UserPlus } from "lucide-react";
+import { Ban, BadgeCheck, BadgeX, Briefcase, Check, Crown, Eye, FilePen, FileText, KeyRound, Link2, ListX, LogIn, MessageSquare, ScrollText, Shield, ShieldBan, ShieldCheck, Sparkles, Trash2, UserMinus, UserPlus } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import Image from "next/image";
@@ -60,6 +60,12 @@ function describe(entry: TimelineEntry, criteria: Record<string, string>): { ico
       return { icon: BadgeCheck, tone: "success", text: `${who} a validé l'entretien : joueur whitelist` };
     case "candidature.supprimee":
       return { icon: Trash2, tone: "danger", text: `${who} a effacé la candidature` };
+    case "whitelist.retiree":
+      return { icon: BadgeX, tone: "danger", text: `${who} a retiré la whitelist`, detail: typeof data.raison === "string" ? data.raison : undefined };
+    case "compte.blacklist":
+      return { icon: ShieldBan, tone: "danger", text: `${who} a blacklisté le joueur`, detail: typeof data.raison === "string" ? data.raison : undefined };
+    case "compte.blacklist_levee":
+      return { icon: ShieldCheck, tone: "success", text: `${who} a levé la blacklist` };
     case "note.ajoutee":
       return { icon: MessageSquare, tone: "default", text: `${who} a ajouté une note${data.visibilite === "admin" ? " (admins uniquement)" : ""}` };
     case "role.rang":
@@ -104,6 +110,9 @@ const TEAM_EVENTS = new Set([
   "candidature.modification",
   "candidature.refusee",
   "entretien.valide",
+  "whitelist.retiree",
+  "compte.blacklist",
+  "compte.blacklist_levee",
   "candidature.supprimee",
   "note.ajoutee",
   "role.rang",

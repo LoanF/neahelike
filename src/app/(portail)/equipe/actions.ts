@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { db, schema } from "@/db";
 import type { NoteVisibility } from "@/db/schema";
 import type { ReviewResult } from "@/lib/review";
-import { addNote, deleteNote, deletePlayerAccount, refuse, requestChanges, validateInterview, validateWritten, wipeApplication } from "@/lib/review";
+import { addNote, blacklistPlayer, deleteNote, deletePlayerAccount, liftBlacklist, refuse, requestChanges, revokeWhitelist, validateInterview, validateWritten, wipeApplication } from "@/lib/review";
 import { RATE_LIMIT_MESSAGE, rateLimit } from "@/lib/rate-limit";
 import { requireFreshRank, requireUser } from "@/lib/session";
 import type { Viewer } from "@/lib/team";
@@ -117,4 +117,39 @@ export async function deleteAccountAction(_previous: DeleteAccountState, formDat
   revalidatePath("/equipe");
   const warnings = result.warnings.map(warning => `&avertissement=${encodeURIComponent(warning)}`).join("");
   redirect(`/equipe?onglet=tous&supprime=1${warnings}`);
+}
+
+export type SanctionState = (ReviewResult & { at: number }) | null;
+
+/** Admin : retrait de whitelist, blacklist ou levée de la blacklist (champ `sanction`). */
+export async function sanctionAction(_previous: SanctionState, formData: FormData): Promise<SanctionState> {
+  let reviewer;
+  try {
+    reviewer = await requireFreshRank("admin");
+  } catch {
+    return { error: "Réservé aux admins.", at: Date.now() };
+  }
+  if (!(await rateLimit("sanction", reviewer.id))) return { error: RATE_LIMIT_MESSAGE, at: Date.now() };
+
+  const subjectId = String(formData.get("subjectId"));
+  const reason = String(formData.get("reason") ?? "");
+  let result: ReviewResult;
+  switch (String(formData.get("sanction"))) {
+    case "retirer":
+      result = await revokeWhitelist(subjectId, reviewer, reason);
+      break;
+    case "blacklist":
+      result = await blacklistPlayer(subjectId, reviewer, reason);
+      break;
+    case "lever":
+      result = await liftBlacklist(subjectId, reviewer);
+      break;
+    default:
+      result = { error: "Action inconnue." };
+  }
+  if ("ok" in result) {
+    revalidatePath(`/equipe/joueurs/${subjectId}`);
+    revalidatePath("/equipe");
+  }
+  return { ...result, at: Date.now() };
 }
