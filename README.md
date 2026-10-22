@@ -280,7 +280,7 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
 
 ### Tables du bot
 
-`bot_guild_config`, `bot_permission_levels`, `bot_permission_level_roles`, `bot_modules`, `bot_command_permissions`, `bot_messages`, `bot_tickets`. Seul le bot les écrit. Voir [Le site et le bot Discord](#le-site-et-le-bot-discord).
+`bot_guild_config`, `bot_permission_levels`, `bot_permission_level_roles`, `bot_modules`, `bot_command_permissions`, `bot_messages`, `bot_tickets`, `bot_giveaways`, `bot_giveaway_entries`, `bot_sanctions`. Seul le bot les écrit. Voir [Le site et le bot Discord](#le-site-et-le-bot-discord).
 
 ### Migrations
 
@@ -423,7 +423,9 @@ Ce que gère le bot, d'après ses tables :
 - des modules activables, avec leurs réglages (`bot_modules`) ;
 - le rang requis par commande (`bot_command_permissions`) ;
 - des messages personnalisés (`bot_messages`) ;
-- des tickets : un salon privé par demande, avec catégories, formulaire d'ouverture, prise en charge, transcription à la fermeture et note de satisfaction (`bot_tickets`).
+- des tickets : un salon privé par demande, avec catégories, formulaire d'ouverture, prise en charge, transcription à la fermeture et note de satisfaction (`bot_tickets`) ;
+- des giveaways avec leurs participants et gagnants (`bot_giveaways`, `bot_giveaway_entries`) ;
+- le casier de modération : avertissements, exclusions, expulsions, bannissements définitifs ou temporaires, jamais supprimés mais marqués levés (`bot_sanctions`). `user_id` est l'ID Discord, sans lien avec `users` : on peut sanctionner quelqu'un qui n'a pas de compte sur le site.
 
 Pour l'installation, les commandes et les variables du bot, voir le README du dépôt `bot-neahelike`.
 
