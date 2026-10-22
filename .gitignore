@@ -42,3 +42,8 @@ next-env.d.ts
 
 # modèle des variables d'environnement
 !.env.example
+
+# tests de bout en bout
+/tests/e2e/.auth/
+/test-results/
+/playwright-report/
