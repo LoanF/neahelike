@@ -33,7 +33,6 @@ export default async function OpenGraphImage() {
           fontFamily: "Marcellus",
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse n'accepte que <img> */}
         <img
           src={`data:image/png;base64,${logo.toString("base64")}`}
           width={300}
