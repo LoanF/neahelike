@@ -27,7 +27,9 @@ const RESOURCES = [
 export default async function PortailPage() {
   const user = await requireUser();
   const [open, latest] = await Promise.all([getOpenApplication(user.id), getLatestApplication(user.id)]);
-  const application = open ?? latest;
+  // Whitelist retirée : l'ancienne candidature ne compte plus, le parcours repart de zéro.
+  const revoked = !open && latest?.whitelistRevokedAt ? latest : null;
+  const application = open ?? (revoked ? null : latest);
   const block = open ? null : await getStartBlock(user.id);
   const journey = journeyIndex(application?.status ?? null);
 
@@ -44,7 +46,7 @@ export default async function PortailPage() {
             <h2 className={styles.cardTitle}>Ma candidature</h2>
             {application && !block?.reason && <Badge tone={STATUS_TONE[application.status]} size="lg">{STATUS_LABEL[application.status]}</Badge>}
           </div>
-          <ApplicationState application={open} latest={latest} block={block} criteria={await criteriaLabels()} />
+          <ApplicationState application={open} latest={latest} revoked={revoked} block={block} criteria={await criteriaLabels()} />
         </Plaque>
 
         <Plaque unveil className={styles.journey}>
@@ -109,7 +111,19 @@ function Progress({ application }: { application: Application }) {
   );
 }
 
-function ApplicationState({ application, latest, block, criteria }: { application: Application | null; latest: Application | null; block: StartBlock; criteria: Record<string, string> }) {
+function ApplicationState({
+  application,
+  latest,
+  revoked,
+  block,
+  criteria,
+}: {
+  application: Application | null;
+  latest: Application | null;
+  revoked: Application | null;
+  block: StartBlock;
+  criteria: Record<string, string>;
+}) {
   if (block?.reason === "whitelistee") {
     return <p className={styles.stateText}>Ta whitelist est validée. Bienvenue parmi les citoyens de Néa Hélikè.</p>;
   }
@@ -118,6 +132,7 @@ function ApplicationState({ application, latest, block, criteria }: { applicatio
     const refused = latest?.status === "refusee" ? latest : null;
     return (
       <>
+        {revoked?.whitelistRevokeReason && <p className={styles.quote}>« {revoked.whitelistRevokeReason} »</p>}
         {refused && (refused.refusalCriteria?.length || refused.refusalComment) ? (
           <div className={styles.refusal}>
             {!!refused.refusalCriteria?.length && (
@@ -133,9 +148,11 @@ function ApplicationState({ application, latest, block, criteria }: { applicatio
         <p className={styles.stateText}>
           {block?.reason === "delai"
             ? `Ta dernière candidature a été refusée. Tu pourras en déposer une nouvelle à partir du ${formatDate(block.until)}.`
-            : latest?.status === "refusee"
-              ? "Ta dernière candidature a été refusée, mais le délai est passé : tu peux en déposer une nouvelle."
-              : "Tu n'as pas encore commencé ta candidature. Compte une trentaine de minutes, et prévois le lien de ton background."}
+            : revoked
+              ? "L'équipe t'a retiré ta whitelist. Tu peux déposer une nouvelle candidature dès maintenant."
+              : latest?.status === "refusee"
+                ? "Ta dernière candidature a été refusée, mais le délai est passé : tu peux en déposer une nouvelle."
+                : "Tu n'as pas encore commencé ta candidature. Compte une trentaine de minutes, et prévois le lien de ton background."}
         </p>
         {block?.reason !== "delai" && (
           <form action={startCandidature} className={styles.cta}>
