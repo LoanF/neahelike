@@ -64,7 +64,6 @@ Le site reprend le langage visuel de l'interface en jeu, « The Struck Plaque »
 
 - `src/styles/tokens.css` : jetons du design system (couleurs, recettes de plaque, mouvement).
 - `docs/lore/` : diapos de référence du lore.
-- `/kit` : page (non indexée) qui présente tous les composants du site.
 
 ## Organisation
 
