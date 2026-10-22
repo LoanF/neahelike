@@ -54,7 +54,7 @@ export default async function StatistiquesPage() {
   const tiles = [
     { label: "Candidatures envoyées", value: String(totals.submitted), note: `${totals.accounts} comptes liés` },
     { label: "À lire", value: String(totals.toRead), note: "Envoyées, sans décision" },
-    { label: "Entretiens à passer", value: String(totals.interviews), note: `${totals.whitelisted} whitelistés` },
+    { label: "Entretiens à passer", value: String(totals.interviews), note: `${totals.whitelisted} whitelist` },
     { label: "Taux de validation", value: totals.validationRate === null ? "—" : `${Math.round(totals.validationRate * 100)} %`, note: "Écrits validés sur décisions finales" },
     { label: "Délai de traitement", value: duration(totals.averageHours), note: "En moyenne, de l'envoi à la décision" },
   ];

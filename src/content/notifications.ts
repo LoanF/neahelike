@@ -32,7 +32,7 @@ export const NOTIFICATIONS = {
   whitelistee: (): NotificationText => ({
     type: "entretien.valide",
     title: "Bienvenue à Néa Hélikè",
-    body: "Ton entretien est validé : tu es whitelisté. La cité t'attend.",
+    body: "Ton entretien est validé : tu es whitelist. La cité t'attend.",
     href: "/portail",
   }),
   supprimee: (): NotificationText => ({

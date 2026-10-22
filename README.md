@@ -359,7 +359,7 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
 
 ### Espace équipe
 
-- **Liste des joueurs** (`/equipe`) : onglets À traiter, Entretiens, Modifications, Brouillons, Whitelistés, Refusées, Tous. Recherche par ID Discord, pseudo, prénom ou nom RP. La liste se rafraîchit toutes les 10 s.
+- **Liste des joueurs** (`/equipe`) : onglets À traiter, Entretiens, Modifications, Brouillons, Whitelist, Refusées, Tous. Recherche par ID Discord, pseudo, prénom ou nom RP. La liste se rafraîchit toutes les 10 s.
 - **Fiche joueur** : candidature complète, dossier de reprise mis en avant, chronologie de toutes les actions. Un « œil » animé indique quand un autre membre consulte la fiche (signal envoyé toutes les 10 s, table `profile_views`).
 - **Décisions** (`lib/review.ts`) :
 

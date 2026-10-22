@@ -66,7 +66,7 @@ export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps
     status === "brouillon" || status === "a_modifier"
       ? "En attente du joueur : la candidature n'est pas encore envoyée."
       : status === "whitelistee"
-        ? "Joueur whitelisté."
+        ? "Joueur whitelist."
         : status === "refusee"
           ? "Candidature refusée."
           : null;

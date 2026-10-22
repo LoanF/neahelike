@@ -7,7 +7,7 @@ export const STATUS_LABEL: Record<ApplicationStatus, string> = {
   envoyee: "Envoyée",
   a_modifier: "Modification demandée",
   entretien: "Entretien vocal à passer",
-  whitelistee: "Whitelisté",
+  whitelistee: "Whitelist",
   refusee: "Refusée",
 };
 

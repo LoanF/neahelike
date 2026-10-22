@@ -117,7 +117,7 @@ test("le recruteur valide l'écrit puis l'entretien vocal", async ({ browser }) 
   expect((await messagesTo(PLAYER.id)).length).toBeGreaterThanOrEqual(3);
 });
 
-test("le joueur whitelisté ne peut plus recandidater", async ({ browser }) => {
+test("le joueur whitelist ne peut plus recandidater", async ({ browser }) => {
   const page = await as(browser, PLAYER);
   await page.goto("/portail/candidature");
   await expect(page.getByText("Ta whitelist est déjà validée")).toBeVisible();

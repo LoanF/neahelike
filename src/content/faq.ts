@@ -12,7 +12,7 @@ export const FAQ: FaqGroup[] = [
     items: [
       {
         title: "Comment rejoindre le serveur ?",
-        content: "Connecte ton compte Discord sur le portail, accepte les CGU, puis remplis ta candidature : infos hors-jeu, personnage, background. Si ton background est validé, un recruteur te reçoit sur Discord pour un court entretien vocal. Une fois le vocal réussi, tu es whitelisté.",
+        content: "Connecte ton compte Discord sur le portail, accepte les CGU, puis remplis ta candidature : infos hors-jeu, personnage, background. Si ton background est validé, un recruteur te reçoit sur Discord pour un court entretien vocal. Une fois le vocal réussi, tu es whitelist.",
       },
       {
         title: "Combien de temps prend une candidature ?",

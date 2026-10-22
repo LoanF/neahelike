@@ -17,7 +17,7 @@ const STEPS = [
   { n: "I", t: "Discord", d: "Connecte ton compte Discord au portail et accepte les CGU." },
   { n: "II", t: "Candidature", d: "Infos HRP, personnage, affinité et background. Ton brouillon est gardé." },
   { n: "III", t: "Vocal", d: "Un recruteur te reçoit sur Discord pour un court entretien." },
-  { n: "IV", t: "Citoyen", d: "Tu es whitelisté. Ton personnage entre dans la cité." },
+  { n: "IV", t: "Citoyen", d: "Tu es whitelist. Ton personnage entre dans la cité." },
 ];
 
 /** Voir lore/page.tsx : régénérée au plus tard toutes les 5 minutes. */

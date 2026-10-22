@@ -57,7 +57,7 @@ function describe(entry: TimelineEntry, criteria: Record<string, string>): { ico
         detail: [list(data.criteres).map(id => criteria[id] ?? id).join(" · "), typeof data.commentaire === "string" ? data.commentaire : ""].filter(Boolean).join("\n"),
       };
     case "entretien.valide":
-      return { icon: BadgeCheck, tone: "success", text: `${who} a validé l'entretien : joueur whitelisté` };
+      return { icon: BadgeCheck, tone: "success", text: `${who} a validé l'entretien : joueur whitelist` };
     case "candidature.supprimee":
       return { icon: Trash2, tone: "danger", text: `${who} a effacé la candidature` };
     case "note.ajoutee":

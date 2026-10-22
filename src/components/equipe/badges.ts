@@ -11,7 +11,7 @@ export const BADGE_LABEL: Record<TeamBadge, string> = {
   vue: "Vue",
   a_modifier: "Modification demandée",
   entretien: "Entretien vocal à passer",
-  whitelistee: "Whitelisté",
+  whitelistee: "Whitelist",
   refusee: "Refusée",
 };
 
@@ -32,7 +32,7 @@ export const TABS = [
   { id: "entretiens", label: "Entretiens", badges: ["entretien"] },
   { id: "modifications", label: "Modifications", badges: ["a_modifier"] },
   { id: "brouillons", label: "Brouillons", badges: ["brouillon", "dossier"] },
-  { id: "validees", label: "Whitelistés", badges: ["whitelistee"] },
+  { id: "validees", label: "Whitelist", badges: ["whitelistee"] },
   { id: "refusees", label: "Refusées", badges: ["refusee"] },
   { id: "tous", label: "Tous", badges: null },
 ] as const satisfies readonly { id: string; label: string; badges: readonly TeamBadge[] | null }[];

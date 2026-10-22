@@ -48,7 +48,7 @@ export const DIRECT_MESSAGES = {
   }),
   whitelistee: (): Embed => ({
     title: "Bienvenue à Néa Hélikè",
-    description: "Ton entretien est validé : tu es whitelisté et tu as reçu le rôle **Magistrat**. La cité t'attend.",
+    description: "Ton entretien est validé : tu es whitelist et tu as reçu le rôle **Magistrat**. La cité t'attend.",
     color: EMBED_SUCCESS,
     footer,
   }),

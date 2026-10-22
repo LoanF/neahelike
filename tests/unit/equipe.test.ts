@@ -81,7 +81,7 @@ describe("délai de recandidature", () => {
     expect(startBlock(application({ status: "refusee", decidedAt }))).toBeNull();
   });
 
-  it("empêche un joueur whitelisté de recommencer", () => {
+  it("empêche un joueur whitelist de recommencer", () => {
     expect(startBlock(application({ status: "whitelistee" }))).toEqual({ reason: "whitelistee" });
     expect(startBlock(null)).toBeNull();
   });
