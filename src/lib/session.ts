@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { CGU_VERSION } from "@/content/legal";
 import { db, schema } from "@/db";
 import type { Rank, User } from "@/db/schema";
+import { getBlacklistEntry } from "./blacklist";
 import { rolesAreStale, syncMember } from "./members";
 
 const RANK_ORDER: Record<Rank, number> = { joueur: 0, recruteur: 1, admin: 2, owner: 3 };
@@ -54,6 +55,8 @@ interface Requirements {
 export async function requireUser({ cgu = true, rank }: Requirements = {}): Promise<User> {
   const user = await getCurrentUser();
   if (!user) redirect("/connexion");
+  // Avant tout le reste : un joueur blacklisté n'a accès qu'à sa page de blocage.
+  if (await getBlacklistEntry(user.id)) redirect("/blacklist");
   if (!user.inGuild) redirect("/rejoindre-discord");
   if (cgu && !hasAcceptedCgu(user)) redirect("/liaison");
   if (rank && !hasRank(user, rank)) redirect("/portail");

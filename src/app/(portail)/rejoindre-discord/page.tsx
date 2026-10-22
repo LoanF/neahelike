@@ -4,6 +4,7 @@ import { Button, ButtonLink } from "@/components/plaque";
 import { AuthScreen } from "@/components/portal/auth-screen";
 import { ProfileCard } from "@/components/portal/profile-card";
 import { SITE } from "@/content/site";
+import { getBlacklistEntry } from "@/lib/blacklist";
 import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { getCurrentUser } from "@/lib/session";
 import { logout, recheckGuild } from "../actions";
@@ -14,6 +15,7 @@ export const metadata: Metadata = { title: "Rejoins le Discord" };
 export default async function RejoindreDiscordPage({ searchParams }: { searchParams: Promise<{ erreur?: string }> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/connexion");
+  if (await getBlacklistEntry(user.id)) redirect("/blacklist");
   if (user.inGuild) redirect("/liaison");
   const { erreur } = await searchParams;
 

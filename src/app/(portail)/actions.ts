@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { signIn, signOut } from "@/auth";
 import { CGU_VERSION } from "@/content/legal";
 import { db, schema } from "@/db";
+import { getBlacklistEntry } from "@/lib/blacklist";
 import { logEvent } from "@/lib/events";
 import { syncMember } from "@/lib/members";
 import { latestNotifications, markAllRead } from "@/lib/notifications";
@@ -26,6 +27,7 @@ export async function logout() {
 export async function acceptCgu(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) redirect("/connexion");
+  if (await getBlacklistEntry(user.id)) redirect("/blacklist");
   if (formData.get("cgu") !== "on") redirect("/liaison?erreur=cgu");
   if (!(await rateLimit("cgu", user.id))) redirect("/liaison?erreur=limite");
 
@@ -42,6 +44,7 @@ export async function acceptCgu(formData: FormData) {
 export async function recheckGuild() {
   const user = await getCurrentUser();
   if (!user) redirect("/connexion");
+  if (await getBlacklistEntry(user.id)) redirect("/blacklist");
   if (!(await rateLimit("discord", user.id))) redirect("/rejoindre-discord?erreur=limite");
   const { inGuild } = await syncMember(user.id);
   redirect(inGuild ? "/liaison" : "/rejoindre-discord?erreur=absent");
