@@ -113,6 +113,13 @@
       "when": 1792637556174,
       "tag": "0015_limite_d_envoi",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792683707534,
+      "tag": "0016_giveaways_et_sanctions",
+      "breakpoints": true
     }
   ]
 }
