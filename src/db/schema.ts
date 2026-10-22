@@ -167,6 +167,16 @@ export const reapplyLocks = pgTable("reapply_locks", {
   until: timestamp({ withTimezone: true }).notNull(),
 });
 
+/**
+ * Compteurs de la limite d'envoi (lib/rate-limit.ts) : une ligne par membre et par action,
+ * remise à zéro à `resetAt`. Les lignes expirées sont purgées au fil de l'eau.
+ */
+export const rateLimits = pgTable("rate_limits", {
+  key: text().primaryKey(),
+  count: integer().notNull(),
+  resetAt: timestamp({ withTimezone: true }).notNull(),
+});
+
 /** Owners ajoutés depuis le site, en plus des owners permanents (content/owners.ts). */
 export const siteOwners = pgTable("site_owners", {
   discordId: text().primaryKey(),
