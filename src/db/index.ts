@@ -9,8 +9,16 @@ type Database = ReturnType<typeof drizzle<typeof schema>>;
 const globalForDb = globalThis as unknown as { db?: Database };
 
 function connect(): Database {
-  // prepare: false pour le pooler Supabase (mode transaction).
-  const client = postgres(env().DATABASE_URL, { prepare: false, max: 5 });
+  const client = postgres(env().DATABASE_URL, {
+    // Pooler Supabase en mode transaction : pas de requêtes préparées.
+    prepare: false,
+    max: 5,
+    // Sur Vercel, une fonction peut dormir entre deux visites : une connexion restée ouverte peut
+    // mourir sans prévenir et bloquer la requête suivante. On les ferme vite et on ne les garde pas longtemps.
+    idle_timeout: 20,
+    max_lifetime: 60 * 5,
+    connect_timeout: 10,
+  });
   return drizzle(client, { schema, casing: "snake_case" });
 }
 
