@@ -25,13 +25,14 @@ export const metadata: Metadata = {
   },
   description: "La cité engloutie est sortie des eaux. Les dieux sont revenus avec elle. Serveur roleplay FiveM en whitelist dans l'univers de la mythologie grecque.",
   icons: { icon: "/images/logo.png", apple: "/images/logo.png" },
+  // Sans titre ni description ici, chaque page garde les siens dans l'aperçu.
   openGraph: {
-    title: "Néa Hélikè",
-    description: "Serveur roleplay FiveM en whitelist, dans l'univers de la mythologie grecque.",
-    images: ["/images/logo.png"],
+    siteName: "Néa Hélikè",
     locale: "fr_FR",
     type: "website",
   },
+  // L'image d'aperçu vient de app/opengraph-image.tsx.
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {
