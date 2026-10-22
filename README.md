@@ -128,7 +128,7 @@ Le site et le bot utilisent **la même application Discord** (portail développe
 1. **OAuth2** : copier le Client ID et le Client Secret dans `AUTH_DISCORD_ID` / `AUTH_DISCORD_SECRET`. Ajouter les redirections :
    - `https://<domaine>/api/auth/callback/discord` (production) ;
    - `http://localhost:3000/api/auth/callback/discord` (local).
-2. **Bot** : générer le token (`DISCORD_BOT_TOKEN`) et activer l'intent privilégié « Server Members ». Inviter le bot sur le serveur avec la permission « Gérer les rôles ». Son rôle doit être placé **au-dessus** des rôles qu'il donne : attente de wl, whitelist et Novice.
+2. **Bot** : générer le token (`DISCORD_BOT_TOKEN`) et activer l'intent privilégié « Server Members ». Inviter le bot sur le serveur avec les permissions « Gérer les rôles » et « Bannir des membres » (blacklist). Son rôle doit être placé **au-dessus** des rôles qu'il donne : attente de wl, whitelist et Novice.
 3. Copier l'ID du serveur et des rôles : activer le mode développeur dans Discord, puis clic droit → Copier l'identifiant.
 
 Le site ne demande que le scope `identify` à la connexion. La présence sur le serveur et les rôles sont lus avec le token du bot, par des appels à l'API REST de Discord (`src/lib/discord.ts`). Le site ne lance aucun processus bot.
@@ -290,6 +290,7 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
 | `businesses` | Entreprises qu'on peut reprendre |
 | `refusal_criteria` | Critères de refus |
 | `rate_limits` | Compteurs de la limite d'actions par minute |
+| `blacklist` | IDs Discord blacklistés (raison facultative, auteur, origine `site` ou `bot`). **Partagée avec le bot**, sans lien avec `users` : un ID blacklisté par le bot est bloqué dès sa première connexion au site |
 
 ### Tables du bot
 
@@ -334,7 +335,7 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
 |---|---|
 | joueur | Son portail : tableau de bord, candidature, dossier de reprise, compte |
 | recruteur | + Espace équipe : liste des joueurs, fiches, décisions sur les candidatures envoyées, notes |
-| admin | + Administration (affinités et créatures, entreprises, critères, journal, statistiques), notes réservées aux admins, valider avant l'envoi, effacer une candidature, supprimer un compte |
+| admin | + Administration (affinités et créatures, entreprises, critères, journal, statistiques), notes réservées aux admins, valider avant l'envoi, effacer une candidature, retirer une whitelist, blacklister et lever une blacklist, supprimer un compte |
 | owner | + Rôles et permissions, gestion des owners |
 
 ### Candidature
@@ -359,7 +360,7 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
 
 ### Espace équipe
 
-- **Liste des joueurs** (`/equipe`) : onglets À traiter, Entretiens, Modifications, Brouillons, Whitelist, Refusées, Tous. Recherche par ID Discord, pseudo, prénom ou nom RP. La liste se rafraîchit toutes les 10 s.
+- **Liste des joueurs** (`/equipe`) : onglets À traiter, Entretiens, Modifications, Brouillons, Whitelist, Refusées (dont les whitelists retirées), Blacklist, Tous. Recherche par ID Discord, pseudo, prénom ou nom RP. La liste se rafraîchit toutes les 10 s.
 - **Fiche joueur** : candidature complète, dossier de reprise mis en avant, chronologie de toutes les actions. Un « œil » animé indique quand un autre membre consulte la fiche (signal envoyé toutes les 10 s, table `profile_views`).
 - **Décisions** (`lib/review.ts`) :
 
@@ -375,7 +376,12 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
 - **Suppression d'un compte** (admin, sur demande du joueur par ticket) :
   - le joueur perd « attente de wl » et la whitelist, retrouve le rôle de base Novice et reçoit un MP ;
   - son compte, ses candidatures et ses notes sont effacés, et le journal est anonymisé ;
-  - si un refus de moins de 3 mois existe, le délai est gardé dans `reapply_locks`.
+  - si un refus de moins de 3 mois existe, le délai est gardé dans `reapply_locks` ;
+  - une blacklist éventuelle est gardée (table `blacklist`, indexée par ID Discord).
+- **Retirer la whitelist** (admin, sur la fiche d'un joueur whitelist, raison facultative) : le joueur perd « Magistrat (wl) » et « attente de wl », retrouve le rôle Novice, reçoit un MP et une notification avec la raison. La candidature reste « whitelistee » dans l'historique, marquée retirée (`whitelist_revoked_at`), et ne bloque plus : le joueur peut en recommencer une de zéro tout de suite.
+- **Blacklister** (admin, raison facultative, confirmation en recopiant BLACKLIST ; impossible sur un owner ou sur soi-même) : MP au joueur, puis **bannissement du Discord** ; sa whitelist éventuelle est retirée. Sur le site, `requireUser` le renvoie vers `/blacklist` sur toutes les pages du portail : une page de blocage avec la raison s'il y en a une, et seulement un bouton de déconnexion.
+- **Lever la blacklist** (admin, depuis la fiche, donc pour un joueur qui a un compte sur le site) : la ligne est supprimée et le bannissement Discord levé. Le joueur doit rejoindre le serveur et, sans whitelist, recandidater. Les blacklists posées par le bot sans compte sur le site se lèvent depuis le bot.
+- Chaque retrait, blacklist et levée est inscrit dans la chronologie de la fiche et le journal.
 
 ### Administration
 
@@ -424,6 +430,7 @@ Règles de cohabitation :
   - **Le site seul calcule le rang** (`users.rank`, à partir des owners et de `role_ranks`) et écrit l'événement `rang.change`.
   - **Le bot met à jour la présence en temps réel** : arrivée et départ du serveur (`in_guild`, événements `discord.rejoint` / `discord.quitte`), pseudo et avatar. Quand les rôles d'un membre changent sur Discord, ou qu'il quitte le serveur, le bot remet `roles_synced_at` à `null` : le site relit le rang à la page suivante.
   - Le bot n'écrit jamais `rank`, ni les CGU, et ne supprime jamais de compte.
+- **Blacklist partagée** : le site et la commande `/blacklist` du bot lisent et écrivent la même table `blacklist`. Le bot indique `source = 'bot'`. Lever une blacklist supprime la ligne (et le bannissement Discord) ; l'historique reste dans `events` pour le site.
   - Le site garde sa propre synchronisation (à la connexion et toutes les 5 minutes) : il fonctionne même si le bot est éteint, seulement avec un peu plus de délai.
 - Le bot **lit** `events` pour relayer certains événements (dont les changements de rang) dans son salon de logs.
 - Les rôles « attente de wl » et whitelist sont donnés **par le site** au moment des décisions, pas par le bot.
