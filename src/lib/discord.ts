@@ -23,6 +23,9 @@ export class DiscordError extends Error {
   }
 }
 
+const REQUEST_TIMEOUT_MS = 8_000;
+const MAX_RETRY_WAIT_MS = 5_000;
+
 async function call<T>(path: string, init: RequestInit = {}, attempt = 0): Promise<T | null> {
   const response = await fetch(`${API}${path}`, {
     ...init,
@@ -32,12 +35,16 @@ async function call<T>(path: string, init: RequestInit = {}, attempt = 0): Promi
       ...init.headers,
     },
     cache: "no-store",
+    // Discord qui ne répond pas ne doit jamais bloquer une page : on abandonne au bout de 8 s.
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
-  // Limite de débit : on attend le délai indiqué par Discord, une seule fois.
+  // Limite de débit : on attend le délai indiqué par Discord, une seule fois et jamais plus de 5 s.
   if (response.status === 429 && attempt === 0) {
     const body = (await response.json().catch(() => ({}))) as { retry_after?: number };
-    await new Promise(resolve => setTimeout(resolve, Math.ceil((body.retry_after ?? 1) * 1000)));
+    const wait = Math.ceil((body.retry_after ?? 1) * 1000);
+    if (wait > MAX_RETRY_WAIT_MS) throw new DiscordError(429, `Discord ${init.method ?? "GET"} ${path} → limite de débit (${wait} ms)`);
+    await new Promise(resolve => setTimeout(resolve, wait));
     return call<T>(path, init, attempt + 1);
   }
   if (response.status === 404) return null;
