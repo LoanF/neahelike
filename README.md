@@ -56,9 +56,13 @@ Utilisez **pnpm** plutôt que npm : seul `pnpm-lock.yaml` fixe les versions exac
 **Avertissements connus à l'installation** (sans effet sur le site, à revoir quand une mise à jour existera) :
 - `eslint@9 … no longer supported` : ESLint 10 existe, mais les extensions utilisées par `eslint-config-next` (React, import, accessibilité) ne l'acceptent pas encore.
 - `@esbuild-kit/… deprecated` : dépendances internes de `drizzle-kit` 0.31, la dernière version stable. Elles disparaissent avec Drizzle 1.0.
-- Audit : une alerte sur `braces` (déni de service sur des motifs de fichiers très imbriqués), sans correctif publié. Elle ne concerne que l'outil de vérification du code (ESLint), jamais le site ; elle est marquée comme connue pour pnpm dans `package.json` (`pnpm.auditConfig`).
 
-Les autres correctifs de sécurité sont imposés dans `package.json` (`pnpm.overrides` et `overrides` pour npm) : `postcss` récent pour Next.js, `esbuild` récent pour `drizzle-kit`. Les scripts d'installation autorisés (esbuild, unrs-resolver) sont listés dans `pnpm.onlyBuiltDependencies` et `allowScripts`.
+`npm audit` et `pnpm audit` ne trouvent aucune vulnérabilité. Les correctifs sont imposés dans `package.json` (`pnpm.overrides`, et `overrides` pour npm) :
+- `postcss` récent pour Next.js ;
+- `esbuild` récent pour `drizzle-kit` ;
+- `tinyglobby` à la place de `fast-glob` dans `@next/eslint-plugin-next` (même fonction `globSync`), ce qui retire la dépendance vulnérable `braces`.
+
+À chaque mise à jour de Next.js ou de drizzle-kit, vérifiez si ces remplacements sont encore utiles (`pnpm audit` sans eux). Les scripts d'installation autorisés (esbuild, unrs-resolver) sont listés dans `pnpm.onlyBuiltDependencies` et `allowScripts`.
 
 ```bash
 pnpm install
