@@ -11,11 +11,13 @@ function value(values: StepValues | null, field: string) {
   return typeof raw === "string" ? raw.trim() : "";
 }
 
-function Section({ title, step, editable, children }: { title: string; step: DataStepId; editable: boolean; children: ReactNode }) {
+type HeadingLevel = "h2" | "h3";
+
+function Section({ title, step, editable, heading: Heading, children }: { title: string; step: DataStepId; editable: boolean; heading: HeadingLevel; children: ReactNode }) {
   return (
     <section className={styles.recapSection} aria-labelledby={`recap-${step}`}>
       <div className={styles.recapHead}>
-        <h3 id={`recap-${step}`} className={styles.recapTitle}>{title}</h3>
+        <Heading id={`recap-${step}`} className={styles.recapTitle}>{title}</Heading>
         {editable && (
           <Link href={stepHref(step)} className={styles.recapEdit}>
             <PencilLine size={15} aria-hidden="true" /> Modifier
@@ -52,12 +54,15 @@ export function ApplicationRecap({
   user,
   names,
   editable,
+  heading = "h2",
 }: {
   application: Application;
   user: Pick<User, "id" | "username">;
   /** Noms des affinités, créatures et entreprises (lib/businesses.ts, takeoverNames). */
   names: Record<string, string>;
   editable: boolean;
+  /** Niveau des titres de section : h3 quand le récapitulatif est déjà sous un h2. */
+  heading?: HeadingLevel;
 }) {
   const { hrp, rp, background, dossier } = application;
   const affinity = value(rp, "affinity");
@@ -71,7 +76,7 @@ export function ApplicationRecap({
         </p>
       )}
 
-      <Section title="HRP" step="hrp" editable={editable && isStepEditable(application, "hrp")}>
+      <Section heading={heading} title="HRP" step="hrp" editable={editable && isStepEditable(application, "hrp")}>
         <Item label="Pseudo Discord">@{user.username}</Item>
         <Item label="ID Discord">{user.id}</Item>
         <Item label="Âge">{value(hrp, "age") && `${value(hrp, "age")} ans`}</Item>
@@ -83,7 +88,7 @@ export function ApplicationRecap({
         </Item>
       </Section>
 
-      <Section title="Personnage" step="rp" editable={editable && isStepEditable(application, "rp")}>
+      <Section heading={heading} title="Personnage" step="rp" editable={editable && isStepEditable(application, "rp")}>
         <Item label="Prénom et nom">{[value(rp, "firstName"), value(rp, "lastName")].filter(Boolean).join(" ")}</Item>
         <Item label="Âge">{value(rp, "age") && `${value(rp, "age")} ans`}</Item>
         <Item label="Affinité">{affinity ? (names[affinity] ?? affinity) : "Aucune"}</Item>
@@ -93,14 +98,14 @@ export function ApplicationRecap({
         </Item>
       </Section>
 
-      <Section title="Background" step="background" editable={editable && isStepEditable(application, "background")}>
+      <Section heading={heading} title="Background" step="background" editable={editable && isStepEditable(application, "background")}>
         <Item label="Document" wide>
           <DocLink href={value(background, "url")} />
         </Item>
       </Section>
 
       {wantsDossier(application) && (
-        <Section title="Dossier de reprise" step="dossier" editable={editable && isStepEditable(application, "dossier")}>
+        <Section heading={heading} title="Dossier de reprise" step="dossier" editable={editable && isStepEditable(application, "dossier")}>
           <Item label="Reprise">{dossierTargetLabel(dossier, names)}</Item>
           <Item label="Document">
             <DocLink href={value(dossier, "url")} />

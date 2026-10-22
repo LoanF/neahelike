@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { DataStepId, FieldErrors } from "@/lib/application";
 import { currentStep, DATA_STEPS, nextStep, stepHref } from "@/lib/application";
 import { getOpenApplication, saveDraft, saveStep, startApplication, submitApplication } from "@/lib/applications";
+import { RATE_LIMIT_MESSAGE, rateLimit } from "@/lib/rate-limit";
 import { requireUser } from "@/lib/session";
 
 function assertStep(step: string): asserts step is DataStepId {
@@ -12,6 +13,7 @@ function assertStep(step: string): asserts step is DataStepId {
 
 export async function startCandidature() {
   const user = await requireUser();
+  if (!(await rateLimit("start", user.id))) redirect(`/portail/candidature?erreur=${encodeURIComponent(RATE_LIMIT_MESSAGE)}`);
   const result = await startApplication(user.id);
   if ("error" in result) redirect(`/portail/candidature?erreur=${encodeURIComponent(result.error)}`);
   redirect(stepHref(currentStep(result)));
@@ -21,6 +23,7 @@ export async function startCandidature() {
 export async function autosaveStep(step: string, values: unknown): Promise<{ ok: true } | { error: string }> {
   assertStep(step);
   const user = await requireUser();
+  if (!(await rateLimit("autosave", user.id))) return { error: RATE_LIMIT_MESSAGE };
   const application = await getOpenApplication(user.id);
   if (!application) return { error: "Aucune candidature en cours." };
   return saveDraft(application, step, values);
@@ -30,6 +33,7 @@ export async function autosaveStep(step: string, values: unknown): Promise<{ ok:
 export async function submitStep(step: string, values: unknown): Promise<{ errors: FieldErrors } | { next: string }> {
   assertStep(step);
   const user = await requireUser();
+  if (!(await rateLimit("step", user.id))) return { errors: { form: RATE_LIMIT_MESSAGE } };
   const application = await getOpenApplication(user.id);
   if (!application) return { errors: { form: "Aucune candidature en cours." } };
 
@@ -45,6 +49,7 @@ export async function sendCandidature(formData: FormData) {
   const application = await getOpenApplication(user.id);
   if (!application) redirect("/portail/candidature");
   if (formData.get("certify") !== "on") redirect(`${stepHref("recapitulatif")}?erreur=certify`);
+  if (!(await rateLimit("send", user.id))) redirect(`${stepHref("recapitulatif")}?erreur=${encodeURIComponent(RATE_LIMIT_MESSAGE)}`);
 
   const result = await submitApplication(application);
   if ("error" in result) redirect(`${stepHref("recapitulatif")}?erreur=${encodeURIComponent(result.error)}`);

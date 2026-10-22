@@ -8,6 +8,7 @@ import { db, schema } from "@/db";
 import { logEvent } from "@/lib/events";
 import { syncMember } from "@/lib/members";
 import { latestNotifications, markAllRead } from "@/lib/notifications";
+import { rateLimit } from "@/lib/rate-limit";
 import { getCurrentUser } from "@/lib/session";
 
 export async function loginWithDiscord() {
@@ -26,6 +27,7 @@ export async function acceptCgu(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) redirect("/connexion");
   if (formData.get("cgu") !== "on") redirect("/liaison?erreur=cgu");
+  if (!(await rateLimit("cgu", user.id))) redirect("/liaison?erreur=limite");
 
   await db()
     .update(schema.users)
@@ -40,6 +42,7 @@ export async function acceptCgu(formData: FormData) {
 export async function recheckGuild() {
   const user = await getCurrentUser();
   if (!user) redirect("/connexion");
+  if (!(await rateLimit("discord", user.id))) redirect("/rejoindre-discord?erreur=limite");
   const { inGuild } = await syncMember(user.id);
   redirect(inGuild ? "/liaison" : "/rejoindre-discord?erreur=absent");
 }

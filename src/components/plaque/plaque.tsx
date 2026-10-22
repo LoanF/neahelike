@@ -89,12 +89,13 @@ export function Pin({ on, className }: { on: boolean; className?: string }) {
 }
 
 /** Logo officiel rogné en cercle, avec anneau gold-deep. */
-export function Logo({ size = 44, ring = 1, className }: { size?: number; ring?: 1 | 2 | 3; className?: string }) {
+/** `alt=""` quand le nom du site est déjà écrit à côté du logo. */
+export function Logo({ size = 44, ring = 1, alt = "Néa Hélikè", className }: { size?: number; ring?: 1 | 2 | 3; alt?: string; className?: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element -- petit PNG statique, l'optimiseur n'apporte rien ici
     <img
       src="/images/logo.png"
-      alt="Néa Hélikè"
+      alt={alt}
       width={size}
       height={size}
       className={cx(styles.logo, className)}

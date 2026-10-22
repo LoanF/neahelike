@@ -20,6 +20,17 @@ pnpm lint
 pnpm build
 ```
 
+## Tests
+
+- `pnpm test` : tests rapides des règles (étapes et validation de la candidature, rangs, notes, délai de recandidature).
+- `pnpm test:e2e` : parcours complets dans un vrai navigateur (site public, accès au portail, candidature → demande de modification → validation → whitelist). Ils tournent sur une **base de test locale**, jamais sur Supabase :
+
+  ```bash
+  E2E_DATABASE_URL=postgres://utilisateur@127.0.0.1:5432/nea_test pnpm test:e2e
+  ```
+
+  La base doit avoir les migrations (`DATABASE_URL=$E2E_DATABASE_URL pnpm db:migrate`). Les tests lancent leur propre serveur (port 3100) et un **faux Discord** local (`tests/e2e/fake-discord.ts`) : aucun appel n'est fait au vrai Discord, et les messages privés envoyés sont vérifiés. Ils créent deux comptes de test (ID `9000000000000000xx`) qu'ils effacent à chaque lancement.
+
 ## Base de données et migrations
 
 - Le schéma vit dans `src/db/schema.ts` ; `pnpm db:generate` crée la migration SQL dans `drizzle/`. C'est le **seul** endroit où la structure de la base change (le bot Discord ne fait qu'utiliser les tables).
@@ -64,7 +75,6 @@ Le site reprend le langage visuel de l'interface en jeu, « The Struck Plaque »
 
 - `src/styles/tokens.css` : jetons du design system (couleurs, recettes de plaque, mouvement).
 - `docs/lore/` : diapos de référence du lore.
-- `/kit` : page (non indexée) qui présente tous les composants du site.
 
 ## Organisation
 

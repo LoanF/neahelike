@@ -24,7 +24,7 @@ export function AuthScreen({ title, quote, art, children }: AuthScreenProps) {
       </ObliquePanel>
       <div className={styles.artFade} aria-hidden="true" />
       <Link href="/" className={styles.brand}>
-        <Logo size={40} />
+        <Logo size={40} alt="" />
         <span>Néa Hélikè</span>
       </Link>
       <p className={styles.quote}>« {quote} »</p>

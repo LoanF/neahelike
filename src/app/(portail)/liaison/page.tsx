@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthScreen } from "@/components/portal/auth-screen";
 import { ProfileCard } from "@/components/portal/profile-card";
+import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { hasAcceptedCgu, requireUser } from "@/lib/session";
 import { logout } from "../actions";
 import styles from "../portal.module.css";
@@ -30,6 +31,7 @@ export default async function LiaisonPage({ searchParams }: { searchParams: Prom
           : "Ton compte Discord est lié au portail. Accepte les CGU pour accéder à ta candidature. Tu te connecteras toujours via Discord."}
       </p>
       {erreur === "cgu" && <p className={styles.error} role="alert">Coche la case pour accepter les CGU.</p>}
+      {erreur === "limite" && <p className={styles.error} role="alert">{RATE_LIMIT_MESSAGE}</p>}
       <LiaisonForm />
       <form action={logout} className={styles.back}>
         <button type="submit" className={styles.linkButton}>Retour à la connexion</button>

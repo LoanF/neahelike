@@ -4,6 +4,7 @@ import { Button, ButtonLink } from "@/components/plaque";
 import { AuthScreen } from "@/components/portal/auth-screen";
 import { ProfileCard } from "@/components/portal/profile-card";
 import { SITE } from "@/content/site";
+import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { getCurrentUser } from "@/lib/session";
 import { logout, recheckGuild } from "../actions";
 import styles from "../portal.module.css";
@@ -28,6 +29,7 @@ export default async function RejoindreDiscordPage({ searchParams }: { searchPar
       <p className={styles.text}>
         Ton compte n&apos;est pas encore sur le serveur Discord de Néa Hélikè. Rejoins-le : c&apos;est là que se passent les annonces, le recrutement et ton entretien vocal.
       </p>
+      {erreur === "limite" && <p className={styles.error} role="alert">{RATE_LIMIT_MESSAGE}</p>}
       {erreur === "absent" && (
         <p className={styles.error} role="alert">On ne te trouve toujours pas sur le serveur. Vérifie que tu as bien accepté l&apos;invitation, puis réessaie.</p>
       )}
