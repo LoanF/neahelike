@@ -21,9 +21,9 @@ const schema = z.object({
   DISCORD_ROLE_ADMIN: roleList.optional(),
   /** Ancien nom de DISCORD_ROLE_ADMIN, encore lu s'il est défini. */
   DISCORD_ROLE_STAFF: roleList.optional(),
-  DISCORD_ROLE_ASPIRANT: snowflake.optional(),
-  DISCORD_ROLE_HELIKEEN: snowflake.optional(),
-  DISCORD_ROLE_NOVICE: snowflake.optional(),
+  DISCORD_ROLE_ATTENTE_WL: snowflake.optional(),
+  DISCORD_ROLE_WL: snowflake.optional(),
+  DISCORD_ROLE_NON_WL: snowflake.optional(),
 });
 
 export type Env = z.infer<typeof schema>;

@@ -74,9 +74,9 @@ export async function validateWritten(application: Application, reviewer: Review
   await notify(application.userId, NOTIFICATIONS.validee());
 
   const warnings: string[] = [];
-  const role = env().DISCORD_ROLE_ASPIRANT;
+  const role = env().DISCORD_ROLE_ATTENTE_WL;
   if (role) await discord("Rôle « attente de wl »", warnings, () => addRole(application.userId, role, reason(reviewer, "Candidature validée")));
-  else warnings.push("Rôle « attente de wl » non configuré (DISCORD_ROLE_ASPIRANT).");
+  else warnings.push("Rôle « attente de wl » non configuré (DISCORD_ROLE_ATTENTE_WL).");
   await discord("Message privé", warnings, () => sendDirectMessage(application.userId, { embeds: [DIRECT_MESSAGES.validee()] }));
   return { ok: true, warnings };
 }
@@ -126,7 +126,7 @@ export async function refuse(application: Application, reviewer: Reviewer, crite
   await logEvent({ type: "candidature.refusee", subjectId: application.userId, actorId: reviewer.id, data: { criteres: chosen, commentaire: comment.trim(), avant: application.status } });
 
   const warnings: string[] = [];
-  const role = env().DISCORD_ROLE_ASPIRANT;
+  const role = env().DISCORD_ROLE_ATTENTE_WL;
   if (role && application.status === "entretien") {
     await discord("Retrait du rôle « attente de wl »", warnings, () => removeRole(application.userId, role, reason(reviewer, "Candidature refusée")));
   }
@@ -147,9 +147,9 @@ export async function validateInterview(application: Application, reviewer: Revi
   await notify(application.userId, NOTIFICATIONS.whitelistee());
 
   const warnings: string[] = [];
-  const { DISCORD_ROLE_ASPIRANT: waiting, DISCORD_ROLE_HELIKEEN: whitelisted } = env();
+  const { DISCORD_ROLE_ATTENTE_WL: waiting, DISCORD_ROLE_WL: whitelisted } = env();
   if (whitelisted) await discord("Rôle « Magistrat (wl) »", warnings, () => addRole(application.userId, whitelisted, reason(reviewer, "Whitelist validée")));
-  else warnings.push("Rôle whitelist non configuré (DISCORD_ROLE_HELIKEEN).");
+  else warnings.push("Rôle whitelist non configuré (DISCORD_ROLE_WL).");
   if (waiting) await discord("Retrait du rôle « attente de wl »", warnings, () => removeRole(application.userId, waiting, reason(reviewer, "Whitelist validée")));
   await discord("Message privé", warnings, () => sendDirectMessage(application.userId, { embeds: [DIRECT_MESSAGES.whitelistee()] }));
   return { ok: true, warnings };
@@ -163,7 +163,7 @@ export async function wipeApplication(application: Application, reviewer: Review
   await notify(application.userId, NOTIFICATIONS.supprimee());
 
   const warnings: string[] = [];
-  const role = env().DISCORD_ROLE_ASPIRANT;
+  const role = env().DISCORD_ROLE_ATTENTE_WL;
   if (role && application.status === "entretien") {
     await discord("Retrait du rôle « attente de wl »", warnings, () => removeRole(application.userId, role, reason(reviewer, "Candidature effacée")));
   }
@@ -216,12 +216,12 @@ export async function deletePlayerAccount(subjectId: string, reviewer: Reviewer)
   }
 
   // Plus de compte, plus de whitelist : retour au rôle de base, comme un nouvel arrivant.
-  const { DISCORD_ROLE_ASPIRANT: waiting, DISCORD_ROLE_HELIKEEN: whitelisted, DISCORD_ROLE_NOVICE: novice } = env();
+  const { DISCORD_ROLE_ATTENTE_WL: waiting, DISCORD_ROLE_WL: whitelisted, DISCORD_ROLE_NON_WL: novice } = env();
   const why = reason(reviewer, "Compte du portail supprimé");
   if (waiting) await discord("Retrait du rôle « attente de wl »", warnings, () => removeRole(subjectId, waiting, why));
   if (whitelisted) await discord("Retrait du rôle « Magistrat (wl) »", warnings, () => removeRole(subjectId, whitelisted, why));
   if (novice) await discord("Rôle « Novice »", warnings, () => addRole(subjectId, novice, why));
-  else warnings.push("Rôle de base non configuré (DISCORD_ROLE_NOVICE).");
+  else warnings.push("Rôle de base non configuré (DISCORD_ROLE_NON_WL).");
   await discord("Message privé", warnings, () => sendDirectMessage(subjectId, { embeds: [DIRECT_MESSAGES.compteSupprime({ url: `${SITE_URL}/connexion` })] }));
 
   await db().delete(schema.users).where(eq(schema.users.id, subjectId));
