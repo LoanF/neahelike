@@ -1,7 +1,11 @@
 import "server-only";
 import { env } from "./env";
 
-const API = "https://discord.com/api/v10";
+/**
+ * API Discord. Hors production, DISCORD_API_URL peut pointer vers le faux Discord des tests de bout en bout
+ * (tests/e2e/fake-discord.ts) : jamais en production, pour ne pas envoyer le token du bot ailleurs.
+ */
+const API = (process.env.NODE_ENV !== "production" && process.env.DISCORD_API_URL) || "https://discord.com/api/v10";
 
 export interface DiscordUser {
   id: string;
