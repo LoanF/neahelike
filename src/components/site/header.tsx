@@ -22,7 +22,7 @@ export function SiteHeader() {
     <header className={styles.header}>
       <div className={styles.bar}>
         <Link href="/" className={styles.brand}>
-          <Logo size={44} />
+          <Logo size={44} alt="" />
           <span className={styles.brandName}>{SITE.name}</span>
         </Link>
 

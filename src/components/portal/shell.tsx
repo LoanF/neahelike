@@ -19,9 +19,9 @@ export async function PortalShell({ user, children }: { user: ShellUser; childre
   const notifications = await latestNotifications(user.id);
   return (
     <div className={styles.shell}>
-      <aside className={styles.sidebar}>
+      <aside className={styles.sidebar} aria-label="Menu du portail">
         <Link href="/" className={styles.brand}>
-          <Logo size={40} />
+          <Logo size={40} alt="" />
           <span>Néa Hélikè</span>
         </Link>
         <ShellNav

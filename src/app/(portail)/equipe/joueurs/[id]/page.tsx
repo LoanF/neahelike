@@ -116,7 +116,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
                     {application.refusalComment && <em>« {application.refusalComment} »</em>}
                   </div>
                 )}
-                <ApplicationRecap application={application} user={player} names={names} editable={false} />
+                <ApplicationRecap application={application} user={player} names={names} editable={false} heading="h3" />
               </>
             ) : (
               <p className={styles.waiting}>Ce joueur n&apos;a pas encore commencé de candidature.</p>
@@ -124,7 +124,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
           </Plaque>
         </div>
 
-        <aside className={styles.sideColumn}>
+        <aside className={styles.sideColumn} aria-label="Décision et suivi">
           {application && (
             <Plaque className={styles.panel}>
               <h2 className={styles.panelTitle}>Décision</h2>
