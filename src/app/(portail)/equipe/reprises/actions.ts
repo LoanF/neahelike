@@ -16,10 +16,10 @@ export async function toggleBusinessAction(formData: FormData) {
   revalidatePath("/equipe/reprises");
 }
 
-export async function moveBusinessAction(formData: FormData) {
+export async function moveBusinessAction(direction: "up" | "down", formData: FormData) {
   const user = await freshActor("admin");
   if (!user || !(await rateLimit("admin", user.id))) return;
-  await moveBusiness(String(formData.get("id")), formData.get("direction") === "up" ? -1 : 1, user.id);
+  await moveBusiness(String(formData.get("id")), direction === "up" ? -1 : 1, user.id);
   revalidatePath("/equipe/reprises");
 }
 

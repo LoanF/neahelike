@@ -49,12 +49,12 @@ function Rows({ items, kindLabel }: { items: Item[]; kindLabel: string }) {
           <span className={styles.factionControls}>
             <Toggle id={item.id} flag="joinOpen" on={item.joinOpen} labels={["Places ouvertes", "Places closes"]} />
             <Toggle id={item.id} flag="leadOpen" on={item.leadOpen} labels={["Lead disponible", "Lead repris"]} />
-            <form action={moveFactionAction} className={styles.inlineForm}>
+            <form className={styles.inlineForm}>
               <input type="hidden" name="id" value={item.id} />
-              <button type="submit" name="direction" value="up" className={styles.iconButton} disabled={index === 0} aria-label={`Monter ${item.name}`}>
+              <button type="submit" formAction={moveFactionAction.bind(null, "up")} className={styles.iconButton} disabled={index === 0} aria-label={`Monter ${item.name}`}>
                 <ArrowUp size={16} aria-hidden="true" />
               </button>
-              <button type="submit" name="direction" value="down" className={styles.iconButton} disabled={index === active.length - 1} aria-label={`Descendre ${item.name}`}>
+              <button type="submit" formAction={moveFactionAction.bind(null, "down")} className={styles.iconButton} disabled={index === active.length - 1} aria-label={`Descendre ${item.name}`}>
                 <ArrowDown size={16} aria-hidden="true" />
               </button>
             </form>

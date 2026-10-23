@@ -41,12 +41,12 @@ export default async function CriteresPage() {
                       {item.active ? "Proposé" : "Désactivé"}
                     </button>
                   </form>
-                  <form action={moveCriterionAction} className={styles.inlineForm}>
+                  <form className={styles.inlineForm}>
                     <input type="hidden" name="id" value={item.id} />
-                    <button type="submit" name="direction" value="up" className={styles.iconButton} disabled={index === 0} aria-label={`Monter ${item.label}`}>
+                    <button type="submit" formAction={moveCriterionAction.bind(null, "up")} className={styles.iconButton} disabled={index === 0} aria-label={`Monter ${item.label}`}>
                       <ArrowUp size={16} aria-hidden="true" />
                     </button>
-                    <button type="submit" name="direction" value="down" className={styles.iconButton} disabled={index === criteria.length - 1} aria-label={`Descendre ${item.label}`}>
+                    <button type="submit" formAction={moveCriterionAction.bind(null, "down")} className={styles.iconButton} disabled={index === criteria.length - 1} aria-label={`Descendre ${item.label}`}>
                       <ArrowDown size={16} aria-hidden="true" />
                     </button>
                   </form>

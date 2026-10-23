@@ -2,7 +2,7 @@ import "server-only";
 import { asc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { isEmblemName } from "@/components/site/emblem";
-import { db, schema } from "@/db";
+import { db, schema, transaction } from "@/db";
 import type { FactionKind } from "@/db/schema";
 import { logEvent } from "./events";
 import { getFactions, LORE_FIELDS } from "./factions";
@@ -44,17 +44,28 @@ export async function setFactionFlag(id: string, flag: FactionFlag, value: boole
   return { ok: true };
 }
 
-/** Monte ou descend d'un cran dans sa liste (affinités ou créatures). */
-export async function moveFaction(id: string, direction: -1 | 1, adminId: string): Promise<AdminResult> {
-  const { affinities, creatures } = await getFactions(true);
-  const list = affinities.some(item => item.id === id) ? affinities : creatures;
-  const kind: FactionKind = list === affinities ? "affinite" : "creature";
+/**
+ * Échange un élément avec son voisin (monter : -1, descendre : +1). Renvoie le nouvel ordre et la nouvelle
+ * position de l'élément déplacé, ou `null` s'il est introuvable ou déjà en bout de liste.
+ */
+function swapNeighbour<T extends { id: string }>(list: readonly T[], id: string, direction: -1 | 1) {
   const index = list.findIndex(item => item.id === id);
   const target = index + direction;
-  if (index === -1 || target < 0 || target >= list.length) return { ok: true };
+  if (index === -1 || target < 0 || target >= list.length) return null;
   const order = [...list];
   [order[index], order[target]] = [order[target], order[index]];
-  await db().transaction(async tx => {
+  return { order, target, moved: order[target] };
+}
+
+export async function moveFaction(id: string, direction: -1 | 1, adminId: string): Promise<AdminResult> {
+  const { affinities, creatures } = await getFactions(true);
+  const isAffinity = affinities.some(item => item.id === id);
+  const kind: FactionKind = isAffinity ? "affinite" : "creature";
+  const list: readonly { id: string; name: string }[] = isAffinity ? affinities : creatures;
+  const swapped = swapNeighbour(list, id, direction);
+  if (!swapped) return { ok: true };
+  const { order, target, moved } = swapped;
+  await transaction(async tx => {
     for (const [position, item] of order.entries()) {
       await tx
         .insert(schema.factions)
@@ -62,7 +73,7 @@ export async function moveFaction(id: string, direction: -1 | 1, adminId: string
         .onConflictDoUpdate({ target: schema.factions.id, set: { sortOrder: position + 1 } });
     }
   });
-  await logEvent({ type: "faction.modifiee", subjectId: null, actorId: adminId, data: { id, nom: list[index].name, ordre: target + 1 } });
+  await logEvent({ type: "faction.modifiee", subjectId: null, actorId: adminId, data: { id, nom: moved.name, ordre: target + 1 } });
   refreshPublicPages();
   return { ok: true };
 }
@@ -150,14 +161,13 @@ export async function setBusinessFlag(id: string, flag: "open" | "archived", val
 
 export async function moveBusiness(id: string, direction: -1 | 1, adminId: string): Promise<AdminResult> {
   const list = await db().select().from(schema.businesses).where(eq(schema.businesses.archived, false)).orderBy(asc(schema.businesses.sortOrder), asc(schema.businesses.name));
-  const index = list.findIndex(item => item.id === id);
-  const target = index + direction;
-  if (index === -1 || target < 0 || target >= list.length) return { ok: true };
-  [list[index], list[target]] = [list[target], list[index]];
-  await db().transaction(async tx => {
-    for (const [position, item] of list.entries()) await tx.update(schema.businesses).set({ sortOrder: position + 1 }).where(eq(schema.businesses.id, item.id));
+  const swapped = swapNeighbour(list, id, direction);
+  if (!swapped) return { ok: true };
+  const { order, target, moved } = swapped;
+  await transaction(async tx => {
+    for (const [position, item] of order.entries()) await tx.update(schema.businesses).set({ sortOrder: position + 1 }).where(eq(schema.businesses.id, item.id));
   });
-  await logEvent({ type: "entreprise.modifiee", subjectId: null, actorId: adminId, data: { id, nom: list[target].name, ordre: target + 1 } });
+  await logEvent({ type: "entreprise.modifiee", subjectId: null, actorId: adminId, data: { id, nom: moved.name, ordre: target + 1 } });
   return { ok: true };
 }
 
@@ -197,13 +207,12 @@ export async function setCriterionActive(id: string, active: boolean, adminId: s
 
 export async function moveCriterion(id: string, direction: -1 | 1, adminId: string): Promise<AdminResult> {
   const list = await db().select().from(schema.refusalCriteria).orderBy(asc(schema.refusalCriteria.sortOrder));
-  const index = list.findIndex(item => item.id === id);
-  const target = index + direction;
-  if (index === -1 || target < 0 || target >= list.length) return { ok: true };
-  [list[index], list[target]] = [list[target], list[index]];
-  await db().transaction(async tx => {
-    for (const [position, item] of list.entries()) await tx.update(schema.refusalCriteria).set({ sortOrder: position + 1 }).where(eq(schema.refusalCriteria.id, item.id));
+  const swapped = swapNeighbour(list, id, direction);
+  if (!swapped) return { ok: true };
+  const { order, target, moved } = swapped;
+  await transaction(async tx => {
+    for (const [position, item] of order.entries()) await tx.update(schema.refusalCriteria).set({ sortOrder: position + 1 }).where(eq(schema.refusalCriteria.id, item.id));
   });
-  await logEvent({ type: "critere.modifie", subjectId: null, actorId: adminId, data: { id, libelle: list[target].label, ordre: target + 1 } });
+  await logEvent({ type: "critere.modifie", subjectId: null, actorId: adminId, data: { id, libelle: moved.label, ordre: target + 1 } });
   return { ok: true };
 }

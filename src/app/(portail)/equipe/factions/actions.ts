@@ -19,10 +19,10 @@ export async function toggleFactionAction(formData: FormData) {
   revalidatePath("/equipe/factions");
 }
 
-export async function moveFactionAction(formData: FormData) {
+export async function moveFactionAction(direction: "up" | "down", formData: FormData) {
   const user = await freshActor("admin");
   if (!user || !(await rateLimit("admin", user.id))) return;
-  await moveFaction(String(formData.get("id")), formData.get("direction") === "up" ? -1 : 1, user.id);
+  await moveFaction(String(formData.get("id")), direction === "up" ? -1 : 1, user.id);
   revalidatePath("/equipe/factions");
 }
 

@@ -2,7 +2,7 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { cache } from "react";
 import { PERMANENT_OWNER_IDS } from "@/content/owners";
-import { db, schema } from "@/db";
+import { db, schema, transaction } from "@/db";
 import type { Rank } from "@/db/schema";
 import { env } from "./env";
 import { logEvent } from "./events";
@@ -61,7 +61,7 @@ export async function saveRoleRanks(next: Record<string, RoleRank>, names: Recor
   const { ranks: previous } = await roleRanks();
   const entries = Object.entries(next);
 
-  await db().transaction(async tx => {
+  await transaction(async tx => {
     await tx.delete(schema.roleRanks);
     if (entries.length > 0) await tx.insert(schema.roleRanks).values(entries.map(([roleId, rank]) => ({ roleId, rank, updatedById: ownerId })));
   });

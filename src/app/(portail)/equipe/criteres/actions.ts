@@ -15,10 +15,10 @@ export async function toggleCriterionAction(formData: FormData) {
   revalidatePath("/equipe/criteres");
 }
 
-export async function moveCriterionAction(formData: FormData) {
+export async function moveCriterionAction(direction: "up" | "down", formData: FormData) {
   const user = await freshActor("admin");
   if (!user || !(await rateLimit("admin", user.id))) return;
-  await moveCriterion(String(formData.get("id")), formData.get("direction") === "up" ? -1 : 1, user.id);
+  await moveCriterion(String(formData.get("id")), direction === "up" ? -1 : 1, user.id);
   revalidatePath("/equipe/criteres");
 }
 

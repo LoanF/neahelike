@@ -52,12 +52,12 @@ export default async function ReprisesPage() {
                         {item.open ? "Disponible" : "Déjà reprise"}
                       </button>
                     </form>
-                    <form action={moveBusinessAction} className={styles.inlineForm}>
+                    <form className={styles.inlineForm}>
                       <input type="hidden" name="id" value={item.id} />
-                      <button type="submit" name="direction" value="up" className={styles.iconButton} disabled={index === 0} aria-label={`Monter ${item.name}`}>
+                      <button type="submit" formAction={moveBusinessAction.bind(null, "up")} className={styles.iconButton} disabled={index === 0} aria-label={`Monter ${item.name}`}>
                         <ArrowUp size={16} aria-hidden="true" />
                       </button>
-                      <button type="submit" name="direction" value="down" className={styles.iconButton} disabled={index === active.length - 1} aria-label={`Descendre ${item.name}`}>
+                      <button type="submit" formAction={moveBusinessAction.bind(null, "down")} className={styles.iconButton} disabled={index === active.length - 1} aria-label={`Descendre ${item.name}`}>
                         <ArrowDown size={16} aria-hidden="true" />
                       </button>
                     </form>
