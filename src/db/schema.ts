@@ -222,7 +222,9 @@ export const roleRanks = pgTable(
     updatedById: text(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  table => [check("role_ranks_pas_owner", sql`${table.rank} in ('recruteur', 'admin')`)],
+  // Les rôles « joueur » sont aussi enregistrés : une table non vide veut dire « réglé depuis le site »,
+  // même si plus aucun rôle ne donne de droits (sinon on retomberait sur les variables d'environnement).
+  table => [check("role_ranks_pas_owner", sql`${table.rank} in ('joueur', 'recruteur', 'admin')`)],
 );
 
 export const factionKind = pgEnum("faction_kind", ["affinite", "creature"]);

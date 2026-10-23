@@ -53,10 +53,13 @@ async function resyncEveryone() {
   await db().update(schema.users).set({ rolesSyncedAt: null });
 }
 
-/** Enregistre tout le tableau des rôles (les rôles « joueur » ne sont pas stockés). */
+/**
+ * Enregistre tout le tableau des rôles, rôles « joueur » compris : ainsi la table reste non vide même si plus
+ * aucun rôle ne donne de droits, et le secours par variables d'environnement ne se réactive pas.
+ */
 export async function saveRoleRanks(next: Record<string, RoleRank>, names: Record<string, string>, ownerId: string) {
   const { ranks: previous } = await roleRanks();
-  const entries = Object.entries(next).filter(([, rank]) => rank !== "joueur") as [string, "recruteur" | "admin"][];
+  const entries = Object.entries(next);
 
   await db().transaction(async tx => {
     await tx.delete(schema.roleRanks);

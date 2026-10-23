@@ -127,6 +127,13 @@
       "when": 1792711104555,
       "tag": "0017_retrait_whitelist_et_blacklist",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792765283084,
+      "tag": "0018_roles_joueur_enregistres",
+      "breakpoints": true
     }
   ]
 }
