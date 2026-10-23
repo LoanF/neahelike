@@ -66,7 +66,8 @@ export async function requireUser({ cgu = true, rank }: Requirements = {}): Prom
 /** Droits relus sur Discord avant toute action sensible : un rôle retiré il y a une minute ne permet plus d'agir. */
 export async function requireFreshRank(minimum: Rank) {
   const user = await requireUser({ rank: "recruteur" });
-  const { rank } = await syncMember(user.id).catch(() => ({ rank: user.rank }));
+  // Si Discord ne répond pas, on refuse plutôt que de se fier à un rang qui date peut-être de 5 minutes.
+  const { rank } = await syncMember(user.id);
   if (!hasRank({ rank }, minimum)) throw new Error("Permissions insuffisantes.");
   return { ...user, rank };
 }
