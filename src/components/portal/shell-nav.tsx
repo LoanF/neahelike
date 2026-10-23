@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { Rank } from "@/db/schema";
 import { cx } from "@/components/plaque";
+import { hasRank } from "@/lib/rank";
 import styles from "./shell.module.css";
 
 const PORTAL_LINKS = [
@@ -30,8 +31,6 @@ const ADMIN_LINKS = [
 
 const OWNER_LINKS = [{ href: "/equipe/roles", label: "Rôles et permissions", icon: KeyRound }];
 
-const RANK_WEIGHT: Record<Rank, number> = { joueur: 0, recruteur: 1, admin: 2, owner: 3 };
-
 type NavLink = { href: string; label: string; icon: typeof Users; exact?: boolean; also?: string };
 
 const CITY_LINKS = [
@@ -44,7 +43,6 @@ const CITY_LINKS = [
 export function ShellNav({ footer, rank }: { footer: ReactNode; rank: Rank }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const weight = RANK_WEIGHT[rank];
 
   const section = (title: string, links: NavLink[]) => (
     <>
@@ -91,8 +89,8 @@ export function ShellNav({ footer, rank }: { footer: ReactNode; rank: Rank }) {
               </Link>
             );
           })}
-          {weight >= RANK_WEIGHT.recruteur && section("Équipe", TEAM_LINKS)}
-          {weight >= RANK_WEIGHT.admin && section("Administration", [...ADMIN_LINKS, ...(weight >= RANK_WEIGHT.owner ? OWNER_LINKS : [])])}
+          {hasRank({ rank }, "recruteur") && section("Équipe", TEAM_LINKS)}
+          {hasRank({ rank }, "admin") && section("Administration", [...ADMIN_LINKS, ...(hasRank({ rank }, "owner") ? OWNER_LINKS : [])])}
           <span className={styles.navTitle}>La cité</span>
           {CITY_LINKS.map(link => {
             const Icon = link.icon;

@@ -1,7 +1,8 @@
 import "server-only";
-import { asc, inArray, sql } from "drizzle-orm";
+import { asc, inArray } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { getFactions } from "./factions";
+import { displayNameSql } from "./team";
 
 const WEEKS = 12;
 const DECISIONS = ["candidature.validee", "candidature.modification", "candidature.refusee"];
@@ -23,7 +24,7 @@ export async function getStats() {
       .where(inArray(schema.events.type, ["candidature.envoyee", ...DECISIONS, "entretien.valide"]))
       .orderBy(asc(schema.events.createdAt)),
     db()
-      .select({ id: schema.users.id, name: sql<string>`coalesce(${schema.users.globalName}, ${schema.users.username})`, rank: schema.users.rank })
+      .select({ id: schema.users.id, name: displayNameSql(schema.users), rank: schema.users.rank })
       .from(schema.users),
     getFactions(true),
   ]);

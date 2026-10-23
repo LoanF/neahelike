@@ -1,6 +1,6 @@
 import "server-only";
 import { eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { cache } from "react";
 import { auth } from "@/auth";
 import { CGU_VERSION } from "@/content/legal";
@@ -8,13 +8,9 @@ import { db, schema } from "@/db";
 import type { Rank, User } from "@/db/schema";
 import { getBlacklistEntry } from "./blacklist";
 import { rolesAreStale, syncMember } from "./members";
+import { hasRank } from "./rank";
 
-const RANK_ORDER: Record<Rank, number> = { joueur: 0, recruteur: 1, admin: 2, owner: 3 };
-
-/** Chaque rang a toutes les permissions des rangs inférieurs : owner > admin > recruteur > joueur. */
-export function hasRank(user: Pick<User, "rank">, minimum: Rank) {
-  return RANK_ORDER[user.rank] >= RANK_ORDER[minimum];
-}
+export { hasRank } from "./rank";
 
 /**
  * Utilisateur connecté, avec rôles Discord relus s'ils datent de plus de 5 minutes.
@@ -26,7 +22,8 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   if (!id) return null;
 
   const load = async () => (await db().select().from(schema.users).where(eq(schema.users.id, id)))[0] ?? null;
-  const user = await load();
+  // La blacklist est lue en même temps (mise en cache pour la requête) : requireUser la consulte juste après.
+  const [user] = await Promise.all([load(), getBlacklistEntry(id)]);
   if (!user) return null;
   if (!rolesAreStale(user)) return user;
 
@@ -63,11 +60,28 @@ export async function requireUser({ cgu = true, rank }: Requirements = {}): Prom
   return user;
 }
 
+const JUST_SYNCED_MS = 5_000;
+
 /** Droits relus sur Discord avant toute action sensible : un rôle retiré il y a une minute ne permet plus d'agir. */
 export async function requireFreshRank(minimum: Rank) {
   const user = await requireUser({ rank: "recruteur" });
+  // Rang relu à l'instant par getCurrentUser (rôles périmés) : inutile de rappeler Discord une seconde fois.
+  const justSynced = !!user.rolesSyncedAt && Date.now() - user.rolesSyncedAt.getTime() < JUST_SYNCED_MS;
   // Si Discord ne répond pas, on refuse plutôt que de se fier à un rang qui date peut-être de 5 minutes.
-  const { rank } = await syncMember(user.id);
+  const { rank } = justSynced ? user : await syncMember(user.id);
   if (!hasRank({ rank }, minimum)) throw new Error("Permissions insuffisantes.");
   return { ...user, rank };
+}
+
+/**
+ * Garde des Server Actions de l'équipe : le membre avec son rang relu sur Discord, ou `null` s'il n'a pas
+ * (ou plus) le rang demandé, ou si Discord ne répond pas. Une redirection (session expirée) n'est pas avalée.
+ */
+export async function freshActor(minimum: Rank) {
+  try {
+    return await requireFreshRank(minimum);
+  } catch (error) {
+    unstable_rethrow(error);
+    return null;
+  }
 }

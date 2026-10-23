@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { NOTIFICATIONS } from "@/content/notifications";
 import { DIRECT_MESSAGES } from "@/content/equipe";
+import { displayName } from "@/lib/discord-cdn";
 import { db, schema } from "@/db";
 import type { Application, ApplicationStatus, NoteVisibility, User } from "@/db/schema";
 import { formatDate } from "@/components/portal/application-status";
@@ -74,7 +75,7 @@ async function discord(label: string, warnings: string[], task: () => Promise<un
 }
 
 function reason(reviewer: Reviewer, action: string) {
-  return `${action} par ${reviewer.globalName ?? reviewer.username} (portail)`;
+  return `${action} par ${displayName(reviewer)} (portail)`;
 }
 
 /** Première ouverture de la fiche depuis l'envoi : badge « Vue ». */

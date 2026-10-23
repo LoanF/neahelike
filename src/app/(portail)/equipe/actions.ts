@@ -6,18 +6,17 @@ import { redirect } from "next/navigation";
 import { db, schema } from "@/db";
 import type { NoteVisibility } from "@/db/schema";
 import { getBlacklistEntry } from "@/lib/blacklist";
+import { isDiscordId } from "@/lib/discord";
 import type { ReviewResult } from "@/lib/review";
 import { addNote, blacklistPlayer, deleteNote, deletePlayerAccount, liftBlacklist, refuse, requestChanges, revokeWhitelist, validateInterview, validateWritten, wipeApplication } from "@/lib/review";
 import { RATE_LIMIT_MESSAGE, rateLimit } from "@/lib/rate-limit";
-import { requireFreshRank, requireUser } from "@/lib/session";
+import { freshActor, requireUser } from "@/lib/session";
 import type { Viewer } from "@/lib/team";
 import { leavePresence, presenceFor, touchPresence } from "@/lib/team";
 
-const DISCORD_ID = /^\d{15,21}$/;
-
 export async function heartbeat(subjectId: string): Promise<Viewer[]> {
   const user = await requireUser({ rank: "recruteur" });
-  if (!DISCORD_ID.test(subjectId) || !(await rateLimit("presence", user.id))) return [];
+  if (!isDiscordId(subjectId) || !(await rateLimit("presence", user.id))) return [];
   try {
     await touchPresence(subjectId, user.id);
   } catch {
@@ -29,7 +28,7 @@ export async function heartbeat(subjectId: string): Promise<Viewer[]> {
 
 export async function leaveProfile(subjectId: string) {
   const user = await requireUser({ rank: "recruteur" });
-  if (!DISCORD_ID.test(subjectId)) return;
+  if (!isDiscordId(subjectId)) return;
   await leavePresence(subjectId, user.id);
 }
 
@@ -45,12 +44,8 @@ export async function decide(_previous: DecisionState, formData: FormData): Prom
   const decision = String(formData.get("decision"));
   const subjectId = String(formData.get("subjectId"));
   const applicationId = String(formData.get("applicationId"));
-  let reviewer;
-  try {
-    reviewer = await requireFreshRank(decision === "supprimer" ? "admin" : "recruteur");
-  } catch {
-    return { error: "Tes permissions ont changé : recharge la page.", at: Date.now() };
-  }
+  const reviewer = await freshActor(decision === "supprimer" ? "admin" : "recruteur");
+  if (!reviewer) return { error: "Tes permissions ont changé : recharge la page.", at: Date.now() };
   if (!(await rateLimit("decision", reviewer.id))) return { error: RATE_LIMIT_MESSAGE, at: Date.now() };
 
   const [application] = await db().select().from(schema.applications).where(eq(schema.applications.id, applicationId)).orderBy(desc(schema.applications.createdAt));
@@ -90,12 +85,8 @@ export async function decide(_previous: DecisionState, formData: FormData): Prom
 export type NoteState = { error?: string; at: number } | null;
 
 export async function addNoteAction(_previous: NoteState, formData: FormData): Promise<NoteState> {
-  let author;
-  try {
-    author = await requireFreshRank("recruteur");
-  } catch {
-    return { error: "Tes permissions ont changé : recharge la page.", at: Date.now() };
-  }
+  const author = await freshActor("recruteur");
+  if (!author) return { error: "Tes permissions ont changé : recharge la page.", at: Date.now() };
   if (!(await rateLimit("note", author.id))) return { error: RATE_LIMIT_MESSAGE, at: Date.now() };
   const subjectId = String(formData.get("subjectId"));
   const visibility: NoteVisibility = formData.get("visibility") === "admin" ? "admin" : "equipe";
@@ -106,7 +97,7 @@ export async function addNoteAction(_previous: NoteState, formData: FormData): P
 }
 
 export async function deleteNoteAction(formData: FormData) {
-  const viewer = await requireFreshRank("recruteur").catch(() => null);
+  const viewer = await freshActor("recruteur");
   if (!viewer || !(await rateLimit("noteDelete", viewer.id))) return;
   const result = await deleteNote(String(formData.get("noteId")), viewer);
   if ("subjectId" in result && result.subjectId) revalidatePath(`/equipe/joueurs/${result.subjectId}`);
@@ -116,12 +107,8 @@ export type DeleteAccountState = { error: string; at: number } | null;
 
 /** Admin : suppression d'un compte demandée par ticket. Confirmation par le mot SUPPRIMER. */
 export async function deleteAccountAction(_previous: DeleteAccountState, formData: FormData): Promise<DeleteAccountState> {
-  let reviewer;
-  try {
-    reviewer = await requireFreshRank("admin");
-  } catch {
-    return { error: "Réservé aux admins.", at: Date.now() };
-  }
+  const reviewer = await freshActor("admin");
+  if (!reviewer) return { error: "Réservé aux admins.", at: Date.now() };
   if (!(await rateLimit("accountDelete", reviewer.id))) return { error: RATE_LIMIT_MESSAGE, at: Date.now() };
   if (String(formData.get("confirmation") ?? "").trim().toUpperCase() !== "SUPPRIMER") return { error: "Recopie SUPPRIMER pour confirmer.", at: Date.now() };
 
@@ -136,12 +123,8 @@ export type SanctionState = (ReviewResult & { at: number }) | null;
 
 /** Admin : retrait de whitelist, blacklist ou levée de la blacklist (champ `sanction`). */
 export async function sanctionAction(_previous: SanctionState, formData: FormData): Promise<SanctionState> {
-  let reviewer;
-  try {
-    reviewer = await requireFreshRank("admin");
-  } catch {
-    return { error: "Réservé aux admins.", at: Date.now() };
-  }
+  const reviewer = await freshActor("admin");
+  if (!reviewer) return { error: "Réservé aux admins.", at: Date.now() };
   if (!(await rateLimit("sanction", reviewer.id))) return { error: RATE_LIMIT_MESSAGE, at: Date.now() };
 
   const subjectId = String(formData.get("subjectId"));

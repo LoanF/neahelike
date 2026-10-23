@@ -1,4 +1,5 @@
 import "server-only";
+import type { AnyColumn } from "drizzle-orm";
 import { and, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { TeamBadge, TabId } from "@/components/equipe/badges";
@@ -118,6 +119,14 @@ export async function leavePresence(subjectId: string, viewerId: string) {
   await db().delete(schema.profileViews).where(and(eq(schema.profileViews.subjectId, subjectId), eq(schema.profileViews.viewerId, viewerId)));
 }
 
+/**
+ * Nom affiché d'un membre, côté SQL : même règle que `displayName` (lib/discord-cdn.ts).
+ * `T` vaut `string | null` derrière une jointure externe.
+ */
+export function displayNameSql<T extends string | null = string>(table: { globalName: AnyColumn; username: AnyColumn }) {
+  return sql<T>`coalesce(${table.globalName}, ${table.username})`;
+}
+
 const actor = alias(schema.users, "actor");
 
 const subject = alias(schema.users, "subject");
@@ -128,10 +137,10 @@ const eventColumns = {
   data: schema.events.data,
   createdAt: schema.events.createdAt,
   actorId: schema.events.actorId,
-  actorName: sql<string | null>`coalesce(${actor.globalName}, ${actor.username})`,
+  actorName: displayNameSql<string | null>(actor),
   actorAvatar: actor.avatar,
   subjectId: schema.events.subjectId,
-  subjectName: sql<string | null>`coalesce(${subject.globalName}, ${subject.username})`,
+  subjectName: displayNameSql<string | null>(subject),
 };
 
 /** Chronologie du joueur : ses étapes et les actions de l'équipe, de la plus récente à la plus ancienne. */
@@ -181,7 +190,7 @@ export async function journal({ filter, actorId, days, page }: { filter?: Journa
 /** Membres de l'équipe qui ont déjà agi, pour le filtre du journal. */
 export async function journalActors() {
   return db()
-    .selectDistinct({ id: actor.id, name: sql<string>`coalesce(${actor.globalName}, ${actor.username})` })
+    .selectDistinct({ id: actor.id, name: displayNameSql(actor) })
     .from(schema.events)
     .innerJoin(actor, eq(actor.id, schema.events.actorId))
     .where(inArray(actor.rank, ["recruteur", "admin", "owner"]));
@@ -204,7 +213,7 @@ export async function notesFor(subjectId: string, viewer: Pick<User, "rank">) {
       visibility: schema.teamNotes.visibility,
       createdAt: schema.teamNotes.createdAt,
       authorId: schema.teamNotes.authorId,
-      authorName: sql<string | null>`coalesce(${author.globalName}, ${author.username})`,
+      authorName: displayNameSql<string | null>(author),
       authorAvatar: author.avatar,
     })
     .from(schema.teamNotes)

@@ -21,6 +21,11 @@ export interface GuildMember {
   nick: string | null;
 }
 
+/** ID Discord (snowflake) : 15 à 21 chiffres. Seule règle utilisée pour valider un ID reçu d'un formulaire. */
+export function isDiscordId(value: string) {
+  return /^\d{15,21}$/.test(value);
+}
+
 export class DiscordError extends Error {
   constructor(public status: number, message: string) {
     super(message);
