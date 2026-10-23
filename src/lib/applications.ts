@@ -68,14 +68,18 @@ export function startBlock(latest: Application | null): StartBlock {
   return null;
 }
 
+/** Part des lectures qui purgent au passage les délais échus (une sur vingt environ). */
+const LOCK_PURGE_RATE = 0.05;
+
 /**
  * Comme `startBlock`, en tenant compte d'un délai conservé après la suppression d'un ancien compte
- * (voir `reapplyLocks`). Les délais échus sont purgés au passage.
+ * (voir `reapplyLocks`). Les délais échus sont purgés de temps en temps.
  */
 export const getStartBlock = cache(async (userId: string): Promise<StartBlock> => {
   const block = startBlock(await getLatestApplication(userId));
   if (block) return block;
-  await db().delete(schema.reapplyLocks).where(lte(schema.reapplyLocks.until, new Date()));
+  // Purge des délais échus de temps en temps seulement : la lecture ci-dessous ignore déjà les délais passés.
+  if (Math.random() < LOCK_PURGE_RATE) await db().delete(schema.reapplyLocks).where(lte(schema.reapplyLocks.until, new Date()));
   const [lock] = await db()
     .select()
     .from(schema.reapplyLocks)

@@ -25,8 +25,8 @@ export default async function EquipePage({ searchParams }: { searchParams: Promi
   const viewer = await requireUser({ rank: "recruteur" });
   const tab = (TABS.find(item => item.id === onglet)?.id ?? "a-traiter") as TabId;
   const query = q?.trim().slice(0, 80) ?? "";
-  const { rows, counts } = await listPlayers({ tab, query });
-  const [presence, names] = await Promise.all([presenceFor(rows.map(row => row.user.id), viewer.id), takeoverNames()]);
+  const [{ rows, counts }, names] = await Promise.all([listPlayers({ tab, query }), takeoverNames()]);
+  const presence = await presenceFor(rows.map(row => row.user.id), viewer.id);
 
   const list: PlayerListRow[] = rows.map(({ user, application, badge }) => {
     const rp = application?.rp;

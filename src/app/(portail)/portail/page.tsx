@@ -26,7 +26,7 @@ const RESOURCES = [
 
 export default async function PortailPage() {
   const user = await requireUser();
-  const [open, latest] = await Promise.all([getOpenApplication(user.id), getLatestApplication(user.id)]);
+  const [open, latest, criteria] = await Promise.all([getOpenApplication(user.id), getLatestApplication(user.id), criteriaLabels()]);
   // Whitelist retirée : l'ancienne candidature ne compte plus, le parcours repart de zéro.
   const revoked = !open && latest?.whitelistRevokedAt ? latest : null;
   const application = open ?? (revoked ? null : latest);
@@ -46,7 +46,7 @@ export default async function PortailPage() {
             <h2 className={styles.cardTitle}>Ma candidature</h2>
             {application && !block?.reason && <Badge tone={STATUS_TONE[application.status]} size="lg">{STATUS_LABEL[application.status]}</Badge>}
           </div>
-          <ApplicationState application={open} latest={latest} revoked={revoked} block={block} criteria={await criteriaLabels()} />
+          <ApplicationState application={open} latest={latest} revoked={revoked} block={block} criteria={criteria} />
         </Plaque>
 
         <Plaque unveil className={styles.journey}>

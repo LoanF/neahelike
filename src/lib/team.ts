@@ -49,13 +49,16 @@ function matches(row: PlayerRow, query: string) {
 
 /** Joueurs avec leur dernière candidature, filtrés par onglet et recherche (ID Discord, pseudo, prénom ou nom RP). */
 export async function listPlayers({ tab, query }: { tab: TabId; query?: string }) {
-  const [users, applications, blacklisted] = await Promise.all([
+  const [users, latestApplications, blacklisted] = await Promise.all([
     db().select().from(schema.users).orderBy(desc(schema.users.createdAt)),
-    db().select().from(schema.applications).orderBy(desc(schema.applications.createdAt)),
+    // Seulement la dernière candidature de chaque joueur, pas tout l'historique.
+    db()
+      .selectDistinctOn([schema.applications.userId])
+      .from(schema.applications)
+      .orderBy(schema.applications.userId, desc(schema.applications.createdAt)),
     blacklistedIds(),
   ]);
-  const latest = new Map<string, Application>();
-  for (const application of applications) if (!latest.has(application.userId)) latest.set(application.userId, application);
+  const latest = new Map<string, Application>(latestApplications.map(application => [application.userId, application]));
 
   const rows: PlayerRow[] = users.map(user => {
     const application = latest.get(user.id) ?? null;

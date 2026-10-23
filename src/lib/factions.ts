@@ -93,7 +93,8 @@ function customCreature(row: Faction): CreatureView {
   };
 }
 
-async function loadRows(): Promise<Faction[] | null> {
+/** Une seule lecture de la table par requête, quel que soit le filtre demandé ensuite. */
+const loadRows = cache(async (): Promise<Faction[] | null> => {
   try {
     return await db().select().from(schema.factions).orderBy(asc(schema.factions.sortOrder));
   } catch (error) {
@@ -101,7 +102,7 @@ async function loadRows(): Promise<Faction[] | null> {
     console.error("Lecture des affinités et créatures impossible", error);
     return null;
   }
-}
+});
 
 /**
  * Affinités et créatures, triées, avec leur disponibilité. Les archivées ne sont incluses
