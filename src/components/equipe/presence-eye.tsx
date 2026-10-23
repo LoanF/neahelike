@@ -14,7 +14,7 @@ export function PresenceEye({ viewers, size = 22, className }: { viewers: Viewer
   if (viewers.length === 0) return null;
   const names = viewers.map(viewer => displayName(viewer)).join(", ");
   return (
-    <span className={cx(styles.eye, className)} tabIndex={0} aria-label={`En cours de lecture par ${names}`}>
+    <span className={cx(styles.eye, className)} tabIndex={0} role="img" aria-label={`En cours de lecture par ${names}`}>
       <svg width={size} height={size * 0.62} viewBox="0 0 32 20" aria-hidden="true">
         <g className={styles.lid}>
           <path d="M2 10C6 3.8 10.8 1 16 1s10 2.8 14 9c-4 6.2-8.8 9-14 9S6 16.2 2 10Z" fill="var(--nh-bronze-deep)" stroke="var(--nh-gold)" strokeWidth="1.8" />

@@ -3,10 +3,11 @@
 import { BarChart3, BookOpen, Briefcase, FileStack, HelpCircle, History, KeyRound, LayoutDashboard, ListX, Menu, Scale, ScrollText, Sparkles, UserRound, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { Rank } from "@/db/schema";
 import { cx } from "@/components/plaque";
+import { useCloseOnEscape } from "@/components/use-close-on-escape";
 import { hasRank } from "@/lib/rank";
 import styles from "./shell.module.css";
 
@@ -43,6 +44,7 @@ const CITY_LINKS = [
 export function ShellNav({ footer, rank }: { footer: ReactNode; rank: Rank }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const burger = useRef<HTMLButtonElement>(null);
 
   const section = (title: string, links: NavLink[]) => (
     <>
@@ -62,10 +64,15 @@ export function ShellNav({ footer, rank }: { footer: ReactNode; rank: Rank }) {
   );
 
   useEffect(() => setOpen(false), [pathname]);
+  useCloseOnEscape(open, () => {
+    setOpen(false);
+    burger.current?.focus();
+  });
 
   return (
     <>
       <button
+        ref={burger}
         type="button"
         className={styles.burger}
         aria-expanded={open}

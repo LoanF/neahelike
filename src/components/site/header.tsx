@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ButtonLink, cx, Logo } from "@/components/plaque";
+import { useCloseOnEscape } from "@/components/use-close-on-escape";
 import { NAV_LINKS, SITE } from "@/content/site";
 import styles from "./header.module.css";
 
@@ -14,9 +15,14 @@ function isCurrent(pathname: string, href: string) {
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const burger = useRef<HTMLButtonElement>(null);
 
   // Le menu mobile se referme à chaque navigation.
   useEffect(() => setOpen(false), [pathname]);
+  useCloseOnEscape(open, () => {
+    setOpen(false);
+    burger.current?.focus();
+  });
 
   return (
     <header className={styles.header}>
@@ -41,6 +47,7 @@ export function SiteHeader() {
           <a href={SITE.discordUrl} target="_blank" rel="noreferrer" className={styles.discord}>Discord</a>
           <ButtonLink href={SITE.joinUrl} size="sm" className={styles.join}>Rejoindre la Whitelist</ButtonLink>
           <button
+            ref={burger}
             type="button"
             className={styles.burger}
             aria-expanded={open}

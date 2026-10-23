@@ -31,6 +31,7 @@ export function NotificationBell({ initial }: { initial: { items: Item[]; unread
   // Notifications non lues au moment de l'ouverture : elles restent mises en avant tant que le panneau est ouvert.
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const root = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
   const panelId = useId();
 
   useEffect(() => setData(initial), [initial]);
@@ -45,7 +46,12 @@ export function NotificationBell({ initial }: { initial: { items: Item[]; unread
   useEffect(() => {
     if (!open) return;
     const close = (event: MouseEvent | KeyboardEvent) => {
-      if (event instanceof KeyboardEvent ? event.key === "Escape" : !root.current?.contains(event.target as Node)) setOpen(false);
+      if (event instanceof KeyboardEvent) {
+        if (event.key !== "Escape") return;
+        setOpen(false);
+        // Au clavier, le focus revient sur la cloche au lieu de se perdre en haut de la page.
+        button.current?.focus();
+      } else if (!root.current?.contains(event.target as Node)) setOpen(false);
     };
     document.addEventListener("mousedown", close);
     document.addEventListener("keydown", close);
@@ -68,7 +74,7 @@ export function NotificationBell({ initial }: { initial: { items: Item[]; unread
 
   return (
     <div ref={root} className={styles.root}>
-      <button type="button" className={cx(styles.bell, open && styles.bellOpen)} aria-label={label} aria-expanded={open} aria-controls={panelId} onClick={toggle}>
+      <button ref={button} type="button" className={cx(styles.bell, open && styles.bellOpen)} aria-label={label} aria-expanded={open} aria-controls={panelId} onClick={toggle}>
         <Bell size={20} aria-hidden="true" />
         {data.unread > 0 && <span className={styles.count}>{data.unread > 9 ? "9+" : data.unread}</span>}
       </button>
