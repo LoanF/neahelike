@@ -1,4 +1,4 @@
-import { Ban, BadgeCheck, BadgeX, Briefcase, Check, Crown, Eye, FilePen, FileText, KeyRound, Link2, ListX, LogIn, MessageSquare, ScrollText, Shield, ShieldBan, ShieldCheck, Sparkles, Trash2, UserMinus, UserPlus } from "lucide-react";
+import { Ban, BadgeCheck, BadgeX, Briefcase, Check, Clock, Eraser, FileStack, RotateCcw, Crown, Eye, FilePen, FileText, KeyRound, Link2, ListX, LogIn, MessageSquare, ScrollText, Shield, ShieldBan, ShieldCheck, Sparkles, Trash2, UserMinus, UserPlus } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import Image from "next/image";
@@ -60,6 +60,24 @@ function describe(entry: TimelineEntry, criteria: Record<string, string>): { ico
       return { icon: BadgeCheck, tone: "success", text: `${who} a validé l'entretien : joueur whitelist` };
     case "candidature.supprimee":
       return { icon: Trash2, tone: "danger", text: `${who} a effacé la candidature` };
+    case "candidature.delai_leve":
+      return { icon: Clock, tone: "success", text: `${who} a levé le délai de 3 mois` };
+    case "candidature.rouverte":
+      return { icon: RotateCcw, tone: "gold", text: `${who} a annulé le refus : candidature rouverte` };
+    case "dossier.envoye":
+      return { icon: FileStack, tone: "gold", text: "A envoyé un dossier de reprise", detail: typeof data.cible === "string" ? data.cible : undefined };
+    case "dossier.accepte":
+      return { icon: FileStack, tone: "success", text: `${who} a accepté le dossier de reprise`, detail: typeof data.commentaire === "string" ? data.commentaire : undefined };
+    case "dossier.refuse":
+      return { icon: FileStack, tone: "danger", text: `${who} a refusé le dossier de reprise`, detail: typeof data.commentaire === "string" ? data.commentaire : undefined };
+    case "wipe.invitation":
+      return { icon: Eraser, tone: "gold", text: `${who} a invité le joueur à refaire son personnage` };
+    case "wipe.envoyee":
+      return { icon: Eraser, tone: "gold", text: "A envoyé une demande de wipe" };
+    case "wipe.acceptee":
+      return { icon: Eraser, tone: "success", text: `${who} a accepté le wipe : nouveau personnage` };
+    case "wipe.refusee":
+      return { icon: Eraser, tone: "danger", text: `${who} a refusé la demande de wipe`, detail: typeof data.commentaire === "string" ? data.commentaire : undefined };
     case "whitelist.retiree":
       return { icon: BadgeX, tone: "danger", text: `${who} a retiré la whitelist`, detail: typeof data.raison === "string" ? data.raison : undefined };
     case "compte.blacklist":
@@ -114,6 +132,13 @@ const TEAM_EVENTS = new Set([
   "compte.blacklist",
   "compte.blacklist_levee",
   "candidature.supprimee",
+  "candidature.delai_leve",
+  "candidature.rouverte",
+  "dossier.accepte",
+  "dossier.refuse",
+  "wipe.invitation",
+  "wipe.acceptee",
+  "wipe.refusee",
   "note.ajoutee",
   "role.rang",
   "owner.ajoute",

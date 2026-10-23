@@ -1,11 +1,12 @@
 "use client";
 
-import { TextAreaField, TextField } from "@/components/plaque";
+import { TextField } from "@/components/plaque";
 import type { StepValues } from "@/db/schema";
 import styles from "../candidature.module.css";
 import type { Choice } from "./choice-grid";
 import { ChoiceGrid } from "./choice-grid";
 import { StepFooter } from "./step-footer";
+import type { StepChannel } from "./use-step-form";
 import { text, useStepForm } from "./use-step-form";
 
 interface RpFormProps {
@@ -13,10 +14,12 @@ interface RpFormProps {
   affinities: Choice[];
   creatures: Choice[];
   backHref?: string;
+  /** Candidature (par défaut) ou wipe de personnage. */
+  channel?: StepChannel;
 }
 
-export function RpForm({ initial, affinities, creatures, backHref }: RpFormProps) {
-  const form = useStepForm("rp", { affinity: "", creature: "", ...initial });
+export function RpForm({ initial, affinities, creatures, backHref, channel }: RpFormProps) {
+  const form = useStepForm("rp", { affinity: "", creature: "", ...initial }, channel);
   const { values, set, errors } = form;
 
   return (
@@ -44,15 +47,6 @@ export function RpForm({ initial, affinities, creatures, backHref }: RpFormProps
           hint="Ton personnage doit être majeur : 18 ans minimum."
         />
       </div>
-      <TextAreaField
-        label="Origine du personnage"
-        required
-        maxLength={1000}
-        placeholder="D'où vient-il ? Une cité grecque, un peuple lointain, un rescapé d'Hélikè…"
-        value={text(values, "origin")}
-        onChange={event => set("origin", event.target.value)}
-        error={errors.origin}
-      />
 
       <p className={styles.notice}>
         Ton personnage peut rejoindre une affinité, être une créature mystique, les deux à la fois, ou rester un simple citoyen.

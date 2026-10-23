@@ -17,7 +17,12 @@ export const BOT_BLACKLISTED = { id: "900000000000000005", username: "e2e-blackl
 /** Owner ajouté depuis le site (table site_owners), avec sa propre candidature envoyée. */
 export const OWNER = { id: "900000000000000006", username: "e2e-owner", rank: "owner" } as const;
 
-export const USERS = [PLAYER, RECRUITER, ADMIN, WHITELISTED, BOT_BLACKLISTED, OWNER];
+/** Joueur refusé, pour lever le délai et rouvrir la candidature. */
+export const REFUSED = { id: "900000000000000007", username: "e2e-refuse", rank: "joueur" } as const;
+/** Joueur whitelist, pour le dossier de reprise déposé à part et le wipe de personnage. */
+export const WIPER = { id: "900000000000000008", username: "e2e-wipe", rank: "joueur" } as const;
+
+export const USERS = [PLAYER, RECRUITER, ADMIN, WHITELISTED, BOT_BLACKLISTED, OWNER, REFUSED, WIPER];
 
 export function stateFile(user: { username: string }) {
   return `tests/e2e/.auth/${user.username}.json`;

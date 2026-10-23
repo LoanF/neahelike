@@ -1,0 +1,94 @@
+.steps {
+  margin: 0 0 22px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--nh-parchment-dim);
+  line-height: 1.55;
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.quote {
+  margin: 0;
+  padding-left: 14px;
+  font-style: italic;
+  white-space: pre-line;
+  color: var(--nh-parchment);
+  box-shadow: inset 2px 0 0 var(--nh-gold-deep);
+}
+
+.list {
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--nh-radius);
+  color: var(--nh-parchment);
+  text-decoration: none;
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket);
+}
+
+.step:hover {
+  color: var(--nh-gold-lit);
+}
+
+.step:focus-visible {
+  outline: 2px solid var(--nh-gold);
+  outline-offset: 2px;
+}
+
+.stepState {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+}
+
+.recap {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 18px;
+  margin: 0 0 22px;
+}
+
+.recap dt {
+  color: var(--nh-parchment-dim);
+}
+
+.recap dd {
+  margin: 0;
+  color: var(--nh-parchment);
+}
+
+.link,
+.continue {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--nh-gold-lit);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}

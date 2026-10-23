@@ -95,9 +95,6 @@ export function ApplicationRecap({
         <Item label="Âge">{value(rp, "age") && `${value(rp, "age")} ans`}</Item>
         <Item label="Affinité">{affinity ? (Object.hasOwn(names, affinity) ? names[affinity] : affinity) : "Aucune"}</Item>
         <Item label="Créature">{creature ? (Object.hasOwn(names, creature) ? names[creature] : creature) : "Humain"}</Item>
-        <Item label="Origine" wide>
-          <span className={styles.recapText}>{value(rp, "origin")}</span>
-        </Item>
       </Section>
 
       <Section heading={heading} title="Background" step="background" editable={editable && isStepEditable(application, "background")}>

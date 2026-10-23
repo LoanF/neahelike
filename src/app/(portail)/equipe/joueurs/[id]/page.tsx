@@ -27,6 +27,9 @@ import styles from "./fiche.module.css";
 import type { NoteView } from "./notes";
 import { Notes } from "./notes";
 import { Sanctions } from "./sanctions";
+import { formatWlSlot, storedWlSlot } from "@/lib/wl-session";
+import { TakeoverCard } from "@/components/equipe/takeover-card";
+import { listDossiers } from "@/lib/takeovers";
 
 export const metadata: Metadata = { title: "Fiche joueur" };
 
@@ -52,7 +55,9 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
     getBlacklistEntry(player.id),
   ]);
   // Un recruteur ne doit pas deviner l'existence d'une note réservée aux admins.
-  const visibleEvents = isAdmin ? events : events.filter(event => !(event.type === "note.ajoutee" && (event.data as { visibilite?: string }).visibilite === "admin"));
+  const visibleEvents = events.filter(
+    event => !event.type.startsWith("wipe.") && (isAdmin || !(event.type === "note.ajoutee" && (event.data as { visibilite?: string }).visibilite === "admin")),
+  );
   const noteViews: NoteView[] = notes.map(note => ({
     id: note.id,
     content: note.content,
@@ -67,6 +72,10 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
   // Sanctions et suppression : seulement sur un rang inférieur, jamais sur un owner ; sur soi, owners seulement.
   const canSanction = isAdmin && !(await canActOn(player.id, viewer, { known: player }));
   const canDecide = player.id !== viewer.id || hasRank(viewer, "owner");
+  // Dossiers de reprise déposés à part (les brouillons restent privés).
+  const dossiers = await listDossiers(player.id);
+  const sentDossiers = dossiers.filter(dossier => dossier.status !== "brouillon");
+  const slot = application && storedWlSlot(application);
   const badge = teamBadge(application, !!blacklisted);
   const whitelisted = application?.status === "whitelistee" && !application.whitelistRevokedAt;
   const banner = bannerUrl(player, 960);
@@ -157,7 +166,15 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
           {application && canDecide && (
             <Plaque className={styles.panel}>
               <h2 className={styles.panelTitle}>Décision</h2>
-              <DecisionPanel subjectId={player.id} applicationId={application.id} status={application.status} isAdmin={isAdmin} steps={filledSteps} criteria={activeCriteria.map(({ id, label }) => ({ id, label }))} />
+              <DecisionPanel subjectId={player.id} applicationId={application.id} status={application.status} isAdmin={isAdmin} steps={filledSteps} criteria={activeCriteria.map(({ id, label }) => ({ id, label }))} session={slot && formatWlSlot(slot)} reapplyLifted={!!application.reapplyLiftedAt} />
+            </Plaque>
+          )}
+          {sentDossiers.length > 0 && (
+            <Plaque className={styles.panel}>
+              <h2 className={styles.panelTitle}>Dossiers de reprise</h2>
+              {sentDossiers.map(dossier => (
+                <TakeoverCard key={dossier.id} dossier={dossier} names={names} canDecide={canDecide} />
+              ))}
             </Plaque>
           )}
           <Plaque className={styles.panel}>

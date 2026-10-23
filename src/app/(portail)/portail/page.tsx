@@ -13,6 +13,8 @@ import { getLatestApplication, getOpenApplication, getStartBlock } from "@/lib/a
 import { criteriaLabels } from "@/lib/criteria";
 import { displayName } from "@/lib/discord-cdn";
 import { requireUser } from "@/lib/session";
+import { getOpenWipe } from "@/lib/wipes";
+import { formatWlSlot, storedWlSlot } from "@/lib/wl-session";
 import { startCandidature } from "./candidature/actions";
 import styles from "./dashboard.module.css";
 
@@ -26,7 +28,7 @@ const RESOURCES = [
 
 export default async function PortailPage() {
   const user = await requireUser();
-  const [open, latest, criteria] = await Promise.all([getOpenApplication(user.id), getLatestApplication(user.id), criteriaLabels()]);
+  const [open, latest, criteria, wipe] = await Promise.all([getOpenApplication(user.id), getLatestApplication(user.id), criteriaLabels(), getOpenWipe(user.id)]);
   // Whitelist retirée : l'ancienne candidature ne compte plus, le parcours repart de zéro.
   const revoked = !open && latest?.whitelistRevokedAt ? latest : null;
   const application = open ?? (revoked ? null : latest);
@@ -38,6 +40,15 @@ export default async function PortailPage() {
       <PortalHeader eyebrow="Tableau de bord" title={`Bienvenue, ${displayName(user)}`}>
         Suis ta candidature et garde le lore et le règlement à portée de main.
       </PortalHeader>
+
+      {wipe?.status === "ouverte" && wipe.invitedById && (
+        <Plaque rivets="none" className={styles.invite}>
+          <p>
+            <strong>Wipe de personnage</strong> : un admin t&apos;invite à refaire ton personnage. Remplis le nouveau, puis envoie ta demande.
+          </p>
+          <ButtonLink href="/portail/wipe">Refaire mon personnage</ButtonLink>
+        </Plaque>
+      )}
 
       <div className={styles.grid}>
         <Plaque unveil className={styles.main}>
@@ -125,7 +136,14 @@ function ApplicationState({
   criteria: Record<string, string>;
 }) {
   if (block?.reason === "whitelistee") {
-    return <p className={styles.stateText}>Ta whitelist est validée. Bienvenue parmi les citoyens de Néa Hélikè.</p>;
+    return (
+      <>
+        <p className={styles.stateText}>Ta whitelist est validée. Bienvenue parmi les citoyens de Néa Hélikè.</p>
+        <div className={styles.cta}>
+          <ButtonLink href="/portail/wipe" variant="secondary">Wipe de personnage</ButtonLink>
+        </div>
+      </>
+    );
   }
 
   if (!application) {
@@ -151,7 +169,9 @@ function ApplicationState({
             : revoked
               ? "L'équipe t'a retiré ta whitelist. Tu peux déposer une nouvelle candidature dès maintenant."
               : latest?.status === "refusee"
-                ? "Ta dernière candidature a été refusée, mais le délai est passé : tu peux en déposer une nouvelle."
+                ? latest.reapplyLiftedAt
+                  ? "Ta dernière candidature a été refusée, mais l'équipe a levé le délai : tu peux en déposer une nouvelle dès maintenant."
+                  : "Ta dernière candidature a été refusée, mais le délai est passé : tu peux en déposer une nouvelle."
                 : "Tu n'as pas encore commencé ta candidature. Compte une trentaine de minutes, et prévois le lien de ton background."}
         </p>
         {block?.reason !== "delai" && (
@@ -195,12 +215,23 @@ function ApplicationState({
           </div>
         </>
       );
-    case "entretien":
+    case "entretien": {
+      const slot = storedWlSlot(application);
       return (
-        <p className={styles.stateText}>
-          Ta candidature écrite est validée. Rejoins un salon d&apos;attente sur le Discord pour passer ton entretien vocal.
-        </p>
+        <>
+          <p className={styles.stateText}>
+            Ta candidature écrite est validée. Rejoins un salon d&apos;attente sur le Discord pendant la session de whitelist pour passer ton entretien vocal.
+          </p>
+          {slot && (
+            <p className={styles.session}>
+              <span className={styles.sessionLabel}>Prochaine session de whitelist</span>
+              <strong>{formatWlSlot(slot)}</strong>
+              <span className={styles.sessionNote}>Heure de Paris</span>
+            </p>
+          )}
+        </>
       );
+    }
     default:
       return null;
   }

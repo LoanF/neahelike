@@ -50,7 +50,16 @@ export default async function EquipePage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PortalHeader eyebrow="Espace équipe" title="Joueurs">
+      <PortalHeader
+        eyebrow="Espace équipe"
+        title="Joueurs"
+        actions={
+          <Link href={href("validees")} className={styles.wlCount}>
+            <span className={styles.wlCountValue}>{counts.validees}</span>
+            <span className={styles.wlCountLabel}>whitelist sur le serveur</span>
+          </Link>
+        }
+      >
         Les candidatures à lire, les entretiens à faire passer et tous les comptes liés au portail.
       </PortalHeader>
       <div className={styles.page}>

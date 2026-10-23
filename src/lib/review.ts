@@ -8,7 +8,7 @@ import type { Application, ApplicationStatus, NoteVisibility, User } from "@/db/
 import { formatDate } from "@/components/portal/application-status";
 import type { DataStepId } from "./application";
 import { DATA_STEPS, STEPS, visibleSteps } from "./application";
-import { getLatestApplication, reapplyDate } from "./applications";
+import { getLatestApplication, getOpenApplication, reapplyDate } from "./applications";
 import { criteriaLabels, getCriteria, OTHER_CRITERION } from "./criteria";
 import { addRole, banMember, removeRole, sendDirectMessage, unbanMember } from "./discord";
 import { env } from "./env";
@@ -18,8 +18,10 @@ import { notify } from "./notifications";
 import { ownerIds } from "./permissions";
 import { hasRank } from "./session";
 import { SITE_URL } from "./site-url";
+import type { WlSlot } from "./wl-session";
+import { formatWlSlot } from "./wl-session";
 
-type Reviewer = Pick<User, "id" | "rank" | "username" | "globalName">;
+export type Reviewer = Pick<User, "id" | "rank" | "username" | "globalName">;
 
 export type ReviewResult = { ok: true; warnings: string[] } | { error: string };
 
@@ -81,7 +83,7 @@ async function resetToBaseRole(subjectId: string, why: string, warnings: string[
 }
 
 /** Les effets Discord ne bloquent jamais une décision : un échec devient un avertissement pour l'équipe. */
-async function discord(label: string, warnings: string[], task: () => Promise<unknown>) {
+export async function discord(label: string, warnings: string[], task: () => Promise<unknown>) {
   try {
     const result = await task();
     if (result === false) warnings.push(`${label} : MP fermés, le joueur verra la décision sur le portail.`);
@@ -107,20 +109,29 @@ export async function markViewed(application: Application, viewer: Reviewer) {
 }
 
 /** Candidature écrite validée : rôle « attente de wl » et MP. Un admin peut valider à tout moment, le recruteur seulement une candidature envoyée. */
-export async function validateWritten(application: Application, reviewer: Reviewer): Promise<ReviewResult> {
+/** Validation écrite : rôle « attente de wl » et créneau de la prochaine session de whitelist, envoyé au joueur. */
+export async function validateWritten(application: Application, reviewer: Reviewer, slot: WlSlot): Promise<ReviewResult> {
   const from: ApplicationStatus[] = hasRank(reviewer, "admin") ? OPEN_FOR_ADMIN : ["envoyee"];
   if (!from.includes(application.status)) return { error: "Seul un admin peut valider une candidature qui n'a pas été envoyée." };
 
-  const updated = await transition(application, from, { status: "entretien", reviewerId: reviewer.id, changesSteps: null, changesComment: null });
+  const updated = await transition(application, from, {
+    status: "entretien",
+    reviewerId: reviewer.id,
+    changesSteps: null,
+    changesComment: null,
+    interviewSlotStart: slot.start,
+    interviewSlotEnd: slot.end,
+  });
   if (!updated) return CHANGED;
-  await logEvent({ type: "candidature.validee", subjectId: application.userId, actorId: reviewer.id, data: { avant: application.status } });
-  await notify(application.userId, NOTIFICATIONS.validee());
+  const session = formatWlSlot(slot);
+  await logEvent({ type: "candidature.validee", subjectId: application.userId, actorId: reviewer.id, data: { avant: application.status, session } });
+  await notify(application.userId, NOTIFICATIONS.validee(session));
 
   const warnings: string[] = [];
   const role = env().DISCORD_ROLE_ATTENTE_WL;
   if (role) await discord("Rôle « attente de wl »", warnings, () => addRole(application.userId, role, reason(reviewer, "Candidature validée")));
   else warnings.push("Rôle « attente de wl » non configuré (DISCORD_ROLE_ATTENTE_WL).");
-  await discord("Message privé", warnings, () => sendDirectMessage(application.userId, { embeds: [DIRECT_MESSAGES.validee()] }));
+  await discord("Message privé", warnings, () => sendDirectMessage(application.userId, { embeds: [DIRECT_MESSAGES.validee(session)] }));
   return { ok: true, warnings };
 }
 
@@ -219,6 +230,44 @@ export async function wipeApplication(application: Application, reviewer: Review
     if (whitelisted) await discord("Retrait du rôle « Magistrat (wl) »", warnings, () => removeRole(application.userId, whitelisted, why));
     if (novice) await discord("Rôle « Novice »", warnings, () => addRole(application.userId, novice, why));
   }
+  return { ok: true, warnings };
+}
+
+/** Refus : l'admin lève le délai de 3 mois, le joueur peut recandidater tout de suite (le refus reste dans l'historique). */
+export async function liftReapplyDelay(application: Application, reviewer: Reviewer): Promise<ReviewResult> {
+  if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
+  if (application.status !== "refusee") return { error: "Seule une candidature refusée a un délai." };
+  if (application.reapplyLiftedAt) return { error: "Le délai est déjà levé." };
+  const updated = await transition(application, ["refusee"], { reapplyLiftedAt: new Date() });
+  if (!updated) return CHANGED;
+  // Délai gardé après une ancienne suppression de compte : levé lui aussi.
+  await db().delete(schema.reapplyLocks).where(eq(schema.reapplyLocks.discordId, application.userId));
+  await logEvent({ type: "candidature.delai_leve", subjectId: application.userId, actorId: reviewer.id });
+  await notify(application.userId, NOTIFICATIONS.delaiLeve());
+  const warnings: string[] = [];
+  await discord("Message privé", warnings, () => sendDirectMessage(application.userId, { embeds: [DIRECT_MESSAGES.delaiLeve({ url: `${SITE_URL}/portail` })] }));
+  return { ok: true, warnings };
+}
+
+/** Refus annulé par un admin : la candidature revient « à traiter », comme si elle venait d'être envoyée. */
+export async function reopenRefused(application: Application, reviewer: Reviewer): Promise<ReviewResult> {
+  if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
+  if (application.status !== "refusee") return { error: "Seule une candidature refusée peut être rouverte." };
+  if (await getOpenApplication(application.userId)) return { error: "Ce joueur a déjà commencé une nouvelle candidature : efface-la d'abord." };
+  const updated = await transition(application, ["refusee"], {
+    status: "envoyee",
+    reviewerId: reviewer.id,
+    refusalCriteria: null,
+    refusalComment: null,
+    decidedAt: null,
+    reapplyLiftedAt: null,
+    viewedAt: null,
+  });
+  if (!updated) return CHANGED;
+  await logEvent({ type: "candidature.rouverte", subjectId: application.userId, actorId: reviewer.id });
+  await notify(application.userId, NOTIFICATIONS.rouverte());
+  const warnings: string[] = [];
+  await discord("Message privé", warnings, () => sendDirectMessage(application.userId, { embeds: [DIRECT_MESSAGES.rouverte()] }));
   return { ok: true, warnings };
 }
 

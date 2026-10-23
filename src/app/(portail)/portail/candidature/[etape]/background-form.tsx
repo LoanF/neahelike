@@ -6,10 +6,11 @@ import styles from "../candidature.module.css";
 import { Guide } from "./guide";
 import { LinkFields } from "./link-fields";
 import { StepFooter } from "./step-footer";
+import type { StepChannel } from "./use-step-form";
 import { useStepForm } from "./use-step-form";
 
-export function BackgroundForm({ initial, backHref }: { initial: StepValues; backHref?: string }) {
-  const form = useStepForm("background", { shared: false, ...initial });
+export function BackgroundForm({ initial, backHref, channel }: { initial: StepValues; backHref?: string; channel?: StepChannel }) {
+  const form = useStepForm("background", { shared: false, ...initial }, channel);
   return (
     <form
       className={styles.form}

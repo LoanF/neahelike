@@ -13,11 +13,12 @@ type Embed = { title: string; description: string; color: number; fields?: { nam
 const footer = { text: "Néa Hélikè · Portail whitelist" };
 
 export const DIRECT_MESSAGES = {
-  validee: (): Embed => ({
+  validee: (session: string): Embed => ({
     title: "Candidature validée",
     description:
-      "Ta candidature écrite à Néa Hélikè est validée.\n\nTu as reçu le rôle **attente de wl** : rejoins un salon d'attente vocal sur le Discord pour passer ton entretien.",
+      "Ta candidature écrite à Néa Hélikè est validée.\n\nTu as reçu le rôle **attente de wl** : rejoins un salon d'attente vocal sur le Discord pendant la prochaine session de whitelist pour passer ton entretien.",
     color: EMBED_COLOR,
+    fields: [{ name: "Prochaine session de whitelist", value: session.charAt(0).toUpperCase() + session.slice(1) + " (heure de Paris)" }],
     footer,
   }),
   modification: ({ steps, comment, url }: { steps: string[]; comment: string; url: string }): Embed => ({
@@ -58,6 +59,52 @@ export const DIRECT_MESSAGES = {
     description: "Tu es blacklist de Néa Hélikè : tu es banni du Discord et tu n'as plus accès au portail.",
     color: EMBED_DANGER,
     fields: reason ? [{ name: "Raison", value: reason.slice(0, 1000) }] : [],
+    footer,
+  }),
+  delaiLeve: ({ url }: { url: string }): Embed => ({
+    title: "Délai levé",
+    description: `L'équipe de Néa Hélikè a levé ton délai de 3 mois : tu peux déposer une nouvelle candidature dès maintenant sur le portail : ${url}`,
+    color: EMBED_COLOR,
+    footer,
+  }),
+  rouverte: (): Embed => ({
+    title: "Candidature rouverte",
+    description: "L'équipe de Néa Hélikè a annulé le refus de ta candidature : elle est de nouveau en cours de lecture. Tu seras prévenu ici de la suite.",
+    color: EMBED_COLOR,
+    footer,
+  }),
+  dossierAccepte: ({ target, comment }: { target: string; comment: string }): Embed => ({
+    title: "Dossier de reprise accepté",
+    description: `L'équipe de Néa Hélikè a accepté ton dossier de reprise : **${target}**.`,
+    color: EMBED_SUCCESS,
+    fields: comment ? [{ name: "Message de l'équipe", value: comment.slice(0, 1000) }] : [],
+    footer,
+  }),
+  dossierRefuse: ({ target, comment }: { target: string; comment: string }): Embed => ({
+    title: "Dossier de reprise refusé",
+    description: `L'équipe de Néa Hélikè a refusé ton dossier de reprise : **${target}**. Tu peux en déposer un autre depuis le portail.`,
+    color: EMBED_DANGER,
+    fields: comment ? [{ name: "Message de l'équipe", value: comment.slice(0, 1000) }] : [],
+    footer,
+  }),
+  wipeInvitation: ({ url }: { url: string }): Embed => ({
+    title: "Wipe de personnage",
+    description: `Un admin de Néa Hélikè t'invite à refaire ton personnage. Remplis ton nouveau personnage et son background sur le portail, puis envoie ta demande : ${url}\n\nTa partie HRP ne change pas.`,
+    color: EMBED_COLOR,
+    footer,
+  }),
+  wipeAcceptee: ({ comment }: { comment: string }): Embed => ({
+    title: "Wipe accepté",
+    description: "Ton wipe est accepté : ton nouveau personnage remplace l'ancien. Bon jeu à Néa Hélikè.",
+    color: EMBED_SUCCESS,
+    fields: comment ? [{ name: "Message de l'équipe", value: comment.slice(0, 1000) }] : [],
+    footer,
+  }),
+  wipeRefusee: ({ comment }: { comment: string }): Embed => ({
+    title: "Wipe refusé",
+    description: "Un admin a refusé ta demande de wipe : ton personnage actuel reste.",
+    color: EMBED_DANGER,
+    fields: comment ? [{ name: "Message de l'équipe", value: comment.slice(0, 1000) }] : [],
     footer,
   }),
   whitelistee: (): Embed => ({

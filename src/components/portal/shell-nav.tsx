@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, BookOpen, Briefcase, FileStack, HelpCircle, History, KeyRound, LayoutDashboard, ListX, Menu, Scale, ScrollText, Sparkles, UserRound, Users, X } from "lucide-react";
+import { BarChart3, BookOpen, Briefcase, Eraser, FileStack, HelpCircle, History, KeyRound, LayoutDashboard, ListX, Menu, Scale, ScrollText, Sparkles, UserRound, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -19,13 +19,17 @@ const PORTAL_LINKS = [
 ];
 
 // « Joueurs » reste sélectionné sur les fiches (/equipe/joueurs/…), pas sur les pages d'administration.
-const TEAM_LINKS = [{ href: "/equipe", label: "Joueurs", icon: Users, exact: true, also: "/equipe/joueurs/" }];
+const TEAM_LINKS = [
+  { href: "/equipe", label: "Joueurs", icon: Users, exact: true, also: "/equipe/joueurs/" },
+  { href: "/equipe/dossiers", label: "Dossiers de reprise", icon: FileStack },
+];
 
 /** Administration : réservée aux admins ; les rôles et permissions aux owners. */
 const ADMIN_LINKS = [
   { href: "/equipe/factions", label: "Affinités et créatures", icon: Sparkles },
   { href: "/equipe/reprises", label: "Entreprises", icon: Briefcase },
   { href: "/equipe/criteres", label: "Critères de refus", icon: ListX },
+  { href: "/equipe/wipes", label: "Wipes", icon: Eraser },
   { href: "/equipe/journal", label: "Journal", icon: History },
   { href: "/equipe/statistiques", label: "Statistiques", icon: BarChart3 },
 ];

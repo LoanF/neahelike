@@ -134,6 +134,13 @@
       "when": 1792765283084,
       "tag": "0018_roles_joueur_enregistres",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792784053786,
+      "tag": "0019_sessions_wl_dossiers_et_wipe",
+      "breakpoints": true
     }
   ]
 }

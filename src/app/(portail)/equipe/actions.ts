@@ -8,11 +8,12 @@ import type { NoteVisibility } from "@/db/schema";
 import { getBlacklistEntry } from "@/lib/blacklist";
 import { isDiscordId } from "@/lib/discord";
 import type { ReviewResult } from "@/lib/review";
-import { addNote, blacklistPlayer, deleteNote, deletePlayerAccount, liftBlacklist, refuse, requestChanges, revokeWhitelist, validateInterview, validateWritten, wipeApplication } from "@/lib/review";
+import { addNote, blacklistPlayer, deleteNote, deletePlayerAccount, liftBlacklist, liftReapplyDelay, refuse, reopenRefused, requestChanges, revokeWhitelist, validateInterview, validateWritten, wipeApplication } from "@/lib/review";
 import { RATE_LIMIT_MESSAGE, rateLimit } from "@/lib/rate-limit";
 import { freshActor, hasRank, requireUser } from "@/lib/session";
 import type { Viewer } from "@/lib/team";
 import { leavePresence, presenceFor, touchPresence } from "@/lib/team";
+import { parseWlSlot } from "@/lib/wl-session";
 
 export async function heartbeat(subjectId: string): Promise<Viewer[]> {
   const user = await requireUser({ rank: "recruteur" });
@@ -39,12 +40,15 @@ export async function presenceSnapshot(subjectIds: string[]): Promise<Record<str
 
 export type DecisionState = (ReviewResult & { at: number }) | null;
 
+/** Décisions réservées aux admins, possibles même sur un joueur blacklisté. */
+const ADMIN_DECISIONS = ["supprimer", "lever", "rouvrir"];
+
 /** Formulaire de décision de la fiche joueur (un seul point d'entrée, l'action est dans le champ `decision`). */
 export async function decide(_previous: DecisionState, formData: FormData): Promise<DecisionState> {
   const decision = String(formData.get("decision"));
   const subjectId = String(formData.get("subjectId"));
   const applicationId = String(formData.get("applicationId"));
-  const reviewer = await freshActor(decision === "supprimer" ? "admin" : "recruteur");
+  const reviewer = await freshActor(ADMIN_DECISIONS.includes(decision) ? "admin" : "recruteur");
   if (!reviewer) return { error: "Tes permissions ont changé : recharge la page.", at: Date.now() };
   if (!(await rateLimit("decision", reviewer.id))) return { error: RATE_LIMIT_MESSAGE, at: Date.now() };
 
@@ -52,14 +56,16 @@ export async function decide(_previous: DecisionState, formData: FormData): Prom
   if (!application || application.userId !== subjectId) return { error: "Candidature introuvable : recharge la fiche.", at: Date.now() };
   // Seul un owner décide de sa propre candidature ; personne ne fait avancer celle d'un joueur blacklisté.
   if (subjectId === reviewer.id && !hasRank(reviewer, "owner")) return { error: "Tu ne peux pas décider de ta propre candidature.", at: Date.now() };
-  if (decision !== "supprimer" && (await getBlacklistEntry(subjectId))) return { error: "Ce joueur est blacklisté : lève d'abord la blacklist.", at: Date.now() };
+  if (!ADMIN_DECISIONS.includes(decision) && (await getBlacklistEntry(subjectId))) return { error: "Ce joueur est blacklisté : lève d'abord la blacklist.", at: Date.now() };
 
   const comment = String(formData.get("comment") ?? "");
   let result: ReviewResult;
   switch (decision) {
-    case "valider":
-      result = await validateWritten(application, reviewer);
+    case "valider": {
+      const slot = parseWlSlot(String(formData.get("sessionDate") ?? ""), String(formData.get("sessionFrom") ?? ""), String(formData.get("sessionTo") ?? ""));
+      result = "error" in slot ? slot : await validateWritten(application, reviewer, slot);
       break;
+    }
     case "modifier":
       result = await requestChanges(application, reviewer, formData.getAll("steps").map(String), comment);
       break;
@@ -71,6 +77,12 @@ export async function decide(_previous: DecisionState, formData: FormData): Prom
       break;
     case "supprimer":
       result = await wipeApplication(application, reviewer);
+      break;
+    case "lever":
+      result = await liftReapplyDelay(application, reviewer);
+      break;
+    case "rouvrir":
+      result = await reopenRefused(application, reviewer);
       break;
     default:
       result = { error: "Action inconnue." };

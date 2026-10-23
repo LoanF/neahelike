@@ -5,8 +5,7 @@ import { PortalHeader } from "@/components/portal/shell";
 import type { StepId } from "@/lib/application";
 import { canAccessStep, currentStep, isStepId, previousStep, STEPS, stepHref, visibleSteps } from "@/lib/application";
 import { getOpenApplication, isEditable } from "@/lib/applications";
-import { getBusinesses, takeoverNames } from "@/lib/businesses";
-import { getFactions } from "@/lib/factions";
+import { takeoverNames } from "@/lib/businesses";
 import { requireUser } from "@/lib/session";
 import { ChangesNotice } from "../changes-notice";
 import { ApplicationRecap } from "../recap";
@@ -14,6 +13,7 @@ import { Stepper } from "../stepper";
 import styles from "../candidature.module.css";
 import { BackgroundForm } from "./background-form";
 import type { Choice } from "./choice-grid";
+import { formChoices } from "./choices";
 import { DossierForm } from "./dossier-form";
 import { HrpForm } from "./hrp-form";
 import { RpForm } from "./rp-form";
@@ -21,7 +21,6 @@ import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { SendForm } from "./send-form";
 
 export const metadata: Metadata = { title: "Candidature" };
-
 
 /** Erreurs d'envoi, par code (l'adresse ne transporte jamais de texte libre). */
 const SEND_ERRORS: Record<string, string> = {
@@ -45,18 +44,7 @@ export default async function StepPage({ params, searchParams }: { params: Promi
   const previous = previousStep(application, etape);
   const backHref = previous ? stepHref(previous) : undefined;
 
-  // Places closes : lues côté serveur à chaque affichage.
-  const [{ affinities: affinityList, creatures: creatureList }, businessList, names] = await Promise.all([getFactions(), getBusinesses(), takeoverNames()]);
-  const affinityChoice = (item: (typeof affinityList)[number]) => ({ id: item.id, name: item.name, meta: `${item.god} · ${item.element}`, emblem: item.emblem });
-  const creatureChoice = (item: (typeof creatureList)[number]) => ({ id: item.id, name: item.name, meta: item.originShort, emblem: item.emblem });
-  // Rejoindre : « places closes ». Reprendre un lead ou une entreprise : « déjà repris ».
-  const affinities: Choice[] = affinityList.map(item => ({ ...affinityChoice(item), closed: !item.joinOpen }));
-  const creatures: Choice[] = creatureList.map(item => ({ ...creatureChoice(item), closed: !item.joinOpen }));
-  const leads = {
-    affinite: affinityList.map(item => ({ ...affinityChoice(item), closed: !item.leadOpen })),
-    creature: creatureList.map(item => ({ ...creatureChoice(item), closed: !item.leadOpen })),
-    entreprise: businessList.map(item => ({ id: item.id, name: item.name, meta: item.description, emblem: "coin" as const, closed: !item.open })),
-  };
+  const [{ affinities, creatures, leads }, names] = await Promise.all([formChoices(), takeoverNames()]);
 
   return (
     <>

@@ -13,7 +13,7 @@
   padding: 0;
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--nh-grid-gap);
 }
 
@@ -222,4 +222,13 @@
     grid-column: 1 / -1;
     grid-row: 2;
   }
+}
+
+/* Nombre de whitelist : la première tuile, mise en avant. */
+.tileHighlight {
+  box-shadow: var(--nh-rim), inset 0 0 0 1px var(--nh-gold-deep);
+}
+
+.tileHighlight .tileValue {
+  color: var(--nh-gold-lit);
 }

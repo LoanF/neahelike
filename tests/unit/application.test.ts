@@ -12,7 +12,7 @@ import {
 
 // Valeurs telles qu'enregistrées par le formulaire : des chaînes et des cases.
 const HRP = { age: "24", rpHours: "300", experience: "Deux ans de RP whitelist.", goodMic: true, wantsDossier: false };
-const RP = { firstName: "Eudoxie", lastName: "Lykaina", age: "30", origin: "Née au-dessus du port.", affinity: "", creature: "harpies" };
+const RP = { firstName: "Eudoxie", lastName: "Lykaina", age: "30", affinity: "", creature: "harpies" };
 const BACKGROUND = { url: "https://docs.google.com/document/d/x", shared: true };
 const DOSSIER = { kind: "entreprise", target: "nouvelle", targetName: "Les bains d'Asclépios", url: "https://www.canva.com/design/x", shared: true };
 

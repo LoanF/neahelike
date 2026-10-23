@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, PinCheckbox, TextAreaField } from "@/components/plaque";
+import { Button, PinCheckbox, TextAreaField, TextField } from "@/components/plaque";
 import { useActionForm } from "@/components/use-action-form";
 import type { ApplicationStatus } from "@/db/schema";
 import type { DecisionState } from "../../actions";
 import { decide } from "../../actions";
 import styles from "./fiche.module.css";
 
-type Mode = "valider" | "modifier" | "refuser" | "entretien" | "supprimer";
+type Mode = "valider" | "modifier" | "refuser" | "entretien" | "supprimer" | "lever" | "rouvrir";
 
 interface DecisionPanelProps {
   subjectId: string;
@@ -19,13 +19,19 @@ interface DecisionPanelProps {
   steps: { id: string; label: string }[];
   /** Critères de refus actifs (administration). */
   criteria: { id: string; label: string }[];
+  /** Session de whitelist annoncée au joueur, pendant l'entretien. */
+  session?: string | null;
+  /** Refus : délai de 3 mois déjà levé par un admin. */
+  reapplyLifted?: boolean;
 }
 
 const CONFIRM: Record<Mode, { label: string; text: string; variant: "primary" | "danger" }> = {
-  valider: { label: "Confirmer la validation", text: "Le joueur reçoit le rôle « attente de wl » et un message privé l'invite à passer son entretien vocal.", variant: "primary" },
+  valider: { label: "Confirmer la validation", text: "Le joueur reçoit le rôle « attente de wl » et un message privé avec la date de la prochaine session de whitelist.", variant: "primary" },
   entretien: { label: "Confirmer la whitelist", text: "Le joueur reçoit le rôle « Magistrat (wl) », perd « attente de wl » et reçoit un message privé.", variant: "primary" },
   modifier: { label: "Envoyer la demande", text: "Seules les parties cochées se rouvrent. Le joueur reçoit ton message en privé.", variant: "primary" },
   refuser: { label: "Confirmer le refus", text: "Le joueur reçoit les critères en privé. Il pourra recandidater dans 3 mois.", variant: "danger" },
+  lever: { label: "Lever le délai", text: "Le refus reste dans l'historique, mais le joueur peut déposer une nouvelle candidature tout de suite. Il est prévenu en privé.", variant: "primary" },
+  rouvrir: { label: "Rouvrir la candidature", text: "Le refus est annulé : la candidature revient « à traiter », comme si elle venait d'être envoyée. Le joueur est prévenu en privé.", variant: "primary" },
   supprimer: { label: "Effacer définitivement", text: "La candidature est effacée sans délai : le joueur peut en recommencer une tout de suite.", variant: "danger" },
 };
 
@@ -38,7 +44,7 @@ function Submit({ mode, pending }: { mode: Mode; pending: boolean }) {
 }
 
 /** Actions de l'équipe sur une candidature, chacune avec une étape de confirmation. */
-export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps, criteria }: DecisionPanelProps) {
+export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps, criteria, session, reapplyLifted }: DecisionPanelProps) {
   const [state, onSubmit, pending] = useActionForm<DecisionState>(decide, null);
   const [mode, setMode] = useState<Mode | null>(null);
 
@@ -59,15 +65,23 @@ export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps
     choices.push({ mode: "valider", label: "Valider sans attendre", variant: "primary" });
     choices.push({ mode: "refuser", label: "Refuser", variant: "danger" });
   }
+  if (isAdmin && status === "refusee") {
+    choices.push({ mode: "rouvrir", label: "Rouvrir la candidature", variant: "primary" });
+    if (!reapplyLifted) choices.push({ mode: "lever", label: "Lever le délai de 3 mois", variant: "primary" });
+  }
   if (isAdmin) choices.push({ mode: "supprimer", label: "Effacer la candidature", variant: "primary" });
 
   const waiting =
     status === "brouillon" || status === "a_modifier"
       ? "En attente du joueur : la candidature n'est pas encore envoyée."
-      : status === "whitelistee"
+      : status === "entretien" && session
+        ? `Session de whitelist annoncée : ${session} (heure de Paris).`
+        : status === "whitelistee"
         ? "Joueur whitelist."
         : status === "refusee"
-          ? "Candidature refusée."
+          ? reapplyLifted
+            ? "Candidature refusée. Délai levé : le joueur peut recandidater."
+            : "Candidature refusée."
           : null;
 
   return (
@@ -105,6 +119,7 @@ export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps
           <input type="hidden" name="applicationId" value={applicationId} />
           <p className={styles.confirmText}>{CONFIRM[mode].text}</p>
 
+          {mode === "valider" && <SessionFields />}
           {mode === "modifier" && (
             <fieldset className={styles.fieldset}>
               <legend>Parties à rouvrir</legend>
@@ -149,6 +164,24 @@ function CheckItem({ name, value, label }: { name: string; value: string; label:
     <PinCheckbox name={name} value={value} checked={checked} onChange={event => setChecked(event.target.checked)}>
       {label}
     </PinCheckbox>
+  );
+}
+
+/** Date et tranche horaire de la prochaine session de whitelist (heure de Paris). */
+function SessionFields() {
+  const [date, setDate] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Paris" });
+  return (
+    <fieldset className={styles.fieldset}>
+      <legend>Prochaine session de whitelist</legend>
+      <TextField type="date" name="sessionDate" label="Date" required min={today} value={date} onChange={event => setDate(event.target.value)} className={styles.slotField} />
+      <div className={styles.slotRow}>
+        <TextField type="time" name="sessionFrom" label="De" required value={from} onChange={event => setFrom(event.target.value)} className={styles.slotField} />
+        <TextField type="time" name="sessionTo" label="À" required value={to} onChange={event => setTo(event.target.value)} className={styles.slotField} hint="Heure de Paris" />
+      </div>
+    </fieldset>
   );
 }
 

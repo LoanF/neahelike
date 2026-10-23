@@ -240,6 +240,9 @@ src/
 │   ├── notifications.ts        Cloche du portail
 │   ├── events.ts               Journal des actions
 │   ├── stats.ts                Statistiques
+│   ├── takeovers.ts            Dossiers de reprise déposés à part
+│   ├── wipes.ts                Wipes de personnage
+│   ├── wl-session.ts           Créneau de la session de whitelist (heure de Paris)
 │   ├── rate-limit.ts           Limite d'actions par minute
 │   └── site-url.ts  discord-cdn.ts
 ├── content/                    TOUS les textes du site (voir plus bas)
@@ -278,7 +281,9 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
 | Table | Contenu |
 |---|---|
 | `users` | Un compte par joueur connecté : ID Discord, pseudo, avatar, **rang** (`joueur`, `recruteur`, `admin`, `owner`), présence sur le serveur, date de dernière synchronisation des rôles, CGU acceptées (version) |
-| `applications` | Candidatures : statut, réponses de chaque étape en JSON (`hrp`, `rp`, `background`, `dossier`), étapes rouvertes, critères de refus, relecteur, dates. **Une seule candidature ouverte par joueur** (index unique partiel) |
+| `applications` | Candidatures : statut, réponses de chaque étape en JSON (`hrp`, `rp`, `background`, `dossier`), étapes rouvertes, critères de refus, relecteur, dates, créneau de la session de whitelist (`interview_slot_start/end`), délai de refus levé (`reapply_lifted_at`). **Une seule candidature ouverte par joueur** (index unique partiel) |
+| `takeover_dossiers` | Dossiers de reprise déposés **à part**, après une candidature partie sans dossier : contenu (mêmes champs que l'étape « dossier »), statut `brouillon` → `envoye` → `accepte` / `refuse`, message de l'équipe |
+| `wipe_requests` | Wipes de personnage : nouveau personnage (`rp`, `background`), statut `ouverte` → `envoyee` → `acceptee` / `refusee`, admin qui a invité le joueur, message de l'équipe |
 | `events` | Journal de toutes les actions (joueur et équipe). Conservé après la suppression d'un compte, mais anonymisé |
 | `team_notes` | Notes internes de l'équipe sur un joueur, visibles par toute l'équipe ou par les admins seulement |
 | `profile_views` | Présence en direct : qui consulte quelle fiche (l'« œil ») |
@@ -355,9 +360,10 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
   - `brouillon` : en cours de saisie ;
   - `envoyee` : à lire par l'équipe ;
   - `a_modifier` : l'équipe a demandé une modification, et seules les parties choisies se rouvrent ;
-  - `entretien` : écrit validé, rôle « attente de wl » donné, entretien vocal à passer ;
+  - `entretien` : écrit validé, rôle « attente de wl » donné, entretien vocal à passer pendant la **session de whitelist** choisie par le recruteur ;
   - `whitelistee` : rôle whitelist donné ;
-  - `refusee` : le joueur peut recandidater après **3 mois**.
+  - `refusee` : le joueur peut recandidater après **3 mois**, sauf si un admin lève le délai.
+- Le personnage n'a plus de champ « Origine » : l'histoire est dans le background. Les anciennes réponses qui en avaient une sont simplement ignorées.
 - Le contenu proposé (affinités, créatures, entreprises) vient de l'administration. Une place fermée ne peut pas être choisie, et le serveur le revérifie à l'envoi.
 
 ### Dossier de reprise
@@ -365,19 +371,23 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
 - Le joueur peut demander à reprendre une **entreprise** (existante, ou nouvelle avec son nom), ou le **lead d'une affinité ou d'une créature**.
 - La page `/portail/dossier` présente tout ce qui peut être repris, avec la mention « Disponible » ou « Repris ».
 - Le dossier lui-même est un lien vers un document, déposé comme étape de la candidature.
+- **Dossier à part** (`lib/takeovers.ts`) : un joueur dont la candidature est partie sans dossier (envoyée, en entretien, ou déjà whitelist) peut en déposer un depuis `/portail/dossier` (bouton « Déposer un dossier de reprise »). Le brouillon s'enregistre au fil de la saisie. Une fois envoyé, il arrive dans *Équipe › Dossiers de reprise* (`/equipe/dossiers`) et sur la fiche du joueur : un recruteur ou plus l'accepte ou le refuse (message obligatoire pour un refus). Le joueur reçoit un MP et une notification.
 
 ### Espace équipe
 
+- **Nombre de whitelist** : affiché en grand en tête de la liste des joueurs (clic : onglet Whitelist) et en première tuile des statistiques.
 - **Liste des joueurs** (`/equipe`) : onglets À traiter, Entretiens, Modifications, Brouillons, Whitelist, Refusées (dont les whitelists retirées), Blacklist, Tous. Recherche par ID Discord, pseudo, prénom ou nom RP. La liste se rafraîchit toutes les 10 s.
 - **Fiche joueur** : candidature complète, dossier de reprise mis en avant, chronologie de toutes les actions. Un « œil » animé indique quand un autre membre consulte la fiche (signal envoyé toutes les 10 s, table `profile_views`).
 - **Décisions** (`lib/review.ts`) :
 
   | Décision | Rôle Discord | Message privé | Notification portail |
   |---|---|---|---|
-  | Valider l'écrit | « attente de wl » donné | oui | oui |
+  | Valider l'écrit (**date et tranche horaire de la prochaine session de whitelist obligatoires**, heure de Paris) | « attente de wl » donné | oui, avec la session | oui, avec la session |
   | Demander une modification (parties à rouvrir, message) | aucun | oui | oui |
   | Refuser (critères, commentaire) | aucun | oui, avec la date à partir de laquelle il peut recandidater | oui |
   | Valider l'entretien | whitelist donné, « attente de wl » retiré | oui | oui |
+  | Lever le délai de 3 mois (admin, sur un refus) | aucun | oui | oui |
+  | Rouvrir la candidature (admin, sur un refus : elle revient « à traiter ») | aucun | oui | oui |
 
   Chaque décision est vérifiée côté serveur : bon statut, bon rang, et une décision prise par un autre membre entre-temps est détectée. Les textes des MP sont dans `src/content/equipe.ts`.
 - **Notes internes** : jamais visibles par le joueur. Un recruteur écrit pour toute l'équipe. Un admin peut réserver une note aux admins. Un recruteur ne supprime que ses propres notes.
@@ -403,6 +413,7 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
 - **Critères de refus** (`/equipe/criteres`) : ajout, renommage, désactivation, ordre.
 - **Journal** (`/equipe/journal`) : toutes les actions, filtrables par type, membre et période.
 - **Statistiques** (`/equipe/statistiques`) : candidatures, délais de traitement, répartition des personnages, décisions par membre.
+- **Wipes** (`/equipe/wipes`, admins et owners, `lib/wipes.ts`) : après accord sur un ticket Discord, le joueur whitelist remplit un **nouveau personnage** (étapes Personnage et Background, jamais le HRP) sur `/portail/wipe`. Il peut commencer de lui-même, ou un admin l'invite depuis cet onglet (joueur choisi dans la liste des whitelist, ou par ID Discord : MP et notification avec le lien). L'onglet montre les demandes à valider (ancien et nouveau personnage côte à côte), celles en cours de saisie et les dernières décisions. **Validé** : le nouveau personnage remplace l'ancien dans la candidature whitelist, sans autre relecture. **Refusé** : message obligatoire, l'ancien reste. Les wipes n'apparaissent jamais sur la fiche du joueur (seulement ici et dans le journal, filtre « Wipes »).
 - **Rôles et permissions** (`/equipe/roles`, owners uniquement) : chaque rôle du serveur Discord → joueur, recruteur ou admin. Ajout et retrait d'owners par ID Discord.
 
 Les pages publiques (accueil, lore) sont régénérées au plus tard 5 min après une modification, et aussitôt après un changement fait dans l'administration.

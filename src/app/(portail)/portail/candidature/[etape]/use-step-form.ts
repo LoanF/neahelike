@@ -4,7 +4,21 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import type { StepValues } from "@/db/schema";
 import type { DataStepId, FieldErrors } from "@/lib/application";
+import { autosaveDossier, sendDossier } from "../../dossier/actions";
+import { autosaveWipeStep, submitWipeStep } from "../../wipe/actions";
 import { autosaveStep, submitStep } from "../actions";
+
+/**
+ * Où vont les réponses : la candidature, un dossier de reprise déposé à part, ou un wipe de personnage.
+ * Les mêmes formulaires d'étape servent aux trois.
+ */
+const CHANNELS = {
+  candidature: { autosave: autosaveStep, submit: submitStep },
+  dossier: { autosave: autosaveDossier, submit: sendDossier },
+  wipe: { autosave: autosaveWipeStep, submit: submitWipeStep },
+};
+
+export type StepChannel = keyof typeof CHANNELS;
 
 export type SaveState = "idle" | "pending" | "saved" | "error";
 
@@ -15,7 +29,7 @@ const AUTOSAVE_DELAY = 1200;
  * État d'un formulaire d'étape : enregistrement automatique du brouillon pendant la saisie,
  * validation par le serveur au clic sur « Suivant ».
  */
-export function useStepForm(step: DataStepId, initial: StepValues) {
+export function useStepForm(step: DataStepId, initial: StepValues, channel: StepChannel = "candidature") {
   const router = useRouter();
   const [values, setValues] = useState(initial);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -32,7 +46,7 @@ export function useStepForm(step: DataStepId, initial: StepValues) {
     dirty.current = false;
     setSave("pending");
     try {
-      const result = await autosaveStep(step, latest.current);
+      const result = await CHANNELS[channel].autosave(step, latest.current);
       if ("error" in result) throw new Error(result.error);
       setSave("saved");
       setSavedAt(new Date());
@@ -42,7 +56,7 @@ export function useStepForm(step: DataStepId, initial: StepValues) {
       setSave("error");
       return false;
     }
-  }, [step]);
+  }, [step, channel]);
 
   const set = useCallback(
     (field: string, value: string | boolean | null) => {
@@ -77,7 +91,7 @@ export function useStepForm(step: DataStepId, initial: StepValues) {
     startTransition(async () => {
       window.clearTimeout(timer.current);
       dirty.current = false;
-      const result = await submitStep(step, latest.current);
+      const result = await CHANNELS[channel].submit(step, latest.current);
       if ("errors" in result) {
         setErrors(result.errors);
         setSave("saved");

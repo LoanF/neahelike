@@ -256,3 +256,38 @@
     max-width: none;
   }
 }
+
+/* Nombre de whitelist sur le serveur, en tête de l'espace équipe. */
+.wlCount {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: var(--nh-radius);
+  text-decoration: none;
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket), inset 0 0 0 1px var(--nh-gold-deep);
+}
+
+.wlCount:hover .wlCountLabel {
+  color: var(--nh-gold-lit);
+}
+
+.wlCount:focus-visible {
+  outline: 2px solid var(--nh-gold);
+  outline-offset: 2px;
+}
+
+.wlCountValue {
+  font-family: var(--nh-font-title);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--nh-gold-lit);
+  text-shadow: 0 2px 0 #000;
+  font-variant-numeric: tabular-nums;
+}
+
+.wlCountLabel {
+  font-size: 14px;
+  color: var(--nh-parchment-dim);
+}

@@ -533,3 +533,81 @@
 .pager a {
   color: var(--nh-gold-lit);
 }
+
+/* ---------- Liste déroulante (même habillage que les champs de texte) ---------- */
+
+.selectField {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  font-size: 15px;
+  color: var(--nh-parchment);
+}
+
+.select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  font: inherit;
+  color: var(--nh-parchment);
+  background: var(--nh-bronze-deep);
+  border: 0;
+  border-radius: var(--nh-radius);
+  box-shadow: var(--nh-socket);
+  color-scheme: dark;
+}
+
+.select:focus {
+  outline: none;
+  box-shadow: var(--nh-socket-focus);
+}
+
+/* ---------- Wipes ---------- */
+
+.compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.compareCol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: var(--nh-radius);
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket);
+}
+
+.compareCol h4 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--nh-parchment-dim);
+}
+
+.compareCol strong {
+  color: var(--nh-gold-lit);
+}
+
+.request {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 0;
+  border-top: 1px solid rgb(143 111 44 / .35);
+}
+
+.request:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+@media (max-width: 760px) {
+  .compare {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

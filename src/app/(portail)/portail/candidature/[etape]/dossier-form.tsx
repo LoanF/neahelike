@@ -9,6 +9,7 @@ import { ChoiceGrid } from "./choice-grid";
 import { Guide } from "./guide";
 import { LinkFields } from "./link-fields";
 import { StepFooter } from "./step-footer";
+import type { StepChannel } from "./use-step-form";
 import { text, useStepForm } from "./use-step-form";
 
 interface DossierFormProps {
@@ -16,12 +17,15 @@ interface DossierFormProps {
   /** Ce qui peut être repris, avec sa disponibilité, par type de dossier. */
   leads: { affinite: Choice[]; creature: Choice[]; entreprise: Choice[] };
   backHref?: string;
+  /** Candidature (par défaut) ou dossier déposé à part, envoyé directement à l'équipe. */
+  channel?: StepChannel;
+  submitLabel?: string;
 }
 
 const NEW_BUSINESS_CHOICE: Choice = { id: NEW_BUSINESS, name: "Une nouvelle entreprise", meta: "Elle n'existe pas encore : tu la proposes." };
 
-export function DossierForm({ initial, leads, backHref }: DossierFormProps) {
-  const form = useStepForm("dossier", { kind: "", target: "", targetName: "", shared: false, ...initial });
+export function DossierForm({ initial, leads, backHref, channel, submitLabel }: DossierFormProps) {
+  const form = useStepForm("dossier", { kind: "", target: "", targetName: "", shared: false, ...initial }, channel);
   const { values, set, errors } = form;
   const kind = text(values, "kind");
 
@@ -74,7 +78,7 @@ export function DossierForm({ initial, leads, backHref }: DossierFormProps) {
       )}
 
       <LinkFields form={form} label="Lien vers ton dossier" />
-      <StepFooter form={form} backHref={backHref} />
+      <StepFooter form={form} backHref={backHref} submitLabel={submitLabel} />
     </form>
   );
 }

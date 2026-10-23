@@ -52,9 +52,10 @@ export default async function StatistiquesPage() {
   const maxWeek = Math.max(1, ...weeks.map(week => week.count));
 
   const tiles = [
+    { label: "Whitelist sur le serveur", value: String(totals.whitelisted), note: "Joueurs whitelist aujourd'hui", highlight: true },
     { label: "Candidatures envoyées", value: String(totals.submitted), note: `${totals.accounts} comptes liés` },
     { label: "À lire", value: String(totals.toRead), note: "Envoyées, sans décision" },
-    { label: "Entretiens à passer", value: String(totals.interviews), note: `${totals.whitelisted} whitelist` },
+    { label: "Entretiens à passer", value: String(totals.interviews), note: "Écrit validé, en attente de l'entretien vocal" },
     { label: "Taux de validation", value: totals.validationRate === null ? "—" : `${Math.round(totals.validationRate * 100)} %`, note: "Écrits validés sur décisions finales" },
     { label: "Délai de traitement", value: duration(totals.averageHours), note: "En moyenne, de l'envoi à la décision" },
   ];
@@ -68,7 +69,7 @@ export default async function StatistiquesPage() {
         <ul className={styles.tiles}>
           {tiles.map(tile => (
             <li key={tile.label}>
-              <Plaque rivets="none" className={styles.tile}>
+              <Plaque rivets="none" className={"highlight" in tile ? `${styles.tile} ${styles.tileHighlight}` : styles.tile}>
                 <span className={styles.tileLabel}>{tile.label}</span>
                 <span className={styles.tileValue}>{tile.value}</span>
                 <span className={styles.tileNote}>{tile.note}</span>

@@ -17,6 +17,7 @@ const FILTER_LABEL: Record<JournalFilter, string> = {
   comptes: "Comptes",
   notes: "Notes",
   administration: "Administration",
+  wipes: "Wipes",
 };
 
 const PERIODS = [

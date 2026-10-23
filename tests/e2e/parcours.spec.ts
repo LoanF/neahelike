@@ -49,7 +49,6 @@ test("le joueur remplit et envoie sa candidature", async ({ browser }) => {
   await page.getByRole("textbox", { name: "Prénom", exact: true }).fill("Eudoxie");
   await page.getByRole("textbox", { name: "Nom", exact: true }).fill("Lykaina");
   await page.getByRole("textbox", { name: "Âge du personnage", exact: true }).fill("30");
-  await page.getByRole("textbox", { name: "Origine du personnage", exact: true }).fill("Née dans les falaises au-dessus du port.");
   await page.getByText("Aucune affinité").click();
   await page.getByText("Humain", { exact: true }).click();
   await next(page, /\/candidature\/background$/);
@@ -106,10 +105,20 @@ test("le recruteur valide l'écrit puis l'entretien vocal", async ({ browser }) 
   await expect(page.getByText("e2e-corrige")).toBeVisible();
 
   await page.getByRole("button", { name: "Valider la candidature" }).click();
+  // Sans date de session : refusé, le recruteur doit la choisir.
+  await page.getByRole("button", { name: "Confirmer la validation" }).click();
+  await expect(page.getByText("Indique la date et les heures de la prochaine session de whitelist.")).toBeVisible();
+  const nextWeek = new Date(Date.now() + 7 * 86_400_000).toLocaleDateString("en-CA", { timeZone: "Europe/Paris" });
+  await page.getByLabel(/^Date/).fill(nextWeek);
+  await page.getByLabel(/^De/).fill("21:00");
+  await page.getByLabel(/^À/).fill("23:00");
   await page.getByRole("button", { name: "Confirmer la validation" }).click();
   await expect(page.getByText("Décision enregistrée.")).toBeVisible();
+  const validated = (await messagesTo(PLAYER.id)).map(message => JSON.stringify(message));
+  expect(validated.some(message => message.includes("Prochaine session de whitelist") && message.includes("de 21 h 00 à 23 h 00"))).toBe(true);
 
   await page.reload();
+  await expect(page.getByText(/Session de whitelist annoncée : .*de 21 h 00 à 23 h 00/)).toBeVisible();
   await page.getByRole("button", { name: "Valider l'entretien vocal" }).click();
   await page.getByRole("button", { name: "Confirmer la whitelist" }).click();
   await expect(page.getByText("Décision enregistrée.")).toBeVisible();

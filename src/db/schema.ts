@@ -93,6 +93,11 @@ export const applications = pgTable(
     whitelistRevokedAt: timestamp({ withTimezone: true }),
     whitelistRevokedById: text().references(() => users.id, { onDelete: "set null" }),
     whitelistRevokeReason: text(),
+    /** Validation écrite : créneau de la prochaine session de whitelist, choisi par le recruteur et envoyé au joueur. */
+    interviewSlotStart: timestamp({ withTimezone: true }),
+    interviewSlotEnd: timestamp({ withTimezone: true }),
+    /** Refus : délai de recandidature levé par un admin, le joueur peut recommencer tout de suite. */
+    reapplyLiftedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
@@ -105,6 +110,79 @@ export const applications = pgTable(
 );
 
 export type Application = typeof applications.$inferSelect;
+
+/**
+ * Dossier de reprise déposé à part, après une candidature envoyée sans dossier :
+ * brouillon (en cours de saisie) → envoye → accepte ou refuse par l'équipe.
+ */
+export const takeoverStatus = pgEnum("takeover_status", ["brouillon", "envoye", "accepte", "refuse"]);
+export type TakeoverStatus = (typeof takeoverStatus.enumValues)[number];
+
+export const takeoverDossiers = pgTable(
+  "takeover_dossiers",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** Candidature à laquelle le dossier se rattache. */
+    applicationId: uuid().references(() => applications.id, { onDelete: "set null" }),
+    status: takeoverStatus().notNull().default("brouillon"),
+    /** Mêmes champs que l'étape « dossier » de la candidature (voir lib/application.ts). */
+    content: jsonb().$type<StepValues>(),
+    reviewerId: text().references(() => users.id, { onDelete: "set null" }),
+    /** Message de l'équipe au joueur, avec la décision. */
+    comment: text(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    submittedAt: timestamp({ withTimezone: true }),
+    decidedAt: timestamp({ withTimezone: true }),
+  },
+  table => [
+    index("takeover_dossiers_user_idx").on(table.userId, table.createdAt),
+    uniqueIndex("takeover_dossiers_user_open_idx")
+      .on(table.userId)
+      .where(sql`${table.status} in ('brouillon', 'envoye')`),
+  ],
+);
+
+export type TakeoverDossier = typeof takeoverDossiers.$inferSelect;
+
+/**
+ * Wipe de personnage (joueur whitelist) : ouverte (le joueur remplit son nouveau personnage, de lui-même ou invité
+ * par un admin) → envoyee → acceptee (le nouveau personnage remplace l'ancien) ou refusee.
+ * Visible seulement par les admins et owners (onglet Wipe), jamais sur la fiche du joueur.
+ */
+export const wipeStatus = pgEnum("wipe_status", ["ouverte", "envoyee", "acceptee", "refusee"]);
+export type WipeStatus = (typeof wipeStatus.enumValues)[number];
+
+export const wipeRequests = pgTable(
+  "wipe_requests",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: wipeStatus().notNull().default("ouverte"),
+    /** Nouveau personnage : mêmes champs que les étapes « rp » et « background » de la candidature. */
+    rp: jsonb().$type<StepValues>(),
+    background: jsonb().$type<StepValues>(),
+    /** Admin qui a invité le joueur à faire sa demande (null : demande du joueur lui-même). */
+    invitedById: text().references(() => users.id, { onDelete: "set null" }),
+    reviewerId: text().references(() => users.id, { onDelete: "set null" }),
+    comment: text(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    submittedAt: timestamp({ withTimezone: true }),
+    decidedAt: timestamp({ withTimezone: true }),
+  },
+  table => [
+    index("wipe_requests_user_idx").on(table.userId, table.createdAt),
+    uniqueIndex("wipe_requests_user_open_idx")
+      .on(table.userId)
+      .where(sql`${table.status} in ('ouverte', 'envoyee')`),
+  ],
+);
+
+export type WipeRequest = typeof wipeRequests.$inferSelect;
 
 /** `equipe` : recruteurs et admins ; `admin` : admins uniquement. */
 export const noteVisibility = pgEnum("note_visibility", ["equipe", "admin"]);

@@ -61,7 +61,7 @@ export function startBlock(latest: Application | null): StartBlock {
   if (!latest) return null;
   // Whitelist retirée par un admin : le joueur recommence de zéro, sans délai.
   if (latest.status === "whitelistee") return latest.whitelistRevokedAt ? null : { reason: "whitelistee" };
-  if (latest.status === "refusee") {
+  if (latest.status === "refusee" && !latest.reapplyLiftedAt) {
     const until = reapplyDate(latest);
     if (until && until > new Date()) return { reason: "delai", until };
   }
@@ -91,7 +91,7 @@ export async function startApplication(userId: string): Promise<Application | { 
   const open = await getOpenApplication(userId);
   if (open) return open;
   const block = await getStartBlock(userId);
-  if (block?.reason === "whitelistee") return { error: "Tu es déjà whitelisté." };
+  if (block?.reason === "whitelistee") return { error: "Tu es déjà whitelist." };
   if (block?.reason === "delai") return { error: `Tu pourras recandidater à partir du ${block.until.toLocaleDateString("fr-FR")}.` };
 
   const [created] = await db().insert(schema.applications).values({ userId }).onConflictDoNothing().returning();
@@ -102,7 +102,7 @@ export async function startApplication(userId: string): Promise<Application | { 
 }
 
 /** Ne garde que les champs de l'étape, sans valider leur contenu. */
-function cleanDraft(step: DataStepId, values: unknown): StepValues | null {
+export function cleanDraft(step: DataStepId, values: unknown): StepValues | null {
   const parsed = draftSchema(step).safeParse(values);
   if (!parsed.success) return null;
   return Object.fromEntries(STEP_FIELDS[step].map(field => [field, (parsed.data as StepValues)[field] ?? null]));
@@ -121,7 +121,7 @@ export async function saveDraft(application: Application, step: DataStepId, valu
  * Disponibilités gérées par l'administration : une affinité ou une créature fermée ne peut pas être rejointe,
  * un lead déjà repris ou une entreprise reprise ne peut pas être demandé.
  */
-async function availabilityErrors(step: DataStepId, values: StepValues): Promise<FieldErrors> {
+export async function availabilityErrors(step: DataStepId, values: StepValues): Promise<FieldErrors> {
   const errors: FieldErrors = {};
   if (step === "rp") {
     const { affinities, creatures } = await getFactions();

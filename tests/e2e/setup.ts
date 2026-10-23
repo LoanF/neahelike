@@ -3,7 +3,7 @@ import { encode } from "next-auth/jwt";
 import postgres from "postgres";
 import { CGU_VERSION } from "../../src/content/legal";
 import { startFakeDiscord } from "./fake-discord";
-import { ADMIN, ADMIN_ROLE, BASE_URL, BOT_BLACKLISTED, OWNER, PLAYER, RECRUITER, RECRUITER_ROLE, stateFile, USERS, WHITELISTED } from "./users";
+import { ADMIN, ADMIN_ROLE, BASE_URL, BOT_BLACKLISTED, OWNER, PLAYER, RECRUITER, REFUSED, RECRUITER_ROLE, stateFile, USERS, WHITELISTED, WIPER } from "./users";
 
 /**
  * Prépare les tests de bout en bout : comptes de test dans la base de test, faux Discord,
@@ -50,6 +50,17 @@ export default async function globalSetup() {
     values (${OWNER.id}, 'envoyee', ${sql.json({ age: "31", rpHours: "1200", experience: "Owner de test.", goodMic: true, wantsDossier: false })},
             ${sql.json({ firstName: "Theron", lastName: "Kallias", age: "40", origin: "Né au temple de la cité.", affinity: "", creature: "" })},
             ${sql.json({ url: "https://docs.google.com/document/d/e2e-owner", shared: true })}, now())`;
+  // Un joueur refusé à l'instant (délai de 3 mois en cours) et un joueur whitelist pour le dossier à part et le wipe.
+  await sql`
+    insert into applications (user_id, status, hrp, rp, background, submitted_at, decided_at, refusal_criteria, refusal_comment)
+    values (${REFUSED.id}, 'refusee', ${sql.json({ age: "22", rpHours: "50", experience: "Joueur de test refusé.", goodMic: true, wantsDossier: false })},
+            ${sql.json({ firstName: "Doros", lastName: "Melas", age: "25", affinity: "", creature: "" })},
+            ${sql.json({ url: "https://docs.google.com/document/d/e2e-refuse", shared: true })}, now(), now(), ${["autre"]}, 'Background trop léger (test)')`;
+  await sql`
+    insert into applications (user_id, status, hrp, rp, background, submitted_at, decided_at)
+    values (${WIPER.id}, 'whitelistee', ${sql.json({ age: "27", rpHours: "800", experience: "Joueur de test du wipe.", goodMic: true, wantsDossier: false })},
+            ${sql.json({ firstName: "Ancien", lastName: "Personnage", age: "40", affinity: "", creature: "" })},
+            ${sql.json({ url: "https://docs.google.com/document/d/e2e-ancien", shared: true })}, now(), now())`;
   await sql.end();
 
   const discord = await startFakeDiscord([
@@ -59,6 +70,8 @@ export default async function globalSetup() {
     { id: WHITELISTED.id, username: WHITELISTED.username, roles: [] },
     { id: BOT_BLACKLISTED.id, username: BOT_BLACKLISTED.username, roles: [] },
     { id: OWNER.id, username: OWNER.username, roles: [] },
+    { id: REFUSED.id, username: REFUSED.username, roles: [] },
+    { id: WIPER.id, username: WIPER.username, roles: [] },
   ]);
 
   await mkdir("tests/e2e/.auth", { recursive: true });

@@ -71,7 +71,6 @@ export const STEP_SCHEMAS = {
     firstName: text(2, 40, "Le prénom"),
     lastName: text(2, 40, "Le nom"),
     age: integer(18, 120, "L'âge du personnage"),
-    origin: text(10, 1000, "L'origine"),
     affinity: optionalChoice,
     creature: optionalChoice,
   }),
@@ -99,15 +98,15 @@ export type StepData<S extends DataStepId> = z.output<(typeof STEP_SCHEMAS)[S]>;
 /** Champs de chaque étape, pour filtrer les brouillons. */
 export const STEP_FIELDS: Record<DataStepId, string[]> = {
   hrp: ["age", "rpHours", "experience", "goodMic", "wantsDossier"],
-  rp: ["firstName", "lastName", "age", "origin", "affinity", "creature"],
+  rp: ["firstName", "lastName", "age", "affinity", "creature"],
   background: ["url", "shared"],
   dossier: ["kind", "target", "targetName", "url", "shared"],
 };
 
-/** Brouillon : seulement les champs connus, sans validation de contenu. */
+/** Brouillon : seulement les champs connus (les anciens champs, comme « origin », sont ignorés), sans validation de contenu. */
 export function draftSchema(step: DataStepId) {
   const value = z.union([z.string().max(4000), z.boolean(), z.null()]).optional();
-  return z.strictObject(Object.fromEntries(STEP_FIELDS[step].map(field => [field, value])));
+  return z.object(Object.fromEntries(STEP_FIELDS[step].map(field => [field, value])));
 }
 
 export type FieldErrors = Record<string, string>;

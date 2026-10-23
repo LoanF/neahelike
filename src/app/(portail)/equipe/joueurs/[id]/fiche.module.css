@@ -233,6 +233,17 @@
   color: var(--nh-parchment);
 }
 
+.slotRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Sélecteurs natifs de date et d'heure en thème sombre (icône lisible). */
+.slotField input {
+  color-scheme: dark;
+}
+
 .confirmActions {
   display: flex;
   justify-content: space-between;

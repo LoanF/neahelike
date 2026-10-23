@@ -160,10 +160,11 @@ export async function timeline(subjectId: string) {
 
 /** Familles d'événements du journal global. */
 export const JOURNAL_FILTERS = {
-  candidatures: ["candidature.commencee", "candidature.etape", "candidature.envoyee"],
-  decisions: ["candidature.vue", "candidature.validee", "candidature.modification", "candidature.refusee", "entretien.valide", "whitelist.retiree", "candidature.supprimee"],
+  candidatures: ["candidature.commencee", "candidature.etape", "candidature.envoyee", "dossier.envoye"],
+  decisions: ["candidature.vue", "candidature.validee", "candidature.modification", "candidature.refusee", "entretien.valide", "whitelist.retiree", "candidature.supprimee", "candidature.delai_leve", "candidature.rouverte", "dossier.accepte", "dossier.refuse"],
   comptes: ["compte.cree", "compte.cgu", "compte.supprime", "compte.blacklist", "compte.blacklist_levee", "discord.rejoint", "discord.quitte", "rang.change"],
   notes: ["note.ajoutee"],
+  wipes: ["wipe.invitation", "wipe.envoyee", "wipe.acceptee", "wipe.refusee"],
   administration: ["role.rang", "owner.ajoute", "owner.retire", "faction.ajoutee", "faction.modifiee", "entreprise.ajoutee", "entreprise.modifiee", "critere.ajoute", "critere.modifie"],
 } as const;
 

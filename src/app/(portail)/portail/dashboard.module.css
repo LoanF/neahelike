@@ -231,3 +231,47 @@
 .refusal .quote {
   margin-top: 10px;
 }
+
+/* Créneau de la session de whitelist, bien visible pendant l'attente de l'entretien. */
+.session {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border-radius: var(--nh-radius);
+  background: var(--nh-bronze-deep);
+  box-shadow: var(--nh-socket), inset 0 0 0 1px var(--nh-gold-deep);
+}
+
+.session strong {
+  font-size: 18px;
+  color: var(--nh-gold-lit);
+}
+
+.sessionLabel,
+.sessionNote {
+  font-size: 13px;
+  color: var(--nh-parchment-dim);
+}
+
+/* Invitation à un wipe de personnage, envoyée par un admin. */
+.invite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: var(--nh-grid-gap);
+  padding: 18px 22px;
+  box-shadow: var(--nh-rim), inset 0 0 0 1px var(--nh-gold-deep);
+}
+
+.invite p {
+  margin: 0;
+  color: var(--nh-parchment-dim);
+}
+
+.invite strong {
+  color: var(--nh-gold-lit);
+}
