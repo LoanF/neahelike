@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useState } from "react";
 import { Button, TextAreaField, TextField } from "@/components/plaque";
+import { useActionForm } from "@/components/use-action-form";
 import type { SanctionState } from "../../actions";
 import { sanctionAction } from "../../actions";
 import styles from "./fiche.module.css";
@@ -27,8 +27,7 @@ const CONFIRM: Record<Mode, { text: string; submit: string; reason: boolean }> =
   },
 };
 
-function Submit({ mode, ready }: { mode: Mode; ready: boolean }) {
-  const { pending } = useFormStatus();
+function Submit({ mode, ready, pending }: { mode: Mode; ready: boolean; pending: boolean }) {
   return (
     <Button type="submit" variant={mode === "lever" ? "primary" : "danger"} disabled={!ready} loading={pending}>
       {CONFIRM[mode].submit}
@@ -38,7 +37,7 @@ function Submit({ mode, ready }: { mode: Mode; ready: boolean }) {
 
 /** Admin : retrait de whitelist, blacklist et levée de la blacklist, depuis la fiche joueur. */
 export function Sanctions({ subjectId, canRevoke, blacklisted }: { subjectId: string; canRevoke: boolean; blacklisted: boolean }) {
-  const [state, action] = useActionState<SanctionState, FormData>(async (previous, formData) => {
+  const [state, onSubmit, pending] = useActionForm<SanctionState>(async (previous, formData) => {
     const result = await sanctionAction(previous, formData);
     if (result && "ok" in result) setMode(null);
     return result;
@@ -89,7 +88,7 @@ export function Sanctions({ subjectId, canRevoke, blacklisted }: { subjectId: st
       )}
 
       {mode && (
-        <form action={action} className={styles.confirm}>
+        <form onSubmit={onSubmit} className={styles.confirm}>
           <input type="hidden" name="subjectId" value={subjectId} />
           <input type="hidden" name="sanction" value={mode} />
           <p className={styles.confirmText}>{CONFIRM[mode].text}</p>
@@ -103,7 +102,7 @@ export function Sanctions({ subjectId, canRevoke, blacklisted }: { subjectId: st
             <Button type="button" variant="ghost" onClick={() => setMode(null)}>
               Annuler
             </Button>
-            <Submit mode={mode} ready={mode !== "blacklist" || confirmation.trim().toUpperCase() === "BLACKLIST"} />
+            <Submit pending={pending} mode={mode} ready={mode !== "blacklist" || confirmation.trim().toUpperCase() === "BLACKLIST"} />
           </div>
         </form>
       )}

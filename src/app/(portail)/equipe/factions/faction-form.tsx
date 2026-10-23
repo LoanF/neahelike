@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useEffect, useState } from "react";
 import { Button, cx, PinCheckbox, TextAreaField, TextField } from "@/components/plaque";
 import type { EmblemName } from "@/components/site/emblem";
 import { Emblem, EMBLEM_NAMES } from "@/components/site/emblem";
+import { useActionForm } from "@/components/use-action-form";
 import type { FactionKind } from "@/db/schema";
 import type { FactionFormState } from "./actions";
 import { saveFactionAction } from "./actions";
@@ -26,8 +26,7 @@ interface FactionFormProps {
   onDone?: () => void;
 }
 
-function Submit({ label }: { label: string }) {
-  const { pending } = useFormStatus();
+function Submit({ label, pending }: { label: string; pending: boolean }) {
   return (
     <Button type="submit" loading={pending}>
       {label}
@@ -37,7 +36,7 @@ function Submit({ label }: { label: string }) {
 
 /** Formulaire du lore d'une affinité ou d'une créature : tous les champs sont obligatoires. */
 export function FactionForm({ id, kind: fixedKind, initial = {}, fields, onDone }: FactionFormProps) {
-  const [state, action] = useActionState<FactionFormState, FormData>(saveFactionAction, null);
+  const [state, onSubmit, pending] = useActionForm<FactionFormState>(saveFactionAction, null);
   const [kind, setKind] = useState<FactionKind>(fixedKind ?? "affinite");
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(Object.entries(initial).filter(([, value]) => typeof value === "string")) as Record<string, string>,
@@ -58,7 +57,7 @@ export function FactionForm({ id, kind: fixedKind, initial = {}, fields, onDone 
   const set = (key: string, value: string) => setValues(current => ({ ...current, [key]: value }));
 
   return (
-    <form action={action} className={styles.stack}>
+    <form onSubmit={onSubmit} className={styles.stack}>
       {id && <input type="hidden" name="id" value={id} />}
       <input type="hidden" name="kind" value={kind} />
       <input type="hidden" name="emblem" value={emblem} />
@@ -123,7 +122,7 @@ export function FactionForm({ id, kind: fixedKind, initial = {}, fields, onDone 
       {state && "error" in state && <p className={styles.error} role="alert">{state.error}</p>}
       {state && "ok" in state && !id && <p className={styles.success} role="status">Ajoutée : elle apparaît sur le site et dans la candidature.</p>}
       <div>
-        <Submit label={id ? "Enregistrer" : "Ajouter"} />
+        <Submit pending={pending} label={id ? "Enregistrer" : "Ajouter"} />
       </div>
     </form>
   );

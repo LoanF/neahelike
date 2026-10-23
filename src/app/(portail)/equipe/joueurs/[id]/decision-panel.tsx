@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useEffect, useState } from "react";
 import { Button, PinCheckbox, TextAreaField } from "@/components/plaque";
+import { useActionForm } from "@/components/use-action-form";
 import type { ApplicationStatus } from "@/db/schema";
 import type { DecisionState } from "../../actions";
 import { decide } from "../../actions";
@@ -29,8 +29,7 @@ const CONFIRM: Record<Mode, { label: string; text: string; variant: "primary" | 
   supprimer: { label: "Effacer définitivement", text: "La candidature est effacée sans délai : le joueur peut en recommencer une tout de suite.", variant: "danger" },
 };
 
-function Submit({ mode }: { mode: Mode }) {
-  const { pending } = useFormStatus();
+function Submit({ mode, pending }: { mode: Mode; pending: boolean }) {
   return (
     <Button type="submit" variant={CONFIRM[mode].variant} loading={pending}>
       {CONFIRM[mode].label}
@@ -40,7 +39,7 @@ function Submit({ mode }: { mode: Mode }) {
 
 /** Actions de l'équipe sur une candidature, chacune avec une étape de confirmation. */
 export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps, criteria }: DecisionPanelProps) {
-  const [state, action] = useActionState<DecisionState, FormData>(decide, null);
+  const [state, onSubmit, pending] = useActionForm<DecisionState>(decide, null);
   const [mode, setMode] = useState<Mode | null>(null);
 
   // Décision prise : on referme le formulaire.
@@ -100,7 +99,7 @@ export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps
       )}
 
       {mode && (
-        <form action={action} className={styles.confirm}>
+        <form onSubmit={onSubmit} className={styles.confirm}>
           <input type="hidden" name="decision" value={mode} />
           <input type="hidden" name="subjectId" value={subjectId} />
           <input type="hidden" name="applicationId" value={applicationId} />
@@ -136,7 +135,7 @@ export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps
             <Button type="button" variant="ghost" onClick={() => setMode(null)}>
               Annuler
             </Button>
-            <Submit mode={mode} />
+            <Submit pending={pending} mode={mode} />
           </div>
         </form>
       )}

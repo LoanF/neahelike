@@ -14,7 +14,10 @@ export const WHITELISTED = { id: "900000000000000004", username: "e2e-whitelist"
 /** Joueur blacklisté par le bot avant sa première connexion au site. */
 export const BOT_BLACKLISTED = { id: "900000000000000005", username: "e2e-blacklist-bot", rank: "joueur" } as const;
 
-export const USERS = [PLAYER, RECRUITER, ADMIN, WHITELISTED, BOT_BLACKLISTED];
+/** Owner ajouté depuis le site (table site_owners), avec sa propre candidature envoyée. */
+export const OWNER = { id: "900000000000000006", username: "e2e-owner", rank: "owner" } as const;
+
+export const USERS = [PLAYER, RECRUITER, ADMIN, WHITELISTED, BOT_BLACKLISTED, OWNER];
 
 export function stateFile(user: { username: string }) {
   return `tests/e2e/.auth/${user.username}.json`;

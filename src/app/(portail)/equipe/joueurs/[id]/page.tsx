@@ -64,9 +64,9 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
     canDelete: canDeleteNote(note, viewer) && (isAdmin || note.visibility === "equipe"),
   }));
 
-  // Sanctions et suppression : seulement sur un rang inférieur, jamais sur soi ni sur un owner.
+  // Sanctions et suppression : seulement sur un rang inférieur, jamais sur un owner ; sur soi, owners seulement.
   const canSanction = isAdmin && !(await canActOn(player.id, viewer, { known: player }));
-  const ownFile = player.id === viewer.id;
+  const canDecide = player.id !== viewer.id || hasRank(viewer, "owner");
   const badge = teamBadge(application, !!blacklisted);
   const whitelisted = application?.status === "whitelistee" && !application.whitelistRevokedAt;
   const banner = bannerUrl(player, 960);
@@ -154,7 +154,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
         </div>
 
         <aside className={styles.sideColumn} aria-label="Décision et suivi">
-          {application && !ownFile && (
+          {application && canDecide && (
             <Plaque className={styles.panel}>
               <h2 className={styles.panelTitle}>Décision</h2>
               <DecisionPanel subjectId={player.id} applicationId={application.id} status={application.status} isAdmin={isAdmin} steps={filledSteps} criteria={activeCriteria.map(({ id, label }) => ({ id, label }))} />

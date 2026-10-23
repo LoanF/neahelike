@@ -2,7 +2,7 @@ import type { Browser, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { FAKE_DISCORD_PORT } from "./fake-discord";
 import type { SentMessage } from "./fake-discord";
-import { ADMIN, BOT_BLACKLISTED, RECRUITER, stateFile, WHITELISTED } from "./users";
+import { ADMIN, BOT_BLACKLISTED, OWNER, RECRUITER, stateFile, WHITELISTED } from "./users";
 
 // Retrait de whitelist, puis blacklist et levée, sur un joueur déjà whitelist.
 test.describe.configure({ mode: "serial" });
@@ -93,7 +93,7 @@ test("quelqu'un blacklisté par le bot est bloqué dès sa connexion au site", a
   await expect(admin.getByRole("link", { name: /e2e-blacklist-bot/ })).toBeVisible();
 });
 
-test("personne ne décide de sa propre candidature ni ne se sanctionne", async ({ browser }) => {
+test("un admin ne décide pas de sa propre candidature et ne se sanctionne pas", async ({ browser }) => {
   const admin = await as(browser, ADMIN);
   await admin.goto(`/equipe/joueurs/${ADMIN.id}`);
   await expect(admin.getByRole("heading", { level: 1 })).toContainText(ADMIN.username);
@@ -116,4 +116,29 @@ test("un lien ne peut pas afficher un message d'erreur inventé", async ({ brows
   await page.goto("/portail/candidature?erreur=Ton%20compte%20est%20suspendu%2C%20va%20sur%20evil.example");
   await expect(page.getByRole("button", { name: "Commencer ma candidature" })).toBeVisible();
   await expect(page.getByText("evil.example")).toHaveCount(0);
+});
+
+test("un owner peut tout faire sur sa propre fiche", async ({ browser }) => {
+  const owner = await as(browser, OWNER);
+  await owner.goto(`/equipe/joueurs/${OWNER.id}`);
+  await expect(owner.getByRole("heading", { name: "Décision" })).toBeVisible();
+  await expect(owner.getByRole("heading", { name: "Compte" })).toBeVisible();
+});
+
+test("refus : une erreur garde la saisie, et « Autre » accepte un commentaire court", async ({ browser }) => {
+  const owner = await as(browser, OWNER);
+  await owner.goto(`/equipe/joueurs/${OWNER.id}`);
+  await owner.getByRole("button", { name: "Refuser" }).click();
+  const comment = owner.getByLabel(/Commentaire/);
+  await comment.fill("con");
+  // Aucun critère coché : erreur, mais le commentaire reste affiché.
+  await owner.getByRole("button", { name: "Confirmer le refus" }).click();
+  await expect(owner.getByText("Coche au moins un critère de refus.")).toBeVisible();
+  await expect(comment).toHaveValue("con");
+  // Un seul clic sur « Autre » suffit, et trois lettres suffisent.
+  const other = owner.getByRole("checkbox", { name: /Autre/ });
+  await other.check();
+  await expect(other).toBeChecked();
+  await owner.getByRole("button", { name: "Confirmer le refus" }).click();
+  await expect(owner.getByText("Décision enregistrée.")).toBeVisible();
 });

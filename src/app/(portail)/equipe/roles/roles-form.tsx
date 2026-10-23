@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useMemo, useState } from "react";
 import { Button, cx } from "@/components/plaque";
+import { useActionForm } from "@/components/use-action-form";
 import type { RoleRank } from "@/lib/permissions";
 import type { FormState } from "./actions";
 import { saveRolesAction } from "./actions";
@@ -21,8 +21,7 @@ const CHOICES: { id: RoleRank; label: string; hint: string }[] = [
   { id: "admin", label: "Admin", hint: "Recruteur + administration" },
 ];
 
-function Save({ changes }: { changes: number }) {
-  const { pending } = useFormStatus();
+function Save({ changes, pending }: { changes: number; pending: boolean }) {
   return (
     <Button type="submit" loading={pending} disabled={changes === 0}>
       {changes === 0 ? "Aucun changement" : `Enregistrer ${changes} changement${changes > 1 ? "s" : ""}`}
@@ -32,20 +31,20 @@ function Save({ changes }: { changes: number }) {
 
 /** Un sélecteur à trois choix par rôle Discord ; un seul enregistrement pour tout le tableau. */
 export function RolesForm({ roles }: { roles: RoleRow[] }) {
-  const [state, action] = useActionState<FormState, FormData>(saveRolesAction, null);
+  const [state, onSubmit, pending] = useActionForm<FormState>(saveRolesAction, null);
   const [ranks, setRanks] = useState<Record<string, RoleRank>>(() => Object.fromEntries(roles.map(role => [role.id, role.rank])));
   const [query, setQuery] = useState("");
   const changes = useMemo(() => roles.filter(role => ranks[role.id] !== role.rank).length, [roles, ranks]);
   const shown = roles.filter(role => role.name.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
-    <form action={action} className={styles.stack}>
+    <form onSubmit={onSubmit} className={styles.stack}>
       {roles.map(role => (
         <input key={role.id} type="hidden" name={`name:${role.id}`} value={role.name} />
       ))}
       <div className={styles.toolbar}>
         <input type="search" className={styles.search} placeholder="Chercher un rôle" aria-label="Chercher un rôle" value={query} onChange={event => setQuery(event.target.value)} />
-        <Save changes={changes} />
+        <Save pending={pending} changes={changes} />
       </div>
       {state?.error && <p className={styles.error} role="alert">{state.error}</p>}
       {state?.ok && changes === 0 && <p className={styles.success} role="status">{state.ok}</p>}

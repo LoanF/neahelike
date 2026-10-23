@@ -1,14 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useState } from "react";
 import { Button, TextField } from "@/components/plaque";
+import { useActionForm } from "@/components/use-action-form";
 import type { DeleteAccountState } from "../../actions";
 import { deleteAccountAction } from "../../actions";
 import styles from "./fiche.module.css";
 
-function Submit({ ready }: { ready: boolean }) {
-  const { pending } = useFormStatus();
+function Submit({ ready, pending }: { ready: boolean; pending: boolean }) {
   return (
     <Button type="submit" variant="danger" disabled={!ready} loading={pending}>
       Supprimer le compte
@@ -18,7 +17,7 @@ function Submit({ ready }: { ready: boolean }) {
 
 /** Admin : suppression du compte à la demande du joueur (ticket Discord). */
 export function DeleteAccount({ subjectId }: { subjectId: string }) {
-  const [state, action] = useActionState<DeleteAccountState, FormData>(deleteAccountAction, null);
+  const [state, onSubmit, pending] = useActionForm<DeleteAccountState>(deleteAccountAction, null);
   const [open, setOpen] = useState(false);
   const [confirmation, setConfirmation] = useState("");
 
@@ -31,7 +30,7 @@ export function DeleteAccount({ subjectId }: { subjectId: string }) {
   }
 
   return (
-    <form action={action} className={styles.confirm}>
+    <form onSubmit={onSubmit} className={styles.confirm}>
       <input type="hidden" name="subjectId" value={subjectId} />
       <p className={styles.confirmText}>
         À faire seulement sur demande du joueur (ticket Discord). Compte, candidature, notes et notifications sont effacés définitivement. Sur Discord, il perd sa
@@ -43,7 +42,7 @@ export function DeleteAccount({ subjectId }: { subjectId: string }) {
         <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
           Annuler
         </Button>
-        <Submit ready={confirmation.trim().toUpperCase() === "SUPPRIMER"} />
+        <Submit pending={pending} ready={confirmation.trim().toUpperCase() === "SUPPRIMER"} />
       </div>
     </form>
   );

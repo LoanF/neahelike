@@ -10,7 +10,7 @@ import { isDiscordId } from "@/lib/discord";
 import type { ReviewResult } from "@/lib/review";
 import { addNote, blacklistPlayer, deleteNote, deletePlayerAccount, liftBlacklist, refuse, requestChanges, revokeWhitelist, validateInterview, validateWritten, wipeApplication } from "@/lib/review";
 import { RATE_LIMIT_MESSAGE, rateLimit } from "@/lib/rate-limit";
-import { freshActor, requireUser } from "@/lib/session";
+import { freshActor, hasRank, requireUser } from "@/lib/session";
 import type { Viewer } from "@/lib/team";
 import { leavePresence, presenceFor, touchPresence } from "@/lib/team";
 
@@ -50,8 +50,8 @@ export async function decide(_previous: DecisionState, formData: FormData): Prom
 
   const [application] = await db().select().from(schema.applications).where(eq(schema.applications.id, applicationId));
   if (!application || application.userId !== subjectId) return { error: "Candidature introuvable : recharge la fiche.", at: Date.now() };
-  // Personne ne décide de sa propre candidature, ni ne fait avancer celle d'un joueur blacklisté.
-  if (subjectId === reviewer.id) return { error: "Tu ne peux pas décider de ta propre candidature.", at: Date.now() };
+  // Seul un owner décide de sa propre candidature ; personne ne fait avancer celle d'un joueur blacklisté.
+  if (subjectId === reviewer.id && !hasRank(reviewer, "owner")) return { error: "Tu ne peux pas décider de ta propre candidature.", at: Date.now() };
   if (decision !== "supprimer" && (await getBlacklistEntry(subjectId))) return { error: "Ce joueur est blacklisté : lève d'abord la blacklist.", at: Date.now() };
 
   const comment = String(formData.get("comment") ?? "");

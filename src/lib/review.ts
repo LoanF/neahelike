@@ -41,12 +41,13 @@ async function transition(application: Application, from: ApplicationStatus[], v
 const CHANGED = { error: "La candidature a changé entre-temps : recharge la fiche." };
 
 /**
- * Sanctions et suppression de compte : jamais sur soi-même ni sur un owner, et seulement sur un rang
+ * Sanctions et suppression de compte : sur soi-même seulement pour un owner, jamais sur un autre owner, et sur un rang
  * strictement inférieur (un admin ne peut pas agir sur un autre admin). Les owners sont relus dans la
  * liste des owners, pas dans `users.rank` qui peut dater de quelques minutes.
  */
 export async function canActOn(subjectId: string, reviewer: Pick<User, "id" | "rank">, { fresh = false, known }: { fresh?: boolean; known?: Pick<User, "rank"> } = {}): Promise<string | null> {
-  if (subjectId === reviewer.id) return "Tu ne peux pas faire ça sur ton propre compte.";
+  // Un owner peut tout faire sur son propre compte ; les autres membres de l'équipe, rien.
+  if (subjectId === reviewer.id) return hasRank(reviewer, "owner") ? null : "Tu ne peux pas faire ça sur ton propre compte.";
   if ((await ownerIds()).includes(subjectId)) return "Impossible sur un owner.";
   // `known` : rang déjà lu par l'appelant (affichage de la fiche), pour éviter de relire la table.
   const target = known ?? (await db().select({ rank: schema.users.rank }).from(schema.users).where(eq(schema.users.id, subjectId)))[0];
@@ -151,7 +152,7 @@ export async function refuse(application: Application, reviewer: Reviewer, crite
   const known = (await getCriteria()).map(item => item.id);
   const chosen = criteria.filter(id => known.includes(id));
   if (chosen.length === 0) return { error: "Coche au moins un critère de refus." };
-  if (chosen.includes(OTHER_CRITERION) && comment.trim().length < 5) return { error: "Précise le critère « Autre » dans le commentaire." };
+  if (chosen.includes(OTHER_CRITERION) && !comment.trim()) return { error: "Précise le critère « Autre » dans le commentaire." };
 
   const from: ApplicationStatus[] = hasRank(reviewer, "admin") ? [...OPEN_FOR_ADMIN, "entretien"] : ["envoyee", "entretien"];
   if (!from.includes(application.status)) return { error: "Cette candidature ne peut pas être refusée dans son état actuel." };

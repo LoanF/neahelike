@@ -2,9 +2,9 @@
 
 import { Lock, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useActionState, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useEffect, useState } from "react";
 import { Badge, Button, TextField } from "@/components/plaque";
+import { useActionForm } from "@/components/use-action-form";
 import { avatarUrl } from "@/lib/discord-cdn";
 import type { FormState } from "./actions";
 import { addOwnerAction, removeOwnerAction } from "./actions";
@@ -18,8 +18,7 @@ export interface OwnerRow {
   self: boolean;
 }
 
-function AddButton() {
-  const { pending } = useFormStatus();
+function AddButton({ pending }: { pending: boolean }) {
   return (
     <Button type="submit" size="sm" loading={pending}>
       Ajouter
@@ -29,8 +28,13 @@ function AddButton() {
 
 /** Liste des owners : les permanents sont verrouillés, les autres se retirent d'un clic. */
 export function Owners({ owners }: { owners: OwnerRow[] }) {
-  const [state, action] = useActionState<FormState, FormData>(addOwnerAction, null);
+  const [state, onSubmit, pending] = useActionForm<FormState>(addOwnerAction, null);
   const [id, setId] = useState("");
+
+  // Owner ajouté : le champ se vide pour le suivant.
+  useEffect(() => {
+    if (state?.ok) setId("");
+  }, [state]);
 
   return (
     <div className={styles.stack}>
@@ -62,7 +66,7 @@ export function Owners({ owners }: { owners: OwnerRow[] }) {
           </li>
         ))}
       </ul>
-      <form action={action} className={styles.inline}>
+      <form onSubmit={onSubmit} className={styles.inline}>
         <TextField
           name="discordId"
           label="Ajouter un owner par son ID Discord"
@@ -74,7 +78,7 @@ export function Owners({ owners }: { owners: OwnerRow[] }) {
           error={state?.error}
           hint={state?.ok}
         />
-        <AddButton />
+        <AddButton pending={pending} />
       </form>
     </div>
   );

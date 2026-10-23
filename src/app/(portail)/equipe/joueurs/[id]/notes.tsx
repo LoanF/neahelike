@@ -2,9 +2,9 @@
 
 import { Lock, Trash2, Users } from "lucide-react";
 import Image from "next/image";
-import { useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useEffect, useState } from "react";
 import { Badge, Button, cx, TextAreaField } from "@/components/plaque";
+import { useActionForm } from "@/components/use-action-form";
 import type { NoteVisibility } from "@/db/schema";
 import { avatarUrl } from "@/lib/discord-cdn";
 import type { NoteState } from "../../actions";
@@ -22,8 +22,7 @@ export interface NoteView {
   canDelete: boolean;
 }
 
-function AddButton() {
-  const { pending } = useFormStatus();
+function AddButton({ pending }: { pending: boolean }) {
   return (
     <Button type="submit" size="sm" loading={pending}>
       Ajouter la note
@@ -38,7 +37,7 @@ const VISIBILITY = [
 
 /** Notes internes : jamais visibles par le joueur. Un admin choisit si une note reste entre admins. */
 export function Notes({ subjectId, notes, isAdmin }: { subjectId: string; notes: NoteView[]; isAdmin: boolean }) {
-  const [state, action] = useActionState<NoteState, FormData>(addNoteAction, null);
+  const [state, onSubmit, pending] = useActionForm<NoteState>(addNoteAction, null);
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState<NoteVisibility>("equipe");
 
@@ -49,7 +48,7 @@ export function Notes({ subjectId, notes, isAdmin }: { subjectId: string; notes:
 
   return (
     <div className={styles.notes}>
-      <form action={action} className={styles.noteForm}>
+      <form onSubmit={onSubmit} className={styles.noteForm}>
         <input type="hidden" name="subjectId" value={subjectId} />
         <TextAreaField
           name="content"
@@ -83,7 +82,7 @@ export function Notes({ subjectId, notes, isAdmin }: { subjectId: string; notes:
           </p>
         )}
         <div className={styles.noteSubmit}>
-          <AddButton />
+          <AddButton pending={pending} />
         </div>
       </form>
 
