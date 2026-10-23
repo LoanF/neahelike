@@ -13,6 +13,7 @@ import { addRole, banMember, removeRole, sendDirectMessage, unbanMember } from "
 import { env } from "./env";
 import { logEvent } from "./events";
 import { notify } from "./notifications";
+import { ownerIds } from "./permissions";
 import { hasRank } from "./session";
 import { SITE_URL } from "./site-url";
 
@@ -36,6 +37,19 @@ async function transition(application: Application, from: ApplicationStatus[], v
 }
 
 const CHANGED = { error: "La candidature a changé entre-temps : recharge la fiche." };
+
+/**
+ * Sanctions et suppression de compte : jamais sur soi-même ni sur un owner, et seulement sur un rang
+ * strictement inférieur (un admin ne peut pas agir sur un autre admin). Les owners sont relus dans la
+ * liste des owners, pas dans `users.rank` qui peut dater de quelques minutes.
+ */
+export async function canActOn(subjectId: string, reviewer: Pick<User, "id" | "rank">): Promise<string | null> {
+  if (subjectId === reviewer.id) return "Tu ne peux pas faire ça sur ton propre compte.";
+  if ((await ownerIds()).includes(subjectId)) return "Impossible sur un owner.";
+  const [target] = await db().select({ rank: schema.users.rank }).from(schema.users).where(eq(schema.users.id, subjectId));
+  if (target && hasRank(target, reviewer.rank)) return "Impossible sur un membre de l'équipe de rang égal ou supérieur au tien.";
+  return null;
+}
 
 /** Les effets Discord ne bloquent jamais une décision : un échec devient un avertissement pour l'équipe. */
 async function discord(label: string, warnings: string[], task: () => Promise<unknown>) {
@@ -200,7 +214,8 @@ export async function deleteNote(noteId: string, viewer: Reviewer) {
  */
 export async function deletePlayerAccount(subjectId: string, reviewer: Reviewer): Promise<ReviewResult> {
   if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
-  if (subjectId === reviewer.id) return { error: "Tu ne peux pas supprimer ton propre compte d'ici." };
+  const refused = await canActOn(subjectId, reviewer);
+  if (refused) return { error: refused };
   const [player] = await db().select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.id, subjectId));
   if (!player) return { error: "Ce compte n'existe plus." };
 
@@ -242,6 +257,8 @@ function cleanReason(value: string) {
  */
 export async function revokeWhitelist(subjectId: string, reviewer: Reviewer, reasonText: string): Promise<ReviewResult> {
   if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
+  const refused = await canActOn(subjectId, reviewer);
+  if (refused) return { error: refused };
   const latest = await getLatestApplication(subjectId);
   if (!latest || latest.status !== "whitelistee" || latest.whitelistRevokedAt) return { error: "Ce joueur n'est pas whitelist : recharge la fiche." };
 
@@ -274,10 +291,10 @@ export async function revokeWhitelist(subjectId: string, reviewer: Reviewer, rea
  */
 export async function blacklistPlayer(subjectId: string, reviewer: Reviewer, reasonText: string): Promise<ReviewResult> {
   if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
-  if (subjectId === reviewer.id) return { error: "Tu ne peux pas te blacklister toi-même." };
-  const [player] = await db().select({ rank: schema.users.rank }).from(schema.users).where(eq(schema.users.id, subjectId));
+  const refused = await canActOn(subjectId, reviewer);
+  if (refused) return { error: refused };
+  const [player] = await db().select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.id, subjectId));
   if (!player) return { error: "Ce compte n'existe plus." };
-  if (player.rank === "owner") return { error: "Un owner ne peut pas être blacklisté." };
 
   const blacklistReason = cleanReason(reasonText);
   const [created] = await db()

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db, schema } from "@/db";
 import type { NoteVisibility } from "@/db/schema";
+import { getBlacklistEntry } from "@/lib/blacklist";
 import type { ReviewResult } from "@/lib/review";
 import { addNote, blacklistPlayer, deleteNote, deletePlayerAccount, liftBlacklist, refuse, requestChanges, revokeWhitelist, validateInterview, validateWritten, wipeApplication } from "@/lib/review";
 import { RATE_LIMIT_MESSAGE, rateLimit } from "@/lib/rate-limit";
@@ -12,14 +13,18 @@ import { requireFreshRank, requireUser } from "@/lib/session";
 import type { Viewer } from "@/lib/team";
 import { leavePresence, presenceFor, touchPresence } from "@/lib/team";
 
+const DISCORD_ID = /^\d{15,21}$/;
+
 export async function heartbeat(subjectId: string): Promise<Viewer[]> {
   const user = await requireUser({ rank: "recruteur" });
+  if (!DISCORD_ID.test(subjectId) || !(await rateLimit("presence", user.id))) return [];
   await touchPresence(subjectId, user.id);
   return (await presenceFor([subjectId], user.id))[subjectId] ?? [];
 }
 
 export async function leaveProfile(subjectId: string) {
   const user = await requireUser({ rank: "recruteur" });
+  if (!DISCORD_ID.test(subjectId)) return;
   await leavePresence(subjectId, user.id);
 }
 
@@ -45,6 +50,9 @@ export async function decide(_previous: DecisionState, formData: FormData): Prom
 
   const [application] = await db().select().from(schema.applications).where(eq(schema.applications.id, applicationId)).orderBy(desc(schema.applications.createdAt));
   if (!application || application.userId !== subjectId) return { error: "Candidature introuvable : recharge la fiche.", at: Date.now() };
+  // Personne ne décide de sa propre candidature, ni ne fait avancer celle d'un joueur blacklisté.
+  if (subjectId === reviewer.id) return { error: "Tu ne peux pas décider de ta propre candidature.", at: Date.now() };
+  if (decision !== "supprimer" && (await getBlacklistEntry(subjectId))) return { error: "Ce joueur est blacklisté : lève d'abord la blacklist.", at: Date.now() };
 
   const comment = String(formData.get("comment") ?? "");
   let result: ReviewResult;

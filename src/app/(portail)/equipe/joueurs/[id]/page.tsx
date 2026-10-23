@@ -17,7 +17,7 @@ import { getBlacklistEntry } from "@/lib/blacklist";
 import { takeoverNames } from "@/lib/businesses";
 import { criteriaLabels, getCriteria } from "@/lib/criteria";
 import { avatarUrl, bannerUrl, displayName } from "@/lib/discord-cdn";
-import { markViewed } from "@/lib/review";
+import { canActOn, markViewed } from "@/lib/review";
 import { hasRank, requireUser } from "@/lib/session";
 import { canDeleteNote, notesFor, teamBadge, timeline } from "@/lib/team";
 import { ApplicationRecap } from "../../../portail/candidature/recap";
@@ -64,6 +64,9 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
     canDelete: canDeleteNote(note, viewer) && (isAdmin || note.visibility === "equipe"),
   }));
 
+  // Sanctions et suppression : seulement sur un rang inférieur, jamais sur soi ni sur un owner.
+  const canSanction = isAdmin && !(await canActOn(player.id, viewer));
+  const ownFile = player.id === viewer.id;
   const badge = teamBadge(application, !!blacklisted);
   const whitelisted = application?.status === "whitelistee" && !application.whitelistRevokedAt;
   const banner = bannerUrl(player, 960);
@@ -151,7 +154,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
         </div>
 
         <aside className={styles.sideColumn} aria-label="Décision et suivi">
-          {application && (
+          {application && !ownFile && (
             <Plaque className={styles.panel}>
               <h2 className={styles.panelTitle}>Décision</h2>
               <DecisionPanel subjectId={player.id} applicationId={application.id} status={application.status} isAdmin={isAdmin} steps={filledSteps} criteria={activeCriteria.map(({ id, label }) => ({ id, label }))} />
@@ -165,10 +168,10 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
             <h2 className={styles.panelTitle}>Chronologie</h2>
             <Timeline entries={visibleEvents} criteria={criteria} />
           </Plaque>
-          {isAdmin && player.id !== viewer.id && (
+          {canSanction && (
             <Plaque className={`${styles.panel} ${styles.dangerPanel}`} rivets="none">
               <h2 className={`${styles.panelTitle} ${styles.dangerTitle}`}>Compte</h2>
-              {player.rank !== "owner" && <Sanctions subjectId={player.id} canRevoke={whitelisted} blacklisted={!!blacklisted} />}
+              <Sanctions subjectId={player.id} canRevoke={whitelisted} blacklisted={!!blacklisted} />
               <DeleteAccount subjectId={player.id} />
             </Plaque>
           )}
