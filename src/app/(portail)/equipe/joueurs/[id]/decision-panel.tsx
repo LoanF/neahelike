@@ -59,7 +59,7 @@ export function DecisionPanel({ subjectId, applicationId, status, isAdmin, steps
     choices.push({ mode: "valider", label: "Valider sans attendre", variant: "primary" });
     choices.push({ mode: "refuser", label: "Refuser", variant: "danger" });
   }
-  if (isAdmin) choices.push({ mode: "supprimer", label: "Effacer la candidature", variant: "ghost" });
+  if (isAdmin) choices.push({ mode: "supprimer", label: "Effacer la candidature", variant: "primary" });
 
   const waiting =
     status === "brouillon" || status === "a_modifier"
