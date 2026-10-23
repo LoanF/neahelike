@@ -2,7 +2,7 @@
 
 import { Lock, Trash2, Users } from "lucide-react";
 import Image from "next/image";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Badge, Button, cx, TextAreaField } from "@/components/plaque";
 import type { NoteVisibility } from "@/db/schema";
@@ -41,7 +41,6 @@ export function Notes({ subjectId, notes, isAdmin }: { subjectId: string; notes:
   const [state, action] = useActionState<NoteState, FormData>(addNoteAction, null);
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState<NoteVisibility>("equipe");
-  const form = useRef<HTMLFormElement>(null);
 
   // Note ajoutée : on vide le champ.
   useEffect(() => {
@@ -50,7 +49,7 @@ export function Notes({ subjectId, notes, isAdmin }: { subjectId: string; notes:
 
   return (
     <div className={styles.notes}>
-      <form ref={form} action={action} className={styles.noteForm}>
+      <form action={action} className={styles.noteForm}>
         <input type="hidden" name="subjectId" value={subjectId} />
         <TextAreaField
           name="content"

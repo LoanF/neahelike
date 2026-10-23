@@ -36,10 +36,9 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   if (!/^\d+$/.test(id)) notFound();
   const viewer = await requireUser({ rank: "recruteur" });
-  const [player] = await db().select().from(schema.users).where(eq(schema.users.id, id));
+  const [[player], application] = await Promise.all([db().select().from(schema.users).where(eq(schema.users.id, id)), getLatestApplication(id)]);
   if (!player) notFound();
 
-  const application = await getLatestApplication(player.id);
   // Ouvrir sa propre fiche ne compte pas comme une lecture par l'équipe.
   if (application && player.id !== viewer.id) await markViewed(application, viewer);
   const isAdmin = hasRank(viewer, "admin");
@@ -66,7 +65,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
   }));
 
   // Sanctions et suppression : seulement sur un rang inférieur, jamais sur soi ni sur un owner.
-  const canSanction = isAdmin && !(await canActOn(player.id, viewer));
+  const canSanction = isAdmin && !(await canActOn(player.id, viewer, { known: player }));
   const ownFile = player.id === viewer.id;
   const badge = teamBadge(application, !!blacklisted);
   const whitelisted = application?.status === "whitelistee" && !application.whitelistRevokedAt;

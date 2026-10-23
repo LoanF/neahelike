@@ -4,7 +4,7 @@
  * quand ses valeurs passent le schéma strict, ce qui permet d'enregistrer un brouillon à tout moment.
  */
 import { z } from "zod";
-import { DOSSIER_KINDS, MIN_AGE_IRL } from "@/content/candidature";
+import { DOSSIER_KINDS, MIN_AGE_IRL, NEW_BUSINESS } from "@/content/candidature";
 import type { Application, StepValues } from "@/db/schema";
 
 export const STEPS = [
@@ -56,8 +56,8 @@ const SLUG = /^[a-z0-9-]{1,60}$/;
 /** Choix facultatif dans une liste gérée par l'administration ; « Aucune » est enregistré comme chaîne vide. */
 const optionalChoice = z.union([z.literal(""), z.string().regex(SLUG)], { error: "Choisis une option dans la liste." });
 
-/** Entreprise qui n'est pas encore dans la liste : le joueur la nomme lui-même. */
-export const NEW_BUSINESS = "nouvelle";
+/** Défini sans dépendance (content/candidature.ts) pour ne pas embarquer Zod dans le formulaire côté client. */
+export { NEW_BUSINESS };
 
 export const STEP_SCHEMAS = {
   hrp: z.object({

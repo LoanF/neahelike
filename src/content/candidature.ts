@@ -43,7 +43,8 @@ export const DOSSIER_KINDS = [
   { id: "creature", label: "Le lead d'une créature", text: "Représenter un peuple de créatures mystiques auprès de la cité." },
 ] as const;
 
-export type DossierKind = (typeof DOSSIER_KINDS)[number]["id"];
+/** Entreprise qui n'est pas encore dans la liste : le joueur la nomme lui-même. */
+export const NEW_BUSINESS = "nouvelle";
 
 export const DOSSIER_GUIDE = {
   intro: "Le dossier de reprise montre à l'équipe ce que tu comptes faire du rôle que tu demandes. Il est lu en plus de ta candidature.",

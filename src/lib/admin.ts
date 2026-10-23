@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { isEmblemName } from "@/components/site/emblem";
 import { db, schema } from "@/db";
@@ -155,7 +155,7 @@ export async function moveBusiness(id: string, direction: -1 | 1, adminId: strin
   if (index === -1 || target < 0 || target >= list.length) return { ok: true };
   [list[index], list[target]] = [list[target], list[index]];
   await db().transaction(async tx => {
-    for (const [position, item] of list.entries()) await tx.update(schema.businesses).set({ sortOrder: position + 1 }).where(and(eq(schema.businesses.id, item.id)));
+    for (const [position, item] of list.entries()) await tx.update(schema.businesses).set({ sortOrder: position + 1 }).where(eq(schema.businesses.id, item.id));
   });
   await logEvent({ type: "entreprise.modifiee", subjectId: null, actorId: adminId, data: { id, nom: list[target].name, ordre: target + 1 } });
   return { ok: true };

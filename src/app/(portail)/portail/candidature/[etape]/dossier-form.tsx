@@ -1,9 +1,8 @@
 "use client";
 
 import { TextField } from "@/components/plaque";
-import { DOSSIER_GUIDE, DOSSIER_KINDS } from "@/content/candidature";
+import { DOSSIER_GUIDE, DOSSIER_KINDS, NEW_BUSINESS } from "@/content/candidature";
 import type { StepValues } from "@/db/schema";
-import { NEW_BUSINESS } from "@/lib/application";
 import styles from "../candidature.module.css";
 import type { Choice } from "./choice-grid";
 import { ChoiceGrid } from "./choice-grid";

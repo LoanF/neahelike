@@ -1,6 +1,6 @@
 "use server";
 
-import { desc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db, schema } from "@/db";
@@ -48,7 +48,7 @@ export async function decide(_previous: DecisionState, formData: FormData): Prom
   if (!reviewer) return { error: "Tes permissions ont changé : recharge la page.", at: Date.now() };
   if (!(await rateLimit("decision", reviewer.id))) return { error: RATE_LIMIT_MESSAGE, at: Date.now() };
 
-  const [application] = await db().select().from(schema.applications).where(eq(schema.applications.id, applicationId)).orderBy(desc(schema.applications.createdAt));
+  const [application] = await db().select().from(schema.applications).where(eq(schema.applications.id, applicationId));
   if (!application || application.userId !== subjectId) return { error: "Candidature introuvable : recharge la fiche.", at: Date.now() };
   // Personne ne décide de sa propre candidature, ni ne fait avancer celle d'un joueur blacklisté.
   if (subjectId === reviewer.id) return { error: "Tu ne peux pas décider de ta propre candidature.", at: Date.now() };

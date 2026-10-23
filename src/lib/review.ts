@@ -45,10 +45,11 @@ const CHANGED = { error: "La candidature a changé entre-temps : recharge la fic
  * strictement inférieur (un admin ne peut pas agir sur un autre admin). Les owners sont relus dans la
  * liste des owners, pas dans `users.rank` qui peut dater de quelques minutes.
  */
-export async function canActOn(subjectId: string, reviewer: Pick<User, "id" | "rank">, { fresh = false } = {}): Promise<string | null> {
+export async function canActOn(subjectId: string, reviewer: Pick<User, "id" | "rank">, { fresh = false, known }: { fresh?: boolean; known?: Pick<User, "rank"> } = {}): Promise<string | null> {
   if (subjectId === reviewer.id) return "Tu ne peux pas faire ça sur ton propre compte.";
   if ((await ownerIds()).includes(subjectId)) return "Impossible sur un owner.";
-  const [target] = await db().select({ rank: schema.users.rank }).from(schema.users).where(eq(schema.users.id, subjectId));
+  // `known` : rang déjà lu par l'appelant (affichage de la fiche), pour éviter de relire la table.
+  const target = known ?? (await db().select({ rank: schema.users.rank }).from(schema.users).where(eq(schema.users.id, subjectId)))[0];
   if (!target) return null;
   // Pour l'action elle-même, le rang de la cible est relu sur Discord : celui en base date de sa dernière visite.
   let rank = target.rank;
