@@ -17,13 +17,17 @@ import type { Choice } from "./choice-grid";
 import { DossierForm } from "./dossier-form";
 import { HrpForm } from "./hrp-form";
 import { RpForm } from "./rp-form";
+import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { SendForm } from "./send-form";
 
 export const metadata: Metadata = { title: "Candidature" };
 
 
+/** Erreurs d'envoi, par code (l'adresse ne transporte jamais de texte libre). */
 const SEND_ERRORS: Record<string, string> = {
   certify: "Coche la case de certification pour envoyer ta candidature.",
+  limite: RATE_LIMIT_MESSAGE,
+  envoi: "Ta candidature ne peut pas être envoyée : vérifie que toutes les étapes sont complètes et que tes choix (affinité, créature, reprise) sont toujours ouverts.",
 };
 
 export default async function StepPage({ params, searchParams }: { params: Promise<{ etape: string }>; searchParams: Promise<{ erreur?: string }> }) {
@@ -71,7 +75,7 @@ export default async function StepPage({ params, searchParams }: { params: Promi
             creatures={creatures}
             leads={leads}
             names={names}
-            error={erreur ? (SEND_ERRORS[erreur] ?? erreur) : undefined}
+            error={erreur && Object.hasOwn(SEND_ERRORS, erreur) ? SEND_ERRORS[erreur] : undefined}
           />
         </Plaque>
       </div>

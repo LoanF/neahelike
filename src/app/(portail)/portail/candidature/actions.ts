@@ -13,9 +13,10 @@ function assertStep(step: string): asserts step is DataStepId {
 
 export async function startCandidature() {
   const user = await requireUser();
-  if (!(await rateLimit("start", user.id))) redirect(`/portail/candidature?erreur=${encodeURIComponent(RATE_LIMIT_MESSAGE)}`);
+  if (!(await rateLimit("start", user.id))) redirect("/portail/candidature?erreur=limite");
   const result = await startApplication(user.id);
-  if ("error" in result) redirect(`/portail/candidature?erreur=${encodeURIComponent(result.error)}`);
+  // Codes seulement dans l'adresse : la page affiche le texte correspondant (pas de texte libre injectable par un lien).
+  if ("error" in result) redirect("/portail/candidature?erreur=demarrage");
   redirect(stepHref(currentStep(result)));
 }
 
@@ -49,9 +50,9 @@ export async function sendCandidature(formData: FormData) {
   const application = await getOpenApplication(user.id);
   if (!application) redirect("/portail/candidature");
   if (formData.get("certify") !== "on") redirect(`${stepHref("recapitulatif")}?erreur=certify`);
-  if (!(await rateLimit("send", user.id))) redirect(`${stepHref("recapitulatif")}?erreur=${encodeURIComponent(RATE_LIMIT_MESSAGE)}`);
+  if (!(await rateLimit("send", user.id))) redirect(`${stepHref("recapitulatif")}?erreur=limite`);
 
   const result = await submitApplication(application);
-  if ("error" in result) redirect(`${stepHref("recapitulatif")}?erreur=${encodeURIComponent(result.error)}`);
+  if ("error" in result) redirect(`${stepHref("recapitulatif")}?erreur=envoi`);
   redirect("/portail/candidature?envoyee=1");
 }

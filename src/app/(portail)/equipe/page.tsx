@@ -19,6 +19,10 @@ export const metadata: Metadata = { title: "Joueurs" };
 
 const shortDate = (date: Date) => date.toLocaleDateString("fr-FR", { day: "numeric", month: "short", timeZone: "Europe/Paris" });
 
+/** Seuls les avertissements que le site produit lui-même sont affichés (pas de texte libre venu d'un lien). */
+const KNOWN_WARNING = /^(Retrait du rôle « [^»]{1,40} »|Rôle « Novice »|Message privé) : (MP fermés, le joueur verra la décision sur le portail\.|échec côté Discord\.)$|^Rôle de base non configuré \(DISCORD_ROLE_NON_WL\)\.$/;
+const isKnownWarning = (text: string) => KNOWN_WARNING.test(text);
+
 export default async function EquipePage({ searchParams }: { searchParams: Promise<{ onglet?: string; q?: string; supprime?: string; avertissement?: string | string[] }> }) {
   const { onglet, q, supprime, avertissement } = await searchParams;
   const viewer = await requireUser({ rank: "recruteur" });
@@ -58,7 +62,7 @@ export default async function EquipePage({ searchParams }: { searchParams: Promi
             Compte supprimé.
             {avertissement && (
               <span className={styles.noticeWarnings}>
-                À vérifier sur Discord : {[avertissement].flat().map(item => item.slice(0, 120)).join(" · ")}
+                À vérifier sur Discord : {[avertissement].flat().filter(isKnownWarning).join(" · ")}
               </span>
             )}
           </p>

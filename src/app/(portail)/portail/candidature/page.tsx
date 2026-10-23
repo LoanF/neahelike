@@ -7,12 +7,19 @@ import { CANDIDATURE_INTRO } from "@/content/candidature";
 import { currentStep, STEPS, stepHref } from "@/lib/application";
 import { getOpenApplication, getStartBlock, isEditable } from "@/lib/applications";
 import { takeoverNames } from "@/lib/businesses";
+import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { requireUser } from "@/lib/session";
 import { startCandidature } from "./actions";
 import styles from "./candidature.module.css";
 import { ApplicationRecap } from "./recap";
 
 export const metadata: Metadata = { title: "Candidature" };
+
+/** Erreurs au démarrage, par code (l'adresse ne transporte jamais de texte libre). */
+const START_ERRORS: Record<string, string> = {
+  limite: RATE_LIMIT_MESSAGE,
+  demarrage: "Impossible de commencer ta candidature pour le moment : recharge la page et réessaie.",
+};
 
 export default async function CandidaturePage({ searchParams }: { searchParams: Promise<{ erreur?: string; envoyee?: string }> }) {
   const { erreur, envoyee } = await searchParams;
@@ -72,7 +79,7 @@ export default async function CandidaturePage({ searchParams }: { searchParams: 
                   </li>
                 ))}
               </ol>
-              {erreur && <p className={styles.formError} role="alert">{erreur}</p>}
+              {erreur && Object.hasOwn(START_ERRORS, erreur) && <p className={styles.formError} role="alert">{START_ERRORS[erreur]}</p>}
               <form action={startCandidature} className={styles.start}>
                 <Button type="submit" size="lg">Commencer ma candidature</Button>
               </form>
