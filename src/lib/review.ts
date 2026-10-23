@@ -12,6 +12,7 @@ import { criteriaLabels, getCriteria, OTHER_CRITERION } from "./criteria";
 import { addRole, banMember, removeRole, sendDirectMessage, unbanMember } from "./discord";
 import { env } from "./env";
 import { logEvent } from "./events";
+import { syncMember } from "./members";
 import { notify } from "./notifications";
 import { ownerIds } from "./permissions";
 import { hasRank } from "./session";
@@ -43,11 +44,21 @@ const CHANGED = { error: "La candidature a changé entre-temps : recharge la fic
  * strictement inférieur (un admin ne peut pas agir sur un autre admin). Les owners sont relus dans la
  * liste des owners, pas dans `users.rank` qui peut dater de quelques minutes.
  */
-export async function canActOn(subjectId: string, reviewer: Pick<User, "id" | "rank">): Promise<string | null> {
+export async function canActOn(subjectId: string, reviewer: Pick<User, "id" | "rank">, { fresh = false } = {}): Promise<string | null> {
   if (subjectId === reviewer.id) return "Tu ne peux pas faire ça sur ton propre compte.";
   if ((await ownerIds()).includes(subjectId)) return "Impossible sur un owner.";
   const [target] = await db().select({ rank: schema.users.rank }).from(schema.users).where(eq(schema.users.id, subjectId));
-  if (target && hasRank(target, reviewer.rank)) return "Impossible sur un membre de l'équipe de rang égal ou supérieur au tien.";
+  if (!target) return null;
+  // Pour l'action elle-même, le rang de la cible est relu sur Discord : celui en base date de sa dernière visite.
+  let rank = target.rank;
+  if (fresh) {
+    try {
+      ({ rank } = await syncMember(subjectId));
+    } catch {
+      return "Discord ne répond pas : impossible de vérifier le rang de ce membre, réessaie dans un instant.";
+    }
+  }
+  if (hasRank({ rank }, reviewer.rank)) return "Impossible sur un membre de l'équipe de rang égal ou supérieur au tien.";
   return null;
 }
 
@@ -169,17 +180,27 @@ export async function validateInterview(application: Application, reviewer: Revi
   return { ok: true, warnings };
 }
 
-/** Admin : efface la candidature (le joueur peut recommencer tout de suite, sans délai). */
+/**
+ * Admin : efface la candidature (le joueur peut recommencer tout de suite, sans délai). Les rôles qu'elle avait
+ * donnés partent avec elle : « attente de wl » pendant l'entretien, la whitelist si elle était validée.
+ */
 export async function wipeApplication(application: Application, reviewer: Reviewer): Promise<ReviewResult> {
   if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
+  const refused = await canActOn(application.userId, reviewer, { fresh: true });
+  if (refused) return { error: refused };
   await db().delete(schema.applications).where(eq(schema.applications.id, application.id));
   await logEvent({ type: "candidature.supprimee", subjectId: application.userId, actorId: reviewer.id, data: { statut: application.status } });
   await notify(application.userId, NOTIFICATIONS.supprimee());
 
   const warnings: string[] = [];
-  const role = env().DISCORD_ROLE_ATTENTE_WL;
-  if (role && application.status === "entretien") {
-    await discord("Retrait du rôle « attente de wl »", warnings, () => removeRole(application.userId, role, reason(reviewer, "Candidature effacée")));
+  const { DISCORD_ROLE_ATTENTE_WL: waiting, DISCORD_ROLE_WL: whitelisted, DISCORD_ROLE_NON_WL: novice } = env();
+  const why = reason(reviewer, "Candidature effacée");
+  if (waiting && application.status === "entretien") {
+    await discord("Retrait du rôle « attente de wl »", warnings, () => removeRole(application.userId, waiting, why));
+  }
+  if (application.status === "whitelistee" && !application.whitelistRevokedAt) {
+    if (whitelisted) await discord("Retrait du rôle « Magistrat (wl) »", warnings, () => removeRole(application.userId, whitelisted, why));
+    if (novice) await discord("Rôle « Novice »", warnings, () => addRole(application.userId, novice, why));
   }
   return { ok: true, warnings };
 }
@@ -214,7 +235,7 @@ export async function deleteNote(noteId: string, viewer: Reviewer) {
  */
 export async function deletePlayerAccount(subjectId: string, reviewer: Reviewer): Promise<ReviewResult> {
   if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
-  const refused = await canActOn(subjectId, reviewer);
+  const refused = await canActOn(subjectId, reviewer, { fresh: true });
   if (refused) return { error: refused };
   const [player] = await db().select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.id, subjectId));
   if (!player) return { error: "Ce compte n'existe plus." };
@@ -257,7 +278,7 @@ function cleanReason(value: string) {
  */
 export async function revokeWhitelist(subjectId: string, reviewer: Reviewer, reasonText: string): Promise<ReviewResult> {
   if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
-  const refused = await canActOn(subjectId, reviewer);
+  const refused = await canActOn(subjectId, reviewer, { fresh: true });
   if (refused) return { error: refused };
   const latest = await getLatestApplication(subjectId);
   if (!latest || latest.status !== "whitelistee" || latest.whitelistRevokedAt) return { error: "Ce joueur n'est pas whitelist : recharge la fiche." };
@@ -291,7 +312,7 @@ export async function revokeWhitelist(subjectId: string, reviewer: Reviewer, rea
  */
 export async function blacklistPlayer(subjectId: string, reviewer: Reviewer, reasonText: string): Promise<ReviewResult> {
   if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
-  const refused = await canActOn(subjectId, reviewer);
+  const refused = await canActOn(subjectId, reviewer, { fresh: true });
   if (refused) return { error: refused };
   const [player] = await db().select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.id, subjectId));
   if (!player) return { error: "Ce compte n'existe plus." };
@@ -324,6 +345,8 @@ export async function blacklistPlayer(subjectId: string, reviewer: Reviewer, rea
 /** Admin : lève la blacklist et le bannissement Discord. Le joueur devra rejoindre le serveur et, s'il n'est plus whitelist, recandidater. */
 export async function liftBlacklist(subjectId: string, reviewer: Reviewer): Promise<ReviewResult> {
   if (!hasRank(reviewer, "admin")) return { error: "Réservé aux admins." };
+  const refused = await canActOn(subjectId, reviewer, { fresh: true });
+  if (refused) return { error: refused };
   const [removed] = await db().delete(schema.blacklist).where(eq(schema.blacklist.discordId, subjectId)).returning();
   if (!removed) return { error: "Ce joueur n'est pas blacklisté : recharge la fiche." };
   await logEvent({ type: "compte.blacklist_levee", subjectId, actorId: reviewer.id });
