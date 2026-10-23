@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, gt, lte, notInArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, lte, notInArray } from "drizzle-orm";
 import { cache } from "react";
 import { REAPPLY_DELAY_MONTHS } from "@/content/candidature";
 import { db, schema } from "@/db";
@@ -13,8 +13,18 @@ import { getFactions } from "./factions";
 const CLOSED_STATUSES: ApplicationStatus[] = ["whitelistee", "refusee"];
 
 /** Statuts dans lesquels le joueur peut encore modifier ses réponses. */
+const EDITABLE_STATUSES: ApplicationStatus[] = ["brouillon", "a_modifier"];
+
 export function isEditable(application: Pick<Application, "status">) {
-  return application.status === "brouillon" || application.status === "a_modifier";
+  return EDITABLE_STATUSES.includes(application.status);
+}
+
+/**
+ * Écriture du joueur sur sa candidature, seulement si elle est encore modifiable au moment de l'écriture :
+ * une décision de l'équipe prise entre-temps (refus, validation avant l'envoi) n'est jamais écrasée.
+ */
+function whileEditable(applicationId: string) {
+  return and(eq(schema.applications.id, applicationId), inArray(schema.applications.status, EDITABLE_STATUSES));
 }
 
 /** Candidature en cours (une seule possible), ou null. */
@@ -98,7 +108,8 @@ export async function saveDraft(application: Application, step: DataStepId, valu
   if (!isEditable(application) || !isStepEditable(application, step)) return { error: "Cette partie n'est plus modifiable." };
   const draft = cleanDraft(step, values);
   if (!draft) return { error: "Brouillon invalide." };
-  await db().update(schema.applications).set({ [step]: draft }).where(eq(schema.applications.id, application.id));
+  const [saved] = await db().update(schema.applications).set({ [step]: draft }).where(whileEditable(application.id)).returning({ id: schema.applications.id });
+  if (!saved) return { error: "Cette partie n'est plus modifiable." };
   return { ok: true as const };
 }
 
@@ -141,7 +152,8 @@ export async function saveStep(application: Application, step: DataStepId, value
   const draft = cleanDraft(step, values);
   if (!draft) return { errors: { form: "Formulaire invalide." } };
 
-  await db().update(schema.applications).set({ [step]: draft }).where(eq(schema.applications.id, application.id));
+  const [saved] = await db().update(schema.applications).set({ [step]: draft }).where(whileEditable(application.id)).returning({ id: schema.applications.id });
+  if (!saved) return { errors: { form: "Cette partie n'est plus modifiable." } };
 
   const parsed = parseStep(step, draft);
   const errors = { ...(parsed.success ? {} : fieldErrors(parsed.error)), ...(await availabilityErrors(step, draft)) };
@@ -164,7 +176,7 @@ export async function submitApplication(application: Application): Promise<{ err
   if (Object.keys(closed).length > 0) return { error: Object.values(closed)[0] };
 
   const resubmission = application.status === "a_modifier";
-  await db()
+  const [sent] = await db()
     .update(schema.applications)
     .set({
       status: "envoyee",
@@ -174,7 +186,9 @@ export async function submitApplication(application: Application): Promise<{ err
       // Dossier décoché après coup : on n'envoie pas un dossier que le joueur ne voit plus.
       ...(!steps.includes("dossier") && { dossier: null }),
     })
-    .where(eq(schema.applications.id, application.id));
+    .where(whileEditable(application.id))
+    .returning({ id: schema.applications.id });
+  if (!sent) return { error: "Ta candidature a déjà été envoyée." };
   await logEvent({ type: "candidature.envoyee", subjectId: application.userId, data: resubmission ? { renvoi: true } : {} });
   return { ok: true };
 }
