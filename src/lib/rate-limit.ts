@@ -18,6 +18,8 @@ export const LIMITS = {
   noteDelete: { max: 20, window: 60 },
   accountDelete: { max: 5, window: 60 },
   sanction: { max: 10, window: 60 },
+  // Présence : un signal toutes les 10 s par fiche ouverte, large marge pour plusieurs onglets.
+  presence: { max: 60, window: 60 },
   admin: { max: 60, window: 60 },
 } as const;
 

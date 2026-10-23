@@ -53,12 +53,12 @@ export async function recheckGuild() {
 /** Cloche : dernières notifications du joueur connecté. */
 export async function fetchNotifications() {
   const user = await getCurrentUser();
-  if (!user) return { items: [], unread: 0 };
+  if (!user || (await getBlacklistEntry(user.id))) return { items: [], unread: 0 };
   return latestNotifications(user.id);
 }
 
 /** Ouverture de la cloche : tout est marqué comme lu. */
 export async function markNotificationsRead() {
   const user = await getCurrentUser();
-  if (user) await markAllRead(user.id);
+  if (user && !(await getBlacklistEntry(user.id))) await markAllRead(user.id);
 }
