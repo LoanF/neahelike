@@ -36,6 +36,12 @@ export default async function globalSetup() {
             ${sql.json({ firstName: "Ilios", lastName: "Phaedra", age: "28", origin: "Né au port de la cité.", affinity: "", creature: "" })},
             ${sql.json({ url: "https://docs.google.com/document/d/e2e-wl", shared: true })}, now(), now())`;
   await sql`insert into blacklist (discord_id, reason, created_by_id, source) values (${BOT_BLACKLISTED.id}, 'Triche en jeu (test)', ${ADMIN.id}, 'bot')`;
+  // L'admin de test a lui aussi une candidature envoyée : il ne doit pas pouvoir en décider.
+  await sql`
+    insert into applications (user_id, status, hrp, rp, background, submitted_at)
+    values (${ADMIN.id}, 'envoyee', ${sql.json({ age: "30", rpHours: "900", experience: "Admin de test.", goodMic: true, wantsDossier: false })},
+            ${sql.json({ firstName: "Kleon", lastName: "Aristos", age: "35", origin: "Né au palais de la cité.", affinity: "", creature: "" })},
+            ${sql.json({ url: "https://docs.google.com/document/d/e2e-admin", shared: true })}, now())`;
   await sql.end();
 
   const discord = await startFakeDiscord([

@@ -92,3 +92,28 @@ test("quelqu'un blacklisté par le bot est bloqué dès sa connexion au site", a
   await admin.goto("/equipe?onglet=blacklist");
   await expect(admin.getByRole("link", { name: /e2e-blacklist-bot/ })).toBeVisible();
 });
+
+test("personne ne décide de sa propre candidature ni ne se sanctionne", async ({ browser }) => {
+  const admin = await as(browser, ADMIN);
+  await admin.goto(`/equipe/joueurs/${ADMIN.id}`);
+  await expect(admin.getByRole("heading", { level: 1 })).toContainText(ADMIN.username);
+  await expect(admin.getByRole("heading", { name: "Décision" })).toHaveCount(0);
+  await expect(admin.getByRole("heading", { name: "Compte" })).toHaveCount(0);
+});
+
+test("un admin ne peut pas sanctionner un membre de rang égal, ni un recruteur un joueur", async ({ browser }) => {
+  // Le recruteur n'a pas les boutons (testé plus haut) ; l'admin a les boutons sur un recruteur, rang inférieur.
+  const admin = await as(browser, ADMIN);
+  await admin.goto(`/equipe/joueurs/${RECRUITER.id}`);
+  await expect(admin.getByRole("button", { name: "Blacklister…" })).toBeVisible();
+});
+
+test("un lien ne peut pas afficher un message d'erreur inventé", async ({ browser }) => {
+  // Le recruteur de test n'a pas de candidature : la page de démarrage affiche les erreurs.
+  const page = await as(browser, RECRUITER);
+  await page.goto("/portail/candidature?erreur=limite");
+  await expect(page.getByRole("alert")).toContainText("Trop d'actions d'affilée");
+  await page.goto("/portail/candidature?erreur=Ton%20compte%20est%20suspendu%2C%20va%20sur%20evil.example");
+  await expect(page.getByRole("button", { name: "Commencer ma candidature" })).toBeVisible();
+  await expect(page.getByText("evil.example")).toHaveCount(0);
+});
