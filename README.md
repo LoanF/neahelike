@@ -328,8 +328,12 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
 - **Owner** : les owners permanents de `src/content/owners.ts` (toujours owners, même avec une base neuve), plus ceux ajoutés depuis le site (table `site_owners`). Le rang owner ne se donne jamais par un rôle Discord.
 - **Recruteur et admin** viennent des **rôles Discord**. Les owners les règlent dans *Administration › Rôles et permissions* (table `role_ranks`). Un membre qui a plusieurs rôles prend le rang le plus élevé. Tant que rien n'est enregistré, les variables `DISCORD_ROLE_ADMIN` / `DISCORD_ROLE_RECRUTEUR` servent de secours.
 - Les rangs sont relus sur Discord **toutes les 5 minutes**, à chaque connexion, et pour tout le monde aussitôt après un changement de réglage.
-- Avant chaque action sensible (décision, note, administration), `requireFreshRank` relit les rôles sur Discord. Un rôle retiré il y a une minute ne permet donc plus d'agir.
+- Avant chaque action sensible (décision, note, administration), `requireFreshRank` relit les rôles sur Discord. Un rôle retiré il y a une minute ne permet donc plus d'agir. **Si Discord ne répond pas, l'action est refusée** : le site ne se fie jamais à un rang qui peut dater de 5 minutes pour une action sensible.
 - Quitter le serveur Discord retire immédiatement toutes les permissions, owners compris.
+- **Règles de protection de l'équipe** (`canActOn` dans `lib/review.ts`, appliquées côté serveur et reprises à l'affichage pour cacher les boutons) :
+  - personne ne décide de **sa propre candidature** : le panneau Décision n'apparaît pas sur sa propre fiche, et le serveur refuse ;
+  - aucune décision n'est possible sur un joueur **blacklisté** (sauf effacer sa candidature) : il faut d'abord lever la blacklist ;
+  - supprimer un compte, retirer une whitelist et blacklister ne sont possibles **ni sur soi-même, ni sur un owner, ni sur un rang égal ou supérieur**. Un admin agit sur les recruteurs et les joueurs, jamais sur un autre admin ; seuls les owners peuvent agir sur un admin. Le statut d'owner est relu dans la liste des owners (`ownerIds`), pas dans `users.rank`.
 
 | Rang | Accès |
 |---|---|
@@ -379,7 +383,7 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
   - si un refus de moins de 3 mois existe, le délai est gardé dans `reapply_locks` ;
   - une blacklist éventuelle est gardée (table `blacklist`, indexée par ID Discord).
 - **Retirer la whitelist** (admin, sur la fiche d'un joueur whitelist, raison facultative) : le joueur perd « Magistrat (wl) » et « attente de wl », retrouve le rôle Novice, reçoit un MP et une notification avec la raison. La candidature reste « whitelistee » dans l'historique, marquée retirée (`whitelist_revoked_at`), et ne bloque plus : le joueur peut en recommencer une de zéro tout de suite.
-- **Blacklister** (admin, raison facultative, confirmation en recopiant BLACKLIST ; impossible sur un owner ou sur soi-même) : MP au joueur, puis **bannissement du Discord** ; sa whitelist éventuelle est retirée. Sur le site, `requireUser` le renvoie vers `/blacklist` sur toutes les pages du portail : une page de blocage avec la raison s'il y en a une, et seulement un bouton de déconnexion.
+- **Blacklister** (admin, raison facultative, confirmation en recopiant BLACKLIST ; mêmes protections que ci-dessus) : MP au joueur, puis **bannissement du Discord** ; sa whitelist éventuelle est retirée. Sur le site, `requireUser` le renvoie vers `/blacklist` sur toutes les pages du portail : une page de blocage avec la raison s'il y en a une, et seulement un bouton de déconnexion.
 - **Lever la blacklist** (admin, depuis la fiche, donc pour un joueur qui a un compte sur le site) : la ligne est supprimée et le bannissement Discord levé. Le joueur doit rejoindre le serveur et, sans whitelist, recandidater. Les blacklists posées par le bot sans compte sur le site se lèvent depuis le bot.
 - Chaque retrait, blacklist et levée est inscrit dans la chronologie de la fiche et le journal.
 
@@ -514,6 +518,10 @@ Le site reprend le langage visuel de l'interface en jeu, « The Struck Plaque »
 - **Aucun secret dans le dépôt** : tout passe par les variables d'environnement (`.env*` est ignoré par git).
 - Chaque écriture passe par une Server Action qui revérifie la session, le rang (relu sur Discord pour les actions sensibles) et la limite d'actions. Toutes les entrées sont validées par Zod côté serveur.
 - Le joueur ne voit jamais les notes internes. Le recruteur ne voit pas les notes réservées aux admins (le filtre est fait côté serveur).
+- Les liens saisis par les joueurs (background, dossier) ne sont cliquables que s'ils commencent par `https://` ; un brouillon pas encore validé peut contenir n'importe quoi, il s'affiche alors en texte simple.
+- **Aucun texte libre ne passe par l'adresse** : les messages d'erreur affichés après une redirection sont choisis par un code connu (`?erreur=limite`, `?erreur=envoi`…), et les avertissements de la liste des joueurs sont filtrés. Un lien piégé ne peut donc pas afficher un faux message sur le vrai site.
+- Un joueur blacklisté n'atteint aucune page du portail (`requireUser` le renvoie vers `/blacklist`) et ne reçoit plus de notifications.
+- Pas de `dangerouslySetInnerHTML`, requêtes SQL toujours paramétrées (Drizzle), protection CSRF des Server Actions par Next.js (vérification de l'origine).
 - **RLS activée sans règle sur toutes les tables** : seul le propriétaire des tables y accède, rien n'est exposé par une API publique de la base.
 - Le token du bot ne quitte jamais le serveur. `DISCORD_API_URL` (faux Discord des tests) est ignorée en production.
 
