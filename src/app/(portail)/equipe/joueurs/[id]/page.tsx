@@ -40,7 +40,8 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
   if (!player) notFound();
 
   const application = await getLatestApplication(player.id);
-  if (application) await markViewed(application, viewer);
+  // Ouvrir sa propre fiche ne compte pas comme une lecture par l'équipe.
+  if (application && player.id !== viewer.id) await markViewed(application, viewer);
   const isAdmin = hasRank(viewer, "admin");
 
   const [events, notes, names, criteria, activeCriteria, blacklisted] = await Promise.all([

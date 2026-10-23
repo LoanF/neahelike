@@ -18,7 +18,12 @@ const DISCORD_ID = /^\d{15,21}$/;
 export async function heartbeat(subjectId: string): Promise<Viewer[]> {
   const user = await requireUser({ rank: "recruteur" });
   if (!DISCORD_ID.test(subjectId) || !(await rateLimit("presence", user.id))) return [];
-  await touchPresence(subjectId, user.id);
+  try {
+    await touchPresence(subjectId, user.id);
+  } catch {
+    // Fiche supprimée entre-temps (clé étrangère) : plus de présence à signaler.
+    return [];
+  }
   return (await presenceFor([subjectId], user.id))[subjectId] ?? [];
 }
 
@@ -123,8 +128,8 @@ export async function deleteAccountAction(_previous: DeleteAccountState, formDat
   const result = await deletePlayerAccount(String(formData.get("subjectId")), reviewer);
   if ("error" in result) return { error: result.error, at: Date.now() };
   revalidatePath("/equipe");
-  const warnings = result.warnings.map(warning => `&avertissement=${encodeURIComponent(warning)}`).join("");
-  redirect(`/equipe?onglet=tous&supprime=1${warnings}`);
+  // Seulement le nombre d'avertissements dans l'adresse : jamais de texte libre qu'un lien piégé pourrait imiter.
+  redirect(`/equipe?onglet=tous&supprime=1${result.warnings.length ? `&avertissements=${result.warnings.length}` : ""}`);
 }
 
 export type SanctionState = (ReviewResult & { at: number }) | null;
@@ -147,7 +152,11 @@ export async function sanctionAction(_previous: SanctionState, formData: FormDat
       result = await revokeWhitelist(subjectId, reviewer, reason);
       break;
     case "blacklist":
-      result = await blacklistPlayer(subjectId, reviewer, reason);
+      // La confirmation est aussi vérifiée ici : un envoi sans elle (script, vieux formulaire) ne bannit personne.
+      result =
+        String(formData.get("confirmation") ?? "").trim().toUpperCase() === "BLACKLIST"
+          ? await blacklistPlayer(subjectId, reviewer, reason)
+          : { error: "Recopie BLACKLIST pour confirmer." };
       break;
     case "lever":
       result = await liftBlacklist(subjectId, reviewer);

@@ -19,12 +19,9 @@ export const metadata: Metadata = { title: "Joueurs" };
 
 const shortDate = (date: Date) => date.toLocaleDateString("fr-FR", { day: "numeric", month: "short", timeZone: "Europe/Paris" });
 
-/** Seuls les avertissements que le site produit lui-même sont affichés (pas de texte libre venu d'un lien). */
-const KNOWN_WARNING = /^(Retrait du rôle « [^»]{1,40} »|Rôle « Novice »|Message privé) : (MP fermés, le joueur verra la décision sur le portail\.|échec côté Discord\.)$|^Rôle de base non configuré \(DISCORD_ROLE_NON_WL\)\.$/;
-const isKnownWarning = (text: string) => KNOWN_WARNING.test(text);
-
-export default async function EquipePage({ searchParams }: { searchParams: Promise<{ onglet?: string; q?: string; supprime?: string; avertissement?: string | string[] }> }) {
-  const { onglet, q, supprime, avertissement } = await searchParams;
+export default async function EquipePage({ searchParams }: { searchParams: Promise<{ onglet?: string; q?: string; supprime?: string; avertissements?: string }> }) {
+  const { onglet, q, supprime, avertissements } = await searchParams;
+  const warningCount = Math.min(Number(avertissements) || 0, 10);
   const viewer = await requireUser({ rank: "recruteur" });
   const tab = (TABS.find(item => item.id === onglet)?.id ?? "a-traiter") as TabId;
   const query = q?.trim().slice(0, 80) ?? "";
@@ -60,9 +57,9 @@ export default async function EquipePage({ searchParams }: { searchParams: Promi
         {supprime && (
           <p className={styles.notice} role="status">
             Compte supprimé.
-            {avertissement && (
+            {warningCount > 0 && (
               <span className={styles.noticeWarnings}>
-                À vérifier sur Discord : {[avertissement].flat().filter(isKnownWarning).join(" · ")}
+                {warningCount === 1 ? "Une action Discord a échoué" : `${warningCount} actions Discord ont échoué`} (rôles ou message privé) : vérifie ses rôles sur le serveur.
               </span>
             )}
           </p>
