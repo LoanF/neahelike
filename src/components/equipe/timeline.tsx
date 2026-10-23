@@ -173,7 +173,7 @@ export function Timeline({ entries, criteria, showSubject = false }: { entries: 
             </span>
             <div className={styles.body}>
               <span className={styles.text}>
-                {team && entry.actorId && <Image src={avatarUrl({ id: entry.actorId, avatar: entry.actorAvatar }, 32)} alt="" width={18} height={18} className={styles.actor} />}
+                {team && entry.actorId && <Image unoptimized src={avatarUrl({ id: entry.actorId, avatar: entry.actorAvatar }, 32)} alt="" width={18} height={18} className={styles.actor} />}
                 {text}
               </span>
               {showSubject && entry.subjectId && (

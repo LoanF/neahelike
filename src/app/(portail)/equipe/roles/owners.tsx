@@ -42,7 +42,7 @@ export function Owners({ owners }: { owners: OwnerRow[] }) {
         {owners.map(owner => (
           <li key={owner.id} className={styles.row}>
             <span className={styles.person}>
-              <Image src={avatarUrl({ id: owner.id, avatar: owner.avatar }, 64)} alt="" width={32} height={32} className={styles.avatar} />
+              <Image unoptimized src={avatarUrl({ id: owner.id, avatar: owner.avatar }, 64)} alt="" width={32} height={32} className={styles.avatar} />
               <span>
                 <span className={styles.personName}>
                   {owner.name}

@@ -93,7 +93,7 @@ export function Notes({ subjectId, notes, isAdmin }: { subjectId: string; notes:
           {notes.map(note => (
             <li key={note.id} className={cx(styles.note, note.visibility === "admin" && styles.noteAdmin)}>
               <div className={styles.noteHead}>
-                {note.authorId && <Image src={avatarUrl({ id: note.authorId, avatar: note.authorAvatar }, 32)} alt="" width={22} height={22} className={styles.noteAvatar} />}
+                {note.authorId && <Image unoptimized src={avatarUrl({ id: note.authorId, avatar: note.authorAvatar }, 32)} alt="" width={22} height={22} className={styles.noteAvatar} />}
                 <span className={styles.noteAuthor}>{note.authorName ?? "Ancien membre"}</span>
                 {note.visibility === "admin" && (
                   <Badge tone="gold">

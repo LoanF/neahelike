@@ -1,4 +1,9 @@
-/** URLs du CDN Discord (utilisables côté client comme côté serveur). */
+/**
+ * URLs du CDN Discord (utilisables côté client comme côté serveur).
+ * Discord sert déjà la bonne taille (`?size=`) en webp, ou en GIF pour les images animées : les <Image> qui les
+ * affichent passent `unoptimized`. L'optimiseur de Next n'apporterait rien, ne sait pas traiter les GIF animés
+ * (avertissement dans la console) et consommerait le quota d'optimisation de l'hébergeur.
+ */
 const CDN = "https://cdn.discordapp.com";
 
 /** Discord n'accepte que les puissances de 2 de 16 à 4096 (une autre taille répond 400) : on arrondit au-dessus. */

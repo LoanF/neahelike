@@ -19,10 +19,10 @@ export function ProfileCard({ user }: { user: ProfileUser }) {
   return (
     <div className={styles.card}>
       <div className={styles.banner}>
-        {banner && <Image src={banner} alt="" fill sizes="440px" className={styles.bannerImage} />}
+        {banner && <Image src={banner} alt="" fill sizes="440px" className={styles.bannerImage} unoptimized />}
       </div>
       <div className={styles.identity}>
-        <Image src={avatarUrl(user, 128)} alt="" width={64} height={64} className={styles.avatar} />
+        <Image unoptimized src={avatarUrl(user, 128)} alt="" width={64} height={64} className={styles.avatar} />
         <div className={styles.names}>
           <div className={styles.nameRow}>
             <span className={styles.name}>{displayName(user)}</span>

@@ -35,7 +35,7 @@ export function TakeoverCard({ dossier, names, player, canDecide }: TakeoverCard
       <header className={styles.head}>
         {player && (
           <Link href={`/equipe/joueurs/${player.id}`} className={styles.person}>
-            <Image src={avatarUrl(player, 64)} alt="" width={32} height={32} className={styles.avatar} />
+            <Image unoptimized src={avatarUrl(player, 64)} alt="" width={32} height={32} className={styles.avatar} />
             <span>{displayName(player)}</span>
           </Link>
         )}

@@ -27,7 +27,7 @@ export function PresenceEye({ viewers, size = 22, className }: { viewers: Viewer
         <span className={styles.tooltipTitle}>En cours de lecture</span>
         {viewers.map(viewer => (
           <span key={viewer.id} className={styles.viewer}>
-            <Image src={avatarUrl(viewer, 32)} alt="" width={20} height={20} className={styles.avatar} />
+            <Image unoptimized src={avatarUrl(viewer, 32)} alt="" width={20} height={20} className={styles.avatar} />
             {displayName(viewer)}
           </span>
         ))}

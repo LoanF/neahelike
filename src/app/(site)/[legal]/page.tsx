@@ -7,8 +7,11 @@ import styles from "./legal.module.css";
 
 type Slug = keyof typeof LEGAL;
 
-export const dynamicParams = false;
-
+/*
+ * Les trois documents sont générés au build. Une autre adresse à la racine (/n-importe-quoi, une icône demandée
+ * par le navigateur…) arrive aussi ici et répond 404 avec notFound() ci-dessous. Pas de `dynamicParams = false` :
+ * avec Next 15.5, il fait écrire « Error: Internal: NoFallbackError » dans la console à chaque adresse inconnue.
+ */
 export function generateStaticParams() {
   return Object.keys(LEGAL).map(legal => ({ legal }));
 }

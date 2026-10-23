@@ -24,7 +24,7 @@ const text = (values: StepValues | null | undefined, key: string) => (typeof val
 function PlayerLink({ player }: { player: Player }) {
   return (
     <Link href={`/equipe/joueurs/${player.id}`} className={styles.person}>
-      <Image src={avatarUrl(player, 64)} alt="" width={32} height={32} className={styles.avatar} />
+      <Image unoptimized src={avatarUrl(player, 64)} alt="" width={32} height={32} className={styles.avatar} />
       <span>
         <span className={styles.personName}>{displayName(player)}</span>
         <span className={styles.personId}>{player.id}</span>

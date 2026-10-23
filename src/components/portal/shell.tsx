@@ -29,7 +29,7 @@ export async function PortalShell({ user, children }: { user: ShellUser; childre
           rank={user.rank}
           footer={
             <div className={styles.player}>
-              <Image src={avatarUrl(user, 64)} alt="" width={40} height={40} className={styles.avatar} />
+              <Image unoptimized src={avatarUrl(user, 64)} alt="" width={40} height={40} className={styles.avatar} />
               <div className={styles.playerNames}>
                 <span className={styles.playerName}>{displayName(user)}</span>
                 {user.rank === "joueur" ? <span className={styles.playerHandle}>@{user.username}</span> : <Badge tone="gold">{RANK_LABEL[user.rank]}</Badge>}

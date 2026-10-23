@@ -53,7 +53,7 @@ export function PlayerList({ rows, initialPresence }: { rows: PlayerListRow[]; i
       {rows.map(row => (
         <li key={row.id}>
           <Link href={`/equipe/joueurs/${row.id}`} className={styles.row}>
-            <Image src={avatarUrl({ id: row.id, avatar: row.avatar }, 64)} alt="" width={40} height={40} className={styles.avatar} />
+            <Image unoptimized src={avatarUrl({ id: row.id, avatar: row.avatar }, 64)} alt="" width={40} height={40} className={styles.avatar} />
             <span className={styles.identity}>
               <span className={styles.name}>
                 {row.name}

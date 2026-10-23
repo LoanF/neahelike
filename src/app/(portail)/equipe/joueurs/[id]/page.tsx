@@ -95,9 +95,9 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
       </Link>
 
       <Plaque className={styles.hero} rivets="none">
-        <div className={styles.banner}>{banner && <Image src={banner} alt="" fill sizes="1100px" className={styles.bannerImage} />}</div>
+        <div className={styles.banner}>{banner && <Image src={banner} alt="" fill sizes="1100px" className={styles.bannerImage} unoptimized />}</div>
         <div className={styles.heroBody}>
-          <Image src={avatarUrl(player, 128)} alt="" width={84} height={84} className={styles.heroAvatar} />
+          <Image unoptimized src={avatarUrl(player, 128)} alt="" width={84} height={84} className={styles.heroAvatar} />
           <div className={styles.heroText}>
             <div className={styles.heroName}>
               <h1>{displayName(player)}</h1>
