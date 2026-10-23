@@ -40,6 +40,8 @@ function Item({ label, wide, children }: { label: string; wide?: boolean; childr
 
 function DocLink({ href }: { href: string }) {
   if (!href) return null;
+  // Un brouillon n'est pas encore validé : seul un lien https devient cliquable.
+  if (!/^https:\/\//.test(href)) return <span>{href.slice(0, 120)}</span>;
   return (
     <a href={href} target="_blank" rel="noreferrer noopener" className={styles.recapLink}>
       {href.replace(/^https:\/\//, "").slice(0, 60)}
@@ -91,8 +93,8 @@ export function ApplicationRecap({
       <Section heading={heading} title="Personnage" step="rp" editable={editable && isStepEditable(application, "rp")}>
         <Item label="Prénom et nom">{[value(rp, "firstName"), value(rp, "lastName")].filter(Boolean).join(" ")}</Item>
         <Item label="Âge">{value(rp, "age") && `${value(rp, "age")} ans`}</Item>
-        <Item label="Affinité">{affinity ? (names[affinity] ?? affinity) : "Aucune"}</Item>
-        <Item label="Créature">{creature ? (names[creature] ?? creature) : "Humain"}</Item>
+        <Item label="Affinité">{affinity ? (Object.hasOwn(names, affinity) ? names[affinity] : affinity) : "Aucune"}</Item>
+        <Item label="Créature">{creature ? (Object.hasOwn(names, creature) ? names[creature] : creature) : "Humain"}</Item>
         <Item label="Origine" wide>
           <span className={styles.recapText}>{value(rp, "origin")}</span>
         </Item>

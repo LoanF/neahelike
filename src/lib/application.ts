@@ -201,9 +201,10 @@ export function stepHref(step: StepId) {
 /** Libellé de la cible d'un dossier de reprise (« Lead des Minotaures »). `names` : voir lib/businesses.ts (takeoverNames). */
 export function dossierTargetLabel(values: StepValues | null | undefined, names: Record<string, string> = {}) {
   if (!values) return null;
+  const nameOf = (id: string) => (Object.hasOwn(names, id) ? names[id] : id);
   const target = typeof values.target === "string" ? values.target : "";
   if (!target) return null;
-  if (values.kind === "affinite" || values.kind === "creature") return `Lead des ${names[target] ?? target}`;
+  if (values.kind === "affinite" || values.kind === "creature") return `Lead des ${nameOf(target)}`;
   if (target === NEW_BUSINESS) return typeof values.targetName === "string" && values.targetName.trim() ? `Nouvelle entreprise : ${values.targetName.trim()}` : null;
-  return `Entreprise : ${names[target] ?? target}`;
+  return `Entreprise : ${nameOf(target)}`;
 }
