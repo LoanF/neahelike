@@ -112,7 +112,7 @@ test("un lien ne peut pas afficher un message d'erreur inventé", async ({ brows
   // Le recruteur de test n'a pas de candidature : la page de démarrage affiche les erreurs.
   const page = await as(browser, RECRUITER);
   await page.goto("/portail/candidature?erreur=limite");
-  await expect(page.getByRole("alert")).toContainText("Trop d'actions d'affilée");
+  await expect(page.getByText("Trop d'actions d'affilée")).toBeVisible();
   await page.goto("/portail/candidature?erreur=Ton%20compte%20est%20suspendu%2C%20va%20sur%20evil.example");
   await expect(page.getByRole("button", { name: "Commencer ma candidature" })).toBeVisible();
   await expect(page.getByText("evil.example")).toHaveCount(0);

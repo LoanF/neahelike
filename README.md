@@ -285,7 +285,7 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
 | `notifications` | Notifications du portail (cloche) |
 | `reapply_locks` | Délai de 3 mois gardé après la suppression d'un compte refusé (seulement l'ID Discord et la date de fin) |
 | `site_owners` | Owners ajoutés depuis le site |
-| `role_ranks` | Rôle Discord → rang (recruteur ou admin), réglé par les owners |
+| `role_ranks` | Rôle Discord → rang (joueur, recruteur ou admin), réglé par les owners. Tous les rôles enregistrés y figurent, rôles « joueur » compris : une table non vide veut dire « réglé depuis le site », et les variables d'environnement ne servent plus |
 | `factions` | État des affinités et créatures (places, lead, ordre, archivage), et lore complet de celles ajoutées depuis le site |
 | `businesses` | Entreprises qu'on peut reprendre |
 | `refusal_criteria` | Critères de refus |
@@ -333,7 +333,11 @@ Le schéma complet est dans `src/db/schema.ts`, commenté table par table.
 - **Règles de protection de l'équipe** (`canActOn` dans `lib/review.ts`, appliquées côté serveur et reprises à l'affichage pour cacher les boutons) :
   - personne ne décide de **sa propre candidature** : le panneau Décision n'apparaît pas sur sa propre fiche, et le serveur refuse ;
   - aucune décision n'est possible sur un joueur **blacklisté** (sauf effacer sa candidature) : il faut d'abord lever la blacklist ;
-  - supprimer un compte, retirer une whitelist et blacklister ne sont possibles **ni sur soi-même, ni sur un owner, ni sur un rang égal ou supérieur**. Un admin agit sur les recruteurs et les joueurs, jamais sur un autre admin ; seuls les owners peuvent agir sur un admin. Le statut d'owner est relu dans la liste des owners (`ownerIds`), pas dans `users.rank`.
+  - supprimer un compte, effacer une candidature, retirer une whitelist, blacklister et lever une blacklist ne sont possibles **ni sur soi-même, ni sur un owner, ni sur un rang égal ou supérieur**. Un admin agit sur les recruteurs et les joueurs, jamais sur un autre admin ; seuls les owners peuvent agir sur un admin. Le statut d'owner est relu dans la liste des owners (`ownerIds`) et, au moment de l'action, le rang de la cible est relu sur Discord (celui en base date de sa dernière visite) ; si Discord ne répond pas, l'action est refusée.
+  - la confirmation « BLACKLIST » est vérifiée côté serveur, comme « SUPPRIMER » ;
+  - ouvrir sa propre fiche ne la marque pas « Vue » pour l'équipe ;
+  - une écriture du joueur (brouillon, étape, envoi) n'écrase jamais une décision prise entre-temps : elle n'est appliquée que si la candidature est encore modifiable à cet instant.
+- **Effacer une candidature** retire aussi les rôles qu'elle avait donnés : « attente de wl » pendant l'entretien, « Magistrat (wl) » (et retour au rôle Novice) si elle était whitelist.
 
 | Rang | Accès |
 |---|---|
