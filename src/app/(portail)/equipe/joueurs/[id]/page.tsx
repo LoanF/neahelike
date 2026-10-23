@@ -30,6 +30,7 @@ import { Sanctions } from "./sanctions";
 import { formatWlSlot, storedWlSlot } from "@/lib/wl-session";
 import { TakeoverCard } from "@/components/equipe/takeover-card";
 import { listDossiers } from "@/lib/takeovers";
+import { acceptedWipeCounts, wipeCountLabel } from "@/lib/wipes";
 
 export const metadata: Metadata = { title: "Fiche joueur" };
 
@@ -73,7 +74,9 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
   const canSanction = isAdmin && !(await canActOn(player.id, viewer, { known: player }));
   const canDecide = player.id !== viewer.id || hasRank(viewer, "owner");
   // Dossiers de reprise déposés à part (les brouillons restent privés).
-  const dossiers = await listDossiers(player.id);
+  // Wipes : seulement le nombre de wipes validés, et seulement pour les admins et owners.
+  const [dossiers, wipeCounts] = await Promise.all([listDossiers(player.id), isAdmin ? acceptedWipeCounts([player.id]) : null]);
+  const wipes = wipeCounts?.get(player.id) ?? 0;
   const sentDossiers = dossiers.filter(dossier => dossier.status !== "brouillon");
   const slot = application && storedWlSlot(application);
   const badge = teamBadge(application, !!blacklisted);
@@ -100,6 +103,7 @@ export default async function FichePage({ params }: { params: Promise<{ id: stri
               <h1>{displayName(player)}</h1>
               {player.rank !== "joueur" && <Badge tone="gold">{RANK_LABEL[player.rank]}</Badge>}
               {!player.inGuild && <Badge tone="danger">A quitté le Discord</Badge>}
+              {wipeCounts && <Badge tone={wipes > 0 ? "gold" : "default"}>{wipeCountLabel(wipes)}</Badge>}
             </div>
             <span className={styles.heroMeta}>
               @{player.username} · ID {player.id} · inscrit le {formatDate(player.createdAt)}

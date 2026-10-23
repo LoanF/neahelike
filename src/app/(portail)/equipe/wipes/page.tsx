@@ -10,7 +10,7 @@ import type { StepValues } from "@/db/schema";
 import { takeoverNames } from "@/lib/businesses";
 import { avatarUrl, displayName } from "@/lib/discord-cdn";
 import { hasRank, requireUser } from "@/lib/session";
-import { wipeBoard, wipeCandidates } from "@/lib/wipes";
+import { wipeBoard, wipeCandidates, wipeCountLabel } from "@/lib/wipes";
 import styles from "../admin.module.css";
 import { decideWipeAction } from "./actions";
 import { InviteForm } from "./invite-form";
@@ -67,10 +67,11 @@ export default async function WipesPage() {
           <DotsRow className={styles.dots} />
           <h2 className={styles.title}>À valider ({pending.length})</h2>
           {pending.length === 0 && <p className={styles.text}>Aucune demande à valider.</p>}
-          {pending.map(({ wipe, player, previous }) => (
+          {pending.map(({ wipe, player, previous, wipes }) => (
             <section key={wipe.id} className={styles.request} aria-label={`Wipe de ${displayName(player)}`}>
               <div className={styles.toolbar}>
                 <PlayerLink player={player} />
+                <Badge tone={wipes > 0 ? "gold" : "default"}>{wipeCountLabel(wipes)} déjà validé{wipes > 1 ? "s" : ""}</Badge>
                 <span className={styles.personId}>Envoyée le {formatDate(wipe.submittedAt ?? wipe.createdAt)}</span>
               </div>
               <div className={styles.compare}>
@@ -98,9 +99,10 @@ export default async function WipesPage() {
             <p className={styles.text}>Personne ne remplit de nouveau personnage en ce moment.</p>
           ) : (
             <ul className={styles.rows}>
-              {open.map(({ wipe, player }) => (
+              {open.map(({ wipe, player, wipes }) => (
                 <li key={wipe.id} className={styles.row}>
                   <PlayerLink player={player} />
+                  <Badge tone={wipes > 0 ? "gold" : "default"}>{wipeCountLabel(wipes)}</Badge>
                   <Badge tone="default">{wipe.invitedById ? `Invité le ${formatDate(wipe.createdAt)}` : `Commencée le ${formatDate(wipe.createdAt)}`}</Badge>
                 </li>
               ))}
@@ -112,9 +114,10 @@ export default async function WipesPage() {
           <Plaque className={styles.panel}>
             <h2 className={styles.title}>Dernières décisions</h2>
             <ul className={styles.rows}>
-              {decided.map(({ wipe, player }) => (
+              {decided.map(({ wipe, player, wipes }) => (
                 <li key={wipe.id} className={styles.row}>
                   <PlayerLink player={player} />
+                  <Badge tone={wipes > 0 ? "gold" : "default"}>{wipeCountLabel(wipes)}</Badge>
                   <Badge tone={wipe.status === "acceptee" ? "success" : "danger"}>
                     {wipe.status === "acceptee" ? "Validé" : "Refusé"} le {formatDate(wipe.decidedAt ?? wipe.createdAt)}
                   </Badge>

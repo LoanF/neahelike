@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray } from "drizzle-orm";
 import { cache } from "react";
 import { DIRECT_MESSAGES } from "@/content/equipe";
 import { NOTIFICATIONS } from "@/content/notifications";
@@ -173,6 +173,22 @@ export async function decideWipe(wipeId: string, admin: Reviewer, accept: boolea
 
 const player = { id: schema.users.id, username: schema.users.username, globalName: schema.users.globalName, avatar: schema.users.avatar };
 
+/** Nombre de wipes validés par joueur (seulement le nombre, pas les anciens personnages). */
+export async function acceptedWipeCounts(userIds?: string[]): Promise<Map<string, number>> {
+  if (userIds?.length === 0) return new Map();
+  const rows = await db()
+    .select({ userId: schema.wipeRequests.userId, total: count() })
+    .from(schema.wipeRequests)
+    .where(and(eq(schema.wipeRequests.status, "acceptee"), userIds ? inArray(schema.wipeRequests.userId, userIds) : undefined))
+    .groupBy(schema.wipeRequests.userId);
+  return new Map(rows.map(row => [row.userId, row.total]));
+}
+
+/** « Aucun wipe », « 1 wipe », « 3 wipes ». */
+export function wipeCountLabel(total: number) {
+  return total === 0 ? "Aucun wipe" : `${total} wipe${total > 1 ? "s" : ""}`;
+}
+
 /** Onglet Wipe : demandes à valider, demandes en cours de saisie, et les dernières décisions. */
 export async function wipeBoard() {
   const rows = await db()
@@ -184,10 +200,12 @@ export async function wipeBoard() {
   // Ancien personnage, pour comparer avec le nouveau.
   const current = new Map<string, Application["rp"]>();
   for (const { wipe } of rows.filter(row => row.wipe.status === "envoyee")) current.set(wipe.userId, (await getLatestApplication(wipe.userId))?.rp ?? null);
+  const counts = await acceptedWipeCounts([...new Set(rows.map(row => row.wipe.userId))]);
+  const withCount = <T extends { wipe: WipeRequest }>(row: T) => ({ ...row, wipes: counts.get(row.wipe.userId) ?? 0 });
   return {
-    pending: rows.filter(row => row.wipe.status === "envoyee").map(row => ({ ...row, previous: current.get(row.wipe.userId) ?? null })),
-    open: rows.filter(row => row.wipe.status === "ouverte"),
-    decided: rows.filter(row => row.wipe.status === "acceptee" || row.wipe.status === "refusee").slice(0, 20),
+    pending: rows.filter(row => row.wipe.status === "envoyee").map(row => ({ ...withCount(row), previous: current.get(row.wipe.userId) ?? null })),
+    open: rows.filter(row => row.wipe.status === "ouverte").map(withCount),
+    decided: rows.filter(row => row.wipe.status === "acceptee" || row.wipe.status === "refusee").slice(0, 20).map(withCount),
   };
 }
 

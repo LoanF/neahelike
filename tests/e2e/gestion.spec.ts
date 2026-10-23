@@ -99,6 +99,7 @@ test("un admin invite au wipe, le joueur refait son personnage, l'admin le valid
   // La demande n'apparaît pas sur la fiche du joueur.
   await admin.goto(`/equipe/joueurs/${WIPER.id}`);
   await expect(admin.locator("#contenu").getByText(/demande de wipe|refaire son personnage|nouveau personnage/i)).toHaveCount(0);
+  await expect(admin.getByText("Aucun wipe", { exact: true })).toBeVisible();
 
   await admin.goto("/equipe/wipes");
   const request = admin.getByRole("region", { name: `Wipe de ${WIPER.username}` });
@@ -109,5 +110,10 @@ test("un admin invite au wipe, le joueur refait son personnage, l'admin le valid
 
   await admin.goto(`/equipe/joueurs/${WIPER.id}`);
   await expect(admin.getByText("Nouvelle Héroïne").first()).toBeVisible();
+  // Seulement le nombre de wipes validés, visible des admins.
+  await expect(admin.getByText("1 wipe", { exact: true })).toBeVisible();
+  const recruiter = await as(browser, RECRUITER);
+  await recruiter.goto(`/equipe/joueurs/${WIPER.id}`);
+  await expect(recruiter.getByText(/^(Aucun wipe|\d+ wipes?)$/)).toHaveCount(0);
   expect((await messagesTo(WIPER.id)).some(message => message.includes("Wipe accepté"))).toBe(true);
 });
